@@ -1,0 +1,339 @@
+
+import React from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Check, Lock, Star } from 'lucide-react';
+
+interface GameRoadmapProps {
+  onLevelClick: (weekId: number) => void;
+  userName: string;
+  weeklyProgress: {
+    success: boolean;
+    data: {
+      week: number;
+      completedTasks: number;
+      totalTasks: number;
+      progress: number;
+    }[];
+    message: string;
+  };
+  allResources: { week: number; resources: { id: string; title: string; type: string; url: string; duration: number; tags: string[]; }[]; }[];
+}
+
+interface Level {
+  id: number;
+  title: string;
+  isUnlocked: boolean;
+  isCompleted: boolean;
+  isActive: boolean;
+  progress?: number;
+}
+
+const GameRoadmap = ({ onLevelClick, userName, weeklyProgress, allResources }: GameRoadmapProps) => {
+  // Convert weeklyProgress object to an array for easier iteration
+  const weeklyProgressData = Array.isArray(weeklyProgress) ? weeklyProgress : [];
+  const weeklyProgressArray = weeklyProgressData.map((weekData) => ({
+    week: weekData.week,
+    completedTasks: weekData.completedTasks,
+    totalTasks: weekData.totalTasks,
+    progress: weekData.progress,
+  }));
+
+  // Calculate level status based on weekly progress
+  const calculateLevelStatus = (weekId: number) => {
+    const weekData = weeklyProgressArray.find(w => w.week === weekId) || { completedTasks: 0, totalTasks: 0, progress: 0 };
+    const previousWeekData = weeklyProgressArray.find(w => w.week === weekId - 1);
+    
+    const isUnlocked = weekId === 1 || (previousWeekData && previousWeekData.progress >= 70);
+    const isCompleted = weekData.progress >= 100;
+    const isActive = isUnlocked && !isCompleted;
+    
+    return {
+      isUnlocked,
+      isCompleted,
+      isActive,
+      progress: weekData.progress || 0
+    };
+  };
+
+  const allWeeks = Array.from(new Set([...weeklyProgressArray.map(w => w.week), ...allResources.map(w => w.week)]));
+
+  const levels: Level[] = allWeeks
+    .map(weekId => {
+      const weekData = weeklyProgressData.find(w => w.week === weekId);
+      const status = calculateLevelStatus(weekId);
+      return {
+        id: weekId,
+        title: `Week ${weekId}`,
+        ...status,
+        progress: weekData ? status.progress : 0, // Use progress from weeklyProgress if available, else 0
+      };
+    })
+    .sort((a, b) => b.id - a.id); // Sort in descending order of week number
+
+  console.log("Debug: levels array before rendering:", levels);
+
+  return (
+    <div className="min-h-screen w-full relative overflow-hidden bg-black">
+      {/* Fixed Welcome Title */}
+      <div className="fixed top-0 left-0 right-0 z-20 bg-black/95 backdrop-blur-md border-b border-orange-500/30 rounded-b-3xl">
+        <div className="text-center py-4 sm:py-6">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-orange-400 neon-glow">Welcome, {userName}!</h1>
+          <p className="text-cyan-400/70 mt-1 text-xs sm:text-sm md:text-base">Your Learning Journey</p>
+        </div>
+      </div>
+
+      {/* Floating particles background */}
+      <div className="absolute inset-0">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-3 h-3 bg-orange-400/30 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animation: `float ${3 + Math.random() * 4}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 2}s`
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Scrollable Path Container */}
+      <div className="h-screen overflow-y-auto overflow-x-hidden px-2 sm:px-4 pt-16 sm:pt-20 md:pt-24 pb-8 scrollbar-hide">
+        <div className="mx-auto relative">
+          {/* Enhanced SVG Paths - Snake-like curves */}
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none z-0"
+            style={{ height: `${levels.length * 160}px` }}
+          >
+            <defs>
+              <linearGradient id="pathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="rgba(251,146,60,0.9)" />
+                <stop offset="50%" stopColor="rgba(249,115,22,1)" />
+                <stop offset="100%" stopColor="rgba(251,146,60,0.9)" />
+              </linearGradient>
+              <filter id="pathGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+                <feMerge> 
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+            
+            {levels.map((level, index) => {
+              if (index === 0) return null;
+              
+              const fromY = index * 160 + 80;
+              const toY = (index - 1) * 160 + 80;
+              
+              const isCurrentLeft = index % 2 === 0;
+              const isNextLeft = (index - 1) % 2 === 0;
+              
+              const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+              const isMobile = screenWidth <= 768;
+              
+              let fromX, toX;
+              
+              if (isMobile) {
+                fromX = isCurrentLeft ? 80 : screenWidth - 80;
+                toX = isNextLeft ? 80 : screenWidth - 80;
+              } else {
+                const maxWidth = Math.min(screenWidth, 1400);
+                const sideMargin = (screenWidth - maxWidth) / 2;
+                const availableWidth = maxWidth - 40;
+                
+                fromX = isCurrentLeft ? 
+                  sideMargin + 20 + 80 : 
+                  sideMargin + availableWidth - 80;
+                
+                toX = isNextLeft ? 
+                  sideMargin + 20 + 80 : 
+                  sideMargin + availableWidth - 80;
+              }
+              
+              const midY = (fromY + toY) / 2;
+              const horizontalDistance = Math.abs(fromX - toX);
+              const controlOffset = horizontalDistance * 0.8;
+              
+              let pathData;
+              if (isCurrentLeft !== isNextLeft) {
+                const direction = fromX < toX ? 1 : -1;
+                pathData = `M ${fromX} ${fromY} 
+                           C ${fromX + (controlOffset * direction * 1.8)} ${fromY},
+                             ${toX - (controlOffset * direction * 0.0)} ${toY},
+                             ${toX} ${toY}`;
+              } else {
+                const midX = (fromX + toX) / 2;
+                pathData = `M ${fromX} ${fromY} 
+                           Q ${midX + (isCurrentLeft ? -50 : 50)} ${midY} 
+                           ${toX} ${toY}`;
+              }
+              
+              return (
+                <g key={`path-group-${level.id}`}>
+                  <path
+                    d={pathData}
+                    stroke="url(#pathGradient)"
+                    strokeWidth="20"
+                    fill="none"
+                    opacity={0.6}
+                    filter="url(#pathGlow)"
+                    strokeLinecap="round"
+                  />
+                  
+                  <path
+                    d={pathData}
+                    stroke="rgb(251, 190, 36)"
+                    strokeWidth="6"
+                    fill="none"
+                    strokeDasharray="30,20"
+                    opacity={0.5}
+                    strokeLinecap="round"
+                  >
+                    <animate
+                      attributeName="stroke-dashoffset"
+                      values="0;50;0"
+                      dur="6s"
+                      repeatCount="indefinite"
+                    />
+                  </path>
+                  
+                  <path
+                    d={pathData}
+                    stroke="rgba(255,255,255,0.3)"
+                    strokeWidth="4"
+                    fill="none"
+                    opacity={0.6}
+                    strokeLinecap="round"
+                  />
+                </g>
+              );
+            })}
+          </svg>
+
+          {/* Level Nodes */}
+          <div className="relative z-10" style={{ height: `${levels.length * 160}px` }}>
+            {levels.length > 0 ? (
+              levels.map((level, index) => {
+              const yPosition = index * 160;
+              const isLeft = index % 2 === 0;
+              const weekData = weeklyProgressArray.find(w => w.week === level.id);
+              
+              return (
+                <div
+                  key={level.id}
+                  className="absolute transition-all duration-500 hover:scale-105"
+                  style={{
+                    top: `${yPosition}px`,
+                    left: isLeft ? '20px' : 'auto',
+                    right: isLeft ? 'auto' : '20px',
+                    width: typeof window !== 'undefined' && window.innerWidth <= 768 ? 'calc(100% - 40px)' : '600px',
+                  }}
+                >
+                  <div className={`
+                    flex flex-row items-center gap-2 sm:gap-4 cursor-pointer transition-all duration-500 p-3 sm:p-4 rounded-3xl backdrop-blur-sm
+                    w-full
+                    ${level.isUnlocked
+                      ? level.isCompleted
+                        ? 'bg-cyan-500/20 border border-cyan-400/60 shadow-xl shadow-cyan-500/30'
+                        : level.isActive
+                          ? 'bg-orange-500/25 border-2 border-orange-400/80 shadow-2xl shadow-orange-500/40 ring-4 ring-orange-400/20'
+                          : 'bg-orange-500/15 border border-orange-400/40 hover:border-orange-400/70 hover:shadow-xl hover:shadow-orange-500/30'
+                      : 'bg-gray-900/60 border border-gray-600/40 opacity-70 cursor-not-allowed'
+                    }
+                  `}
+                    onClick={() => {
+                      console.log("Debug: Clicking level:", level);
+                      if (level.isUnlocked) {
+                        onLevelClick(level.id);
+                      }
+                    }}
+                  >
+                    {/* Level Node Circle */}
+                    <div className={`
+                      w-12 h-12 sm:w-16 sm:h-16 rounded-full border-4 flex items-center justify-center font-bold text-lg sm:text-xl shrink-0 transition-all duration-500 relative
+                      ${level.isUnlocked
+                        ? level.isCompleted
+                          ? 'bg-gradient-to-br from-cyan-400/30 to-cyan-600/30 border-cyan-400 text-cyan-300 shadow-2xl shadow-cyan-500/40'
+                          : level.isActive
+                            ? 'border-orange-400 text-orange-300 bg-gradient-to-br from-orange-500/20 to-yellow-500/20 shadow-2xl shadow-orange-500/50'
+                            : 'border-orange-400/70 text-orange-300 bg-gradient-to-br from-orange-500/10 to-yellow-500/10'
+                        : 'border-gray-500 text-gray-500 bg-gradient-to-br from-gray-800/30 to-gray-900/30'
+                      }
+                    `}>
+                      {level.isCompleted ? (
+                        <Check className="w-5 h-5 sm:w-6 sm:h-6" />
+                      ) : level.isActive ? (
+                        <>
+                          {level.id}
+                          <div className="absolute -inset-2 rounded-full border-2 border-orange-400/30 animate-ping" />
+                        </>
+                      ) : level.isUnlocked ? (
+                        level.id
+                      ) : (
+                        <Lock className="w-5 h-5 sm:w-6 sm:h-6" />
+                      )}
+                    </div>
+
+                    {/* Level Content */}
+                    <div className="flex-grow">
+                      <h2 className="text-lg sm:text-xl font-bold text-orange-300">{level.title}</h2>
+                      {level.isUnlocked && (
+                        <div className="flex items-center mt-1">
+                          <div className="w-full bg-gray-700 rounded-full h-2.5 mr-2">
+                            <div
+                              className="bg-orange-500 h-2.5 rounded-full"
+                              style={{ width: `${level.progress}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm text-orange-300">{Math.round(level.progress || 0)}%</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Status Badge */}
+                    <Badge className={`
+                      px-3 py-1 rounded-full text-xs sm:text-sm font-semibold
+                      ${level.isCompleted
+                        ? 'bg-cyan-500/30 text-cyan-300'
+                        : level.isActive
+                          ? 'bg-orange-500/30 text-orange-300'
+                          : 'bg-gray-700/30 text-gray-400'
+                      }
+                    `}>
+                      {level.isCompleted ? 'Completed' : level.isActive ? 'In Progress' : 'Locked'}
+                    </Badge>
+                  </div>
+                </div>
+              );
+            })
+            ) : (
+              <div className="text-center text-gray-500 text-lg mt-20">
+                No weekly progress data available yet. Start your learning journey!
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Enhanced Styles */}
+      <style>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          33% { transform: translateY(-10px) rotate(120deg); }
+          66% { transform: translateY(5px) rotate(240deg); }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default GameRoadmap;

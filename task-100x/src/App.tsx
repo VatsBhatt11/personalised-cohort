@@ -1,0 +1,51 @@
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import NotFound from "./pages/NotFound";
+import AuthPage from "./components/Auth/AuthPage";
+import useAuth from "./hooks/useAuth";
+import AdminDashboard from "./components/Dashboard/AdminDashboard";
+import Dashboard from "./components/Dashboard/Dashboard";
+
+const queryClient = new QueryClient();
+
+const App = () => {
+  const { isAuthenticated, user, isLoading, login } = useAuth();
+
+  if (isLoading) {
+    return <div>Loading...</div>; // Or a spinner
+  }
+
+  if (!isAuthenticated) {
+    return <AuthPage onAuthSuccess={login} />;
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                user?.role === 'INSTRUCTOR' ? (
+                  <AdminDashboard userEmail={user.email} />
+                ) : (
+                  <Dashboard userEmail={user.email} />
+                )
+              }
+            />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
+
+export default App;
