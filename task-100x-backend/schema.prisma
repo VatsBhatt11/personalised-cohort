@@ -1,0 +1,88 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider             = "prisma-client-py"
+  recursive_type_depth = -1
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      Role
+  plans     Plan[]
+  streak    Streak?
+  cohortId  String?
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  LEARNER
+  INSTRUCTOR
+}
+
+model Cohort {
+  id         String     @id @default(uuid())
+  name       String
+  totalWeeks Int
+  startDate  DateTime
+  endDate    DateTime
+  resources  Resource[]
+  plans      Plan[]
+  createdAt  DateTime   @default(now())
+}
+
+model Resource {
+  id         String       @id @default(uuid())
+  cohortId   String
+  title      String
+  url        String
+  type       ResourceType
+  duration   Int
+  tags       String[]
+  weekNumber Int
+  tasks      Task[]
+  cohort     Cohort       @relation(fields: [cohortId], references: [id])
+}
+
+enum ResourceType {
+  VIDEO
+  ARTICLE
+  DOCUMENT
+}
+
+model Plan {
+  id        String   @id @default(uuid())
+  userId    String
+  cohortId  String
+  createdAt DateTime @default(now())
+  tasks     Task[]
+  user      User     @relation(fields: [userId], references: [id])
+  cohort    Cohort   @relation(fields: [cohortId], references: [id])
+}
+
+model Task {
+  id         String     @id @default(uuid())
+  planId     String
+  resourceId String
+  dayIndex   Int
+  status     TaskStatus
+  timestamp  DateTime   @default(now())
+  plan       Plan       @relation(fields: [planId], references: [id])
+  resource   Resource   @relation(fields: [resourceId], references: [id])
+}
+
+enum TaskStatus {
+  PENDING
+  COMPLETED
+}
+
+model Streak {
+  userId            String   @id
+  currentStreak     Int      @default(0)
+  lastCompletedDate DateTime
+  user              User     @relation(fields: [userId], references: [id])
+}

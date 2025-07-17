@@ -1,0 +1,15 @@
+# version: '3.8'
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:QvSIBKYyXKJ6h0w6@db.obiwieaibrktirikjqoo.supabase.co:5432/postgres
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+
+    volumes:
+      - .:/app
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+    restart: always
