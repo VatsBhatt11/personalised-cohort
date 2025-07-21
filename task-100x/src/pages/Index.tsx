@@ -17,11 +17,6 @@ const Index = () => {
     return <AuthPage onAuthSuccess={handleAuthSuccess} />;
   }
 
-  // Show admin dashboard for admin email
-  if (userEmail === 'admin@gmail.com') {
-    return <AdminDashboard userEmail={userEmail} />;
-  }
-
   // Show learner dashboard for all other emails
   return <Dashboard userEmail={userEmail} />;
 };

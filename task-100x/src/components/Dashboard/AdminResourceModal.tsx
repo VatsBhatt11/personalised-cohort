@@ -25,6 +25,7 @@ interface Resource {
   url: string; // Changed to 'url'
   duration: number;
   tags: string[];
+  isOptional?: boolean;
 }
 
 const AdminResourceModal = ({
@@ -43,7 +44,8 @@ const AdminResourceModal = ({
     type: 'VIDEO' as 'VIDEO' | 'ARTICLE' | 'DOCUMENT', // Changed to 'type' and default to 'VIDEO'
     url: '', // Changed to 'url'
     duration: 0,
-    tags: [] as string[]
+    tags: [] as string[],
+    isOptional: false
   });
   // We no longer need editingResourceId as the backend doesn't uses it for updates.
   // Instead, we'll rely on the week number for resource assignment.
@@ -92,11 +94,12 @@ const AdminResourceModal = ({
       type: newResource.type, // Changed to 'type'
       url: newResource.url.trim(), // Changed to 'url'
       duration: newResource.duration || 0,
-      tags: newResource.tags || []
+      tags: newResource.tags || [],
+      isOptional: newResource.isOptional || false
     };
     const updatedResources = [...resources, resource];
     setResources(updatedResources);
-    setNewResource({ title: '', type: 'VIDEO', url: '', duration: 0, tags: [] });
+    setNewResource({ title: '', type: 'VIDEO', url: '', duration: 0, tags: [], isOptional: false });
     toast({
       title: "Resource added",
       description: "The resource has been added to the list."
@@ -137,7 +140,8 @@ const AdminResourceModal = ({
       type: resource.type,
       url: resource.url,
       duration: resource.duration || 0,
-      tags: resource.tags || []
+      tags: resource.tags || [],
+      isOptional: resource.isOptional || false
     });
   };
 
@@ -152,13 +156,14 @@ const AdminResourceModal = ({
             type: newResource.type, 
             url: newResource.url.trim(), 
             duration: newResource.duration || 0,
-            tags: newResource.tags || []
+            tags: newResource.tags || [],
+            isOptional: newResource.isOptional || false
           }
         : r
     );
     setResources(updatedResources);
     setEditingResourceIndex(null);
-    setNewResource({ title: '', type: 'VIDEO', url: '', duration: 0, tags: [] });
+    setNewResource({ title: '', type: 'VIDEO', url: '', duration: 0, tags: [], isOptional: false });
     toast({
       title: "Resource updated",
       description: "The resource has been updated successfully."
@@ -168,7 +173,7 @@ const AdminResourceModal = ({
 
   const cancelEditing = () => {
     setEditingResourceIndex(null);
-    setNewResource({ title: '', type: 'VIDEO', url: '', duration: 0, tags: [] });
+    setNewResource({ title: '', type: 'VIDEO', url: '', duration: 0, tags: [], isOptional: false });
   };
 
   const handleAssignResources = async () => {
@@ -184,7 +189,11 @@ const AdminResourceModal = ({
     
     setLoading(true);
     try {
-      const resourcesToSend = resources.map(r => ({ ...r, type: r.type.toUpperCase() as 'VIDEO' | 'ARTICLE' | 'DOCUMENT' }));
+      const resourcesToSend = resources.map(r => ({
+        ...r,
+        type: r.type.toUpperCase() as 'VIDEO' | 'ARTICLE' | 'DOCUMENT',
+        isOptional: r.isOptional || false
+      }));
 
       await onResourcesAssigned(selectedWeek, resourcesToSend);
       toast({
@@ -207,7 +216,7 @@ const AdminResourceModal = ({
     onClose();
     // Reset resources and newResource state when modal closes
     setResources([]);
-    setNewResource({ title: '', type: 'VIDEO', url: '', duration: 0, tags: [] });
+    setNewResource({ title: '', type: 'VIDEO', url: '', duration: 0, tags: [], isOptional: false });
     setEditingResourceIndex(null);
     setSelectedWeek(1); // Reset selected week to default
   };
@@ -328,6 +337,16 @@ const AdminResourceModal = ({
                 </div>
               </div>
 
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="isOptional"
+                  className="h-4 w-4 rounded border border-gray-600 bg-gray-800 text-orange-500 focus:ring-orange-500 focus:ring-offset-gray-900"
+                  checked={newResource.isOptional}
+                  onChange={(e) => setNewResource({ ...newResource, isOptional: e.target.checked })}
+                />
+                <label htmlFor="isOptional" className="text-orange-300 text-sm cursor-pointer">Optional Resource</label>
+              </div>
               
               <div className="flex gap-2">
                 {editingResourceIndex !== null ? (

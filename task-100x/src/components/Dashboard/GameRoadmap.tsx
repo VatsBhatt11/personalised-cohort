@@ -3,20 +3,25 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Check, Lock, Star } from 'lucide-react';
 
+import { WeekResource } from '@/lib/api';
+
+interface WeeklyProgressData {
+  total: number;
+  completed: number;
+}
+
+interface WeeklyProgressObject {
+  weeklyProgress: {
+    [key: string]: WeeklyProgressData;
+  };
+  completionRate: number;
+}
+
 interface GameRoadmapProps {
   onLevelClick: (weekId: number) => void;
   userName: string;
-  weeklyProgress: {
-    success: boolean;
-    data: {
-      week: number;
-      completedTasks: number;
-      totalTasks: number;
-      progress: number;
-    }[];
-    message: string;
-  };
-  allResources: { week: number; resources: { id: string; title: string; type: string; url: string; duration: number; tags: string[]; }[]; }[];
+  weeklyProgress: WeeklyProgressObject;
+  allResources: WeekResource[];
 }
 
 interface Level {
@@ -30,12 +35,11 @@ interface Level {
 
 const GameRoadmap = ({ onLevelClick, userName, weeklyProgress, allResources }: GameRoadmapProps) => {
   // Convert weeklyProgress object to an array for easier iteration
-  const weeklyProgressData = Array.isArray(weeklyProgress) ? weeklyProgress : [];
-  const weeklyProgressArray = weeklyProgressData.map((weekData) => ({
-    week: weekData.week,
-    completedTasks: weekData.completedTasks,
-    totalTasks: weekData.totalTasks,
-    progress: weekData.progress,
+  const weeklyProgressArray = Object.entries(weeklyProgress.weeklyProgress || {}).map(([week, data]: [string, WeeklyProgressData]) => ({
+    week: parseInt(week),
+    completedTasks: data.completed,
+    totalTasks: data.total,
+    progress: (data.completed / data.total) * 100,
   }));
 
   // Calculate level status based on weekly progress
@@ -59,7 +63,7 @@ const GameRoadmap = ({ onLevelClick, userName, weeklyProgress, allResources }: G
 
   const levels: Level[] = allWeeks
     .map(weekId => {
-      const weekData = weeklyProgressData.find(w => w.week === weekId);
+      const weekData = weeklyProgressArray.find(w => w.week === weekId);
       const status = calculateLevelStatus(weekId);
       return {
         id: weekId,
@@ -70,18 +74,10 @@ const GameRoadmap = ({ onLevelClick, userName, weeklyProgress, allResources }: G
     })
     .sort((a, b) => b.id - a.id); // Sort in descending order of week number
 
-  console.log("Debug: levels array before rendering:", levels);
+
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden bg-black">
-      {/* Fixed Welcome Title */}
-      <div className="fixed top-0 left-0 right-0 z-20 bg-black/95 backdrop-blur-md border-b border-orange-500/30 rounded-b-3xl">
-        <div className="text-center py-4 sm:py-6">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-orange-400 neon-glow">Welcome, {userName}!</h1>
-          <p className="text-cyan-400/70 mt-1 text-xs sm:text-sm md:text-base">Your Learning Journey</p>
-        </div>
-      </div>
-
+    <div className="relative overflow-hidden bg-black h-full w-full">
       {/* Floating particles background */}
       <div className="absolute inset-0">
         {[...Array(20)].map((_, i) => (
@@ -99,12 +95,12 @@ const GameRoadmap = ({ onLevelClick, userName, weeklyProgress, allResources }: G
       </div>
 
       {/* Scrollable Path Container */}
-      <div className="h-screen overflow-y-auto overflow-x-hidden px-2 sm:px-4 pt-16 sm:pt-20 md:pt-24 pb-8 scrollbar-hide">
+      <div className="h-full overflow-y-auto overflow-x-hidden px-2 sm:px-4 pt-16 sm:pt-20 md:pt-24 pb-8 scrollbar-hide max-w-7xl mx-auto">
         <div className="mx-auto relative">
           {/* Enhanced SVG Paths - Snake-like curves */}
           <svg
             className="absolute inset-0 w-full h-full pointer-events-none z-0"
-            style={{ height: `${levels.length * 160}px` }}
+            style={{ height: `${levels.length * 160}px`, width: '100%', maxWidth: '1200px', margin: '0 auto' }}
           >
             <defs>
               <linearGradient id="pathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -130,38 +126,23 @@ const GameRoadmap = ({ onLevelClick, userName, weeklyProgress, allResources }: G
               const isCurrentLeft = index % 2 === 0;
               const isNextLeft = (index - 1) % 2 === 0;
               
-              const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
-              const isMobile = screenWidth <= 768;
-              
-              let fromX, toX;
-              
-              if (isMobile) {
-                fromX = isCurrentLeft ? 80 : screenWidth - 80;
-                toX = isNextLeft ? 80 : screenWidth - 80;
-              } else {
-                const maxWidth = Math.min(screenWidth, 1400);
-                const sideMargin = (screenWidth - maxWidth) / 2;
-                const availableWidth = maxWidth - 40;
-                
-                fromX = isCurrentLeft ? 
-                  sideMargin + 20 + 80 : 
-                  sideMargin + availableWidth - 80;
-                
-                toX = isNextLeft ? 
-                  sideMargin + 20 + 80 : 
-                  sideMargin + availableWidth - 80;
-              }
+              const containerWidth = 1200; // Max width of max-w-7xl (80rem = 1280px, using 1200 for simplicity)
+              const horizontalPadding = 80; // Padding from the sides
+
+              // Calculate x positions relative to the container's center
+              const fromX = isCurrentLeft ? (containerWidth / 2) - horizontalPadding : (containerWidth / 2) + horizontalPadding;
+              const toX = isNextLeft ? (containerWidth / 2) - horizontalPadding : (containerWidth / 2) + horizontalPadding;
               
               const midY = (fromY + toY) / 2;
               const horizontalDistance = Math.abs(fromX - toX);
-              const controlOffset = horizontalDistance * 0.8;
+              const controlOffset = horizontalDistance * (0.6 + Math.random() * 0.4);
               
               let pathData;
               if (isCurrentLeft !== isNextLeft) {
                 const direction = fromX < toX ? 1 : -1;
                 pathData = `M ${fromX} ${fromY} 
-                           C ${fromX + (controlOffset * direction * 1.8)} ${fromY},
-                             ${toX - (controlOffset * direction * 0.0)} ${toY},
+                           C ${fromX + (controlOffset * direction * 0.5)} ${fromY},
+                             ${toX - (controlOffset * direction * 0.5)} ${toY},
                              ${toX} ${toY}`;
               } else {
                 const midX = (fromX + toX) / 2;
@@ -244,7 +225,6 @@ const GameRoadmap = ({ onLevelClick, userName, weeklyProgress, allResources }: G
                     }
                   `}
                     onClick={() => {
-                      console.log("Debug: Clicking level:", level);
                       if (level.isUnlocked) {
                         onLevelClick(level.id);
                       }

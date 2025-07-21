@@ -10,7 +10,6 @@ router = APIRouter()
 
 class TaskCreate(BaseModel):
     resourceId: str
-    dayIndex: int
 
 class PlanCreate(BaseModel):
     cohortId: str
@@ -30,8 +29,9 @@ async def create_plan(plan: PlanCreate, current_user = Depends(get_current_user)
                 "create": [
                     {
                         "resourceId": task.resourceId,
-                        "dayIndex": task.dayIndex,
-                        "status": "PENDING"
+
+                        "status": "PENDING",
+                        "assignedDate": datetime.now(timezone.utc)
                     } for task in plan.tasks
                 ]
             }
@@ -48,58 +48,129 @@ async def create_plan(plan: PlanCreate, current_user = Depends(get_current_user)
     }
 
 @router.get("/plans/{cohort_id}")
-async def get_plan(cohort_id: str, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)): 
-    print(f"Attempting to retrieve plans for user: {current_user.id}, cohort: {cohort_id}")
-    plans = await prisma.plan.find_many(
-        where={
-            "userId": current_user.id,
-            "cohortId": cohort_id
-        },
+async def get_plan(cohort_id: str, week_number: Optional[int] = None, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):  
+    print(f"Attempting to retrieve plan for user: {current_user.id}, cohort: {cohort_id}, week: {week_number}")
+    
+    # Try to find an existing plan for the current week
+    where_clause = {
+        "userId": current_user.id,
+        "cohortId": cohort_id,
+    }
+
+    if week_number is not None:
+        where_clause["tasks"] = {
+            "some": {
+                "resource": {
+                    "weekNumber": week_number
+                }
+            }
+        }
+
+    plan = await prisma.plan.find_first(
+        where=where_clause,
         include={
             "tasks": {
                 "include": {
                     "resource": True
                 }
             }
-        },
-        order={
-            "createdAt": "desc"
         }
     )
     
-    if not plans:
-        return {
-            "success": True,
-            "data": None,
-            "message": "No plans found for this cohort and user"
-        }
-    print(f"Found {len(plans)} plans for user: {current_user.id}, cohort: {cohort_id}")
+    if not plan:
+        # If no plan exists for this week, check for resources for this week
+        resources_for_week = []
+        if week_number is not None:
+            resources_for_week = await prisma.resource.find_many(
+                where={
+                    "cohortId": cohort_id,
+                    "weekNumber": week_number
+                }
+            )
+        
+        if resources_for_week:
+            # Create a new plan and tasks for these resources
+            new_plan = await prisma.plan.create(
+                data={
+                    "userId": current_user.id,
+                    "cohortId": cohort_id,
+                    "tasks": {
+                        "create": [
+                            {
+                                "resourceId": resource.id,
+                                "status": "PENDING",
+                                "assignedDate": datetime.now(timezone.utc)
+                            } for resource in resources_for_week
+                        ]
+                    }
+                },
+                include={
+                    "tasks": {
+                        "include": {
+                            "resource": True
+                        }
+                    }
+                }
+            )
+            print(f"Created new plan for user: {current_user.id}, cohort: {cohort_id}, week: {week_number}")
+            return {
+                "success": True,
+                "data": new_plan,
+                "message": "Plan created and retrieved successfully"
+            }
+        else:
+            return {
+                "success": True,
+                "data": None,
+                "message": "No plan or resources found for this cohort and week"
+            }
+    
+    print(f"Found plan for user: {current_user.id}, cohort: {cohort_id}, week: {week_number}")
     
     return {
         "success": True,
-        "data": plans,
-        "message": "Plans retrieved successfully"
+        "data": plan,
+        "message": "Plan retrieved successfully"
     }
 
 @router.patch("/tasks/{task_id}/complete")
 async def complete_task(task_id: str, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
-    # Get task and verify ownership
-    task = await prisma.task.find_unique(
-        where={"id": task_id},
-        include={"plan": True}
-    )
-    
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    
-    if task.plan.userId != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized to complete this task")
-    
-    # Update task status
     updated_task = await prisma.task.update(
-        where={"id": task_id},
-        data={"status": "COMPLETED"}
+        where={
+            "id": task_id,
+            "plan": {
+                "userId": current_user.id
+            }
+        },
+        data={
+            "status": "COMPLETED",
+            "completedAt": datetime.now(timezone.utc)
+        }
     )
+
+    if not updated_task:
+        raise HTTPException(status_code=404, detail="Task not found or not authorized")
+
+    # Fetch the task again with its relations to ensure we have the latest data
+    task = await prisma.task.find_unique(
+        where={
+            "id": task_id
+        },
+        include={
+            "resource": True,
+            "plan": {
+                "include": {
+                    "cohort": True
+                }
+            }
+        }
+    )
+
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found after update and fetch")
+    
+    if task.resource is None:
+        raise HTTPException(status_code=500, detail="Associated resource not found for the task. Data inconsistency.")
     
     # Update streak
     streak = await prisma.streak.find_unique(
@@ -136,6 +207,52 @@ async def complete_task(task_id: str, current_user = Depends(get_current_user), 
                 "lastCompletedDate": now
             }
         )
+
+    # Check for weekly streak
+    # Get all required tasks for the current week for the user's plan
+    # Assuming a user has only one active plan at a time for simplicity
+    user_plan = await prisma.plan.find_first(
+        where={
+            "userId": current_user.id,
+            "cohortId": task.plan.cohortId # Assuming task.plan.cohortId is available
+        },
+        include={
+            "tasks": {
+                "include": {
+                    "resource": True
+                }
+            }
+        }
+    )
+
+    if user_plan:
+        # Filter tasks for the current week and required resources
+        current_week_tasks = [t for t in user_plan.tasks if t.resource and t.resource.weekNumber == task.resource.weekNumber and not t.resource.isOptional]
+        
+        # Check if all required tasks for the week are completed within 8 days of assignment
+        all_required_completed_on_time = True
+        for t in current_week_tasks:
+            if t.status != "COMPLETED" or not t.completedAt or not t.assignedDate or (t.completedAt - t.assignedDate).days > 7:
+                all_required_completed_on_time = False
+                break
+        
+        if all_required_completed_on_time and (streak.lastWeeklyStreakAwardedWeek is None or streak.lastWeeklyStreakAwardedWeek < task.resource.weekNumber):
+            # Increment weekly streak and update lastWeeklyStreakAwardedWeek
+            await prisma.streak.update(
+                where={"userId": current_user.id},
+                data={
+                    "weeklyStreak": {"increment": 1},
+                    "lastWeeklyStreakAwardedWeek": task.resource.weekNumber
+                }
+            )
+        elif not all_required_completed_on_time and streak.weeklyStreak > 0:
+            # Reset weekly streak if not all required tasks are completed on time and streak is not 0
+            await prisma.streak.update(
+                where={"userId": current_user.id},
+                data={
+                    "weeklyStreak": 0
+                }
+            )
     
     return {
         "success": True,
@@ -184,17 +301,37 @@ async def get_weekly_progress(current_user = Depends(get_current_user), prisma: 
     
     # Calculate weekly progress
     weekly_progress = {}
+    total_required_resources = 0
+    completed_required_resources = 0
+
     for plan in plans:
         for task in plan.tasks:
-            week = task.resource.weekNumber
-            if week not in weekly_progress:
-                weekly_progress[week] = {
-                    "total": 0,
-                    "completed": 0
-                }
-            weekly_progress[week]["total"] += 1
-            if task.status == "COMPLETED":
-                weekly_progress[week]["completed"] += 1
+            # Only consider required resources for completion rate
+            if not task.resource.isOptional:
+                total_required_resources += 1
+                if task.status == "COMPLETED":
+                    completed_required_resources += 1
+
+                week = task.resource.weekNumber
+                if week not in weekly_progress:
+                    weekly_progress[week] = {
+                        "total": 0,
+                        "completed": 0
+                    }
+                weekly_progress[week]["total"] += 1
+                if task.status == "COMPLETED":
+                    weekly_progress[week]["completed"] += 1
+
+    completion_rate = (completed_required_resources / total_required_resources) * 100 if total_required_resources > 0 else 0
+
+    return {
+        "success": True,
+        "data": {
+            "weeklyProgress": weekly_progress,
+            "completionRate": completion_rate
+        },
+        "message": "Weekly progress retrieved successfully"
+    }
     
     # Calculate completion percentages
     for week in weekly_progress:
@@ -213,10 +350,71 @@ async def get_weekly_progress(current_user = Depends(get_current_user), prisma: 
         for week in sorted(weekly_progress.keys())
     ]
 
+    
+
+@router.get("/leaderboard")
+async def get_leaderboard(current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+    if current_user.role not in ["INSTRUCTOR", "LEARNER"]:
+        raise HTTPException(status_code=403, detail="Only instructors and learners can view the leaderboard")
+
+    users = await prisma.user.find_many(
+        where={
+            "role": "LEARNER"
+        },
+        include={
+            "plans": {
+                "include": {
+                    "tasks": {
+                        "include": {
+                            "resource": True
+                        }
+                    }
+                }
+            },
+            "streak": True
+        }
+    )
+
+    leaderboard_data = []
+    for user in users:
+        total_required_resources = 0
+        completed_required_resources = 0
+        completion_times = []
+
+        for plan in user.plans:
+            for task in plan.tasks:
+                if not task.resource.isOptional:
+                    total_required_resources += 1
+                    if task.status == "COMPLETED":
+                        completed_required_resources += 1
+                        if task.completedAt and task.assignedDate:
+                            completion_times.append((task.completedAt - task.assignedDate).total_seconds())
+
+        completion_rate = (completed_required_resources / total_required_resources) * 100 if total_required_resources > 0 else 0
+        daily_streak = user.streak.currentStreak if user.streak else 0
+        weekly_streak = user.streak.weeklyStreak if user.streak else 0
+        shortest_completion_time = min(completion_times) if completion_times else None
+
+        leaderboard_data.append({
+            "email": user.email,
+            "completionRate": completion_rate,
+            "dailyStreak": daily_streak,
+            "weeklyStreak": weekly_streak,
+            "shortestCompletionTime": shortest_completion_time
+        })
+
+    # Sort leaderboard data
+    leaderboard_data.sort(key=lambda x: (
+        -x["completionRate"],  # Descending
+        -x["dailyStreak"],     # Descending
+        -x["weeklyStreak"],    # Descending
+        x["shortestCompletionTime"] # Ascending
+    ))
+
     return {
         "success": True,
-        "data": weekly_progress_list,
-        "message": "Weekly progress retrieved successfully"
+        "data": leaderboard_data,
+        "message": "Leaderboard data retrieved successfully"
     }
 
 @router.get("/cohorts/current")

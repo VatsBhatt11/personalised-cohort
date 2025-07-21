@@ -1,5 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
+import { Plan } from '@/lib/api';
+import { Sidebar, SidebarProvider, SidebarMenu, SidebarMenuButton } from '@/components/ui/sidebar';
+import { Home, Trophy } from 'lucide-react';
+import Leaderboard from "@/components/Dashboard/Leaderboard";
 import { Badge } from '@/components/ui/badge';
 import { Flame } from 'lucide-react';
 import GoalSettingModal from './GoalSettingModal';
@@ -12,6 +16,12 @@ interface DashboardProps {
   userEmail: string;
 }
 
+interface StreakData {
+  currentStreak: number;
+  weeklyStreak?: number;
+  lastCompletedDate?: string | null;
+}
+
 interface ApiError {
   detail: string;
 }
@@ -19,8 +29,9 @@ interface ApiError {
 const Dashboard = ({ userEmail }: DashboardProps) => {
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
-  const [hasGoals, setHasGoals] = useState(false);
-  const [streak, setStreak] = useState(0);
+  const [weeklyPlan, setWeeklyPlan] = useState<Plan | null>(null);
+  const [streakData, setStreakData] = useState<StreakData | null>(null);
+  const [activeTab, setActiveTab] = useState<'challenges' | 'leaderboard'>('challenges');
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress[]>([]);
   const [allResources, setAllResources] = useState<WeekResource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,7 +70,7 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
       try {
         // Fetch streak data
         const streakResponse = await learner.getStreak();
-        setStreak(streakResponse.currentStreak);
+        setStreakData(streakResponse);
 
         // Fetch weekly progress
         const progressResponse = await learner.getWeeklyProgress();
@@ -69,11 +80,7 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
         const allResourcesResponse = await learner.getAllResources(cohortId);
         setAllResources(allResourcesResponse);
 
-        // Check if user has any goals set
-        const planResponse = await learner.getPlan(cohortId);
-        const hasAnyGoals = planResponse.some(plan => plan.tasks && plan.tasks.length > 0);
-        setHasGoals(hasAnyGoals);
-        console.log("fetchDashboardData: cohortId=", cohortId, "planResponse=", planResponse, "hasAnyGoals=", hasAnyGoals); // Added console log
+
       } catch (error) {
         console.error(error);
         const axiosError = error as AxiosError<ApiError>;
@@ -97,62 +104,26 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
 
   const handleLevelClick = async (weekId: number) => {
     setSelectedWeek(weekId);
+    setIsGoalModalOpen(true);
     if (cohortId) {
       try {
-        const planResponse = await learner.getPlan(cohortId);
-        const hasTasksForSelectedWeek = planResponse.some(plan => 
-          plan.tasks && plan.tasks.some(task => task.resource.weekNumber === weekId)
-        );
-        console.log(`hasTasks: ${hasTasksForSelectedWeek}`);
-        setHasGoals(hasTasksForSelectedWeek || false);
+        const plan = await learner.getPlan(cohortId, weekId);
+        setWeeklyPlan(plan);
       } catch (error) {
         console.error("Error fetching plan for selected week:", error);
-        setHasGoals(false);
+        toast({
+          variant: "destructive",
+          title: "Error fetching plan",
+          description: "Please try again later."
+        });
+        setWeeklyPlan(null);
       }
-    } else {
-      setHasGoals(false); // If no cohortId, assume no goals
-    }
-    setIsGoalModalOpen(true);
-  };
-
-console.log(hasGoals)
-
-  const handleGoalsSet = async () => {
-    if (!cohortId) {
-      toast({
-        title: 'Error',
-        description: 'No active cohort found',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setHasGoals(true);
-      setIsGoalModalOpen(false);
-      console.log("After setting goals: hasGoals=", true, "isGoalModalOpen=", false); // Added console log
-      
-      toast({
-        title: 'Success',
-        description: 'Learning goals have been set!',
-      });
-
-      // Refresh weekly progress
-      const progressResponse = await learner.getWeeklyProgress();
-      setWeeklyProgress(progressResponse);
-    } catch (error) {
-      const axiosError = error as AxiosError<ApiError>;
-      toast({
-        title: 'Error',
-        description: axiosError.response?.data?.detail || 'Failed to set goals',
-        variant: 'destructive',
-      });
-      setHasGoals(false);
-    } finally {
-      setIsLoading(false);
     }
   };
+
+
+
+
 
   if (isLoading) {
     return <div className="min-h-screen bg-black flex items-center justify-center">
@@ -167,41 +138,69 @@ console.log(hasGoals)
   }
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
-      {/* Streak Counter - Top Right */}
-      <div className="absolute top-6 right-6 z-10">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 text-orange-500 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-500/30">
-            <Flame className="w-5 h-5" />
-            <span className="font-semibold">{streak} day streak</span>
+    <SidebarProvider>
+      <div className="h-screen w-full bg-black relative overflow-hidden flex">
+        <Sidebar>
+          <SidebarMenu>
+            <SidebarMenuButton onClick={() => setActiveTab('challenges')} isActive={activeTab === 'challenges'}>
+              <Home />
+              Challenges
+            </SidebarMenuButton>
+            <SidebarMenuButton onClick={() => setActiveTab('leaderboard')} isActive={activeTab === 'leaderboard'}>
+              <Trophy />
+              Leaderboard
+            </SidebarMenuButton>
+          </SidebarMenu>
+        </Sidebar>
+        <div className="flex-1 flex flex-col">
+        {/* Top Bar for User Info and Streak */}
+        <div className="flex justify-between items-center p-4 bg-black/50 backdrop-blur-md border-b border-orange-500/30">
+          <div className="text-lg font-semibold text-orange-400">Welcome, {userName}!</div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 text-orange-500 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-500/30">
+              <Flame className="w-5 h-5" />
+              <span className="font-semibold">{streakData?.currentStreak || 0} day streak</span>
+            </div>
+            {streakData?.weeklyStreak !== undefined && (
+              <Badge 
+                variant="outline" 
+                className="text-md border-cyan-500/50 text-cyan-400 bg-black/50 backdrop-blur-sm rounded-full px-4 py-2"
+              >
+                {`Weekly Streak: ${streakData.weeklyStreak}`}
+              </Badge>
+            )}
           </div>
-          <Badge 
-            variant="outline" 
-            className="border-cyan-500/50 text-cyan-400 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1"
-          >
-            {`Level ${Math.floor(streak / 7) + 1} Learner`}
-          </Badge>
         </div>
-      </div>
+        <div className="flex-1 overflow-auto flex justify-center items-center">
+          {activeTab === 'challenges' && (
+            <>
+              <GameRoadmap
+                onLevelClick={handleLevelClick}
+                userName={userName}
+                weeklyProgress={weeklyProgress}
+                allResources={allResources}
+              />
+              <GoalSettingModal
+                isOpen={isGoalModalOpen}
+                onClose={() => setIsGoalModalOpen(false)}
+                selectedWeek={selectedWeek}
+                cohortId={cohortId}
+                weeklyPlan={weeklyPlan}
+                setWeeklyPlan={setWeeklyPlan}
+              />
+            </>
+          )}
 
-      {/* Game Roadmap - Full Screen */}
-      <GameRoadmap 
-        onLevelClick={handleLevelClick} 
-        userName={userName} 
-        weeklyProgress={weeklyProgress}
-        allResources={allResources}
-      />
 
-      {/* Goal Setting Modal */}
-      <GoalSettingModal 
-        isOpen={isGoalModalOpen} 
-        onClose={() => setIsGoalModalOpen(false)}
-        showGoalForm={!hasGoals}
-        selectedWeek={selectedWeek}
-        onGoalsSet={handleGoalsSet}
-      />
+
+      {activeTab === 'leaderboard' && (
+        <Leaderboard />
+      )}
     </div>
-  );
+    </div>
+    </div>
+    </SidebarProvider>
+  )
 };
 
 export default Dashboard;

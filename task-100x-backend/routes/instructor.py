@@ -24,6 +24,7 @@ class ResourceCreate(BaseModel):
     duration: int
     tags: List[str]
     weekNumber: int
+    isOptional: Optional[bool] = False
 
 class WeeklyResourcePayload(BaseModel):
     id: Optional[str] = None
@@ -32,6 +33,7 @@ class WeeklyResourcePayload(BaseModel):
     type: str
     duration: int
     tags: List[str]
+    isOptional: Optional[bool] = False
 
 @router.post("/resources")
 async def create_resource(resource: ResourceCreate, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)): 
@@ -46,7 +48,9 @@ async def create_resource(resource: ResourceCreate, current_user = Depends(get_c
             "type": resource.type,
             "duration": resource.duration,
             "tags": resource.tags,
-            "weekNumber": resource.weekNumber
+            "isOptional": resource.isOptional,
+            "weekNumber": resource.weekNumber,
+            "isOptional": resource.isOptional
         }
     )
     
@@ -156,7 +160,32 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
     if not cohort:
         raise HTTPException(status_code=404, detail="Cohort not found")
     
+    # Get all plans for this cohort that have tasks for this week
+    # We need to fetch plans first, because deleting resources will cascade delete tasks
+    plans_to_update = await prisma.plan.find_many(
+        where={
+            "cohortId": cohort_id,
+            "tasks": {
+                "some": {
+                    "resource": {
+                        "weekNumber": week_number
+                    }
+                }
+            }
+        },
+        include={
+            "tasks": {
+                "where": {
+                    "resource": {
+                        "weekNumber": week_number
+                    }
+                }
+            }
+        }
+    )
+
     # Delete existing resources for this week and cohort
+    # This will cascade delete associated tasks due to onDelete: Cascade
     await prisma.resource.delete_many(
         where={
             "cohortId": cohort_id,
@@ -175,15 +204,40 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
                 "type": resource.type,
                 "duration": resource.duration,
                 "tags": resource.tags,
-                "weekNumber": week_number
+                "weekNumber": week_number,
+                "isOptional": resource.isOptional
             }
         )
         created_resources.append(new_resource)
     
+    # Re-create tasks for existing plans based on the new resources
+    for plan in plans_to_update:
+        tasks_to_create = []
+        for idx, new_resource in enumerate(created_resources):
+            # Check if a task for this resource already existed in the plan and was completed
+            # This part is tricky because the old tasks are deleted.
+            # For simplicity, we will re-create all tasks as PENDING.
+            # If preserving completion status is critical, a more complex mapping is needed.
+            tasks_to_create.append({
+                "resourceId": new_resource.id,
+                "status": "PENDING",
+                "assignedDate": datetime.now(timezone.utc)
+            })
+        
+        if tasks_to_create:
+            await prisma.task.create_many(
+                data=[
+                    {
+                        "planId": plan.id,
+                        **task_data
+                    } for task_data in tasks_to_create
+                ]
+            )
+
     return {
         "success": True,
         "data": created_resources,
-        "message": f"Successfully created {len(created_resources)} resources for week {week_number}"
+        "message": f"Successfully created {len(created_resources)} resources and updated tasks for week {week_number}"
     }
 
 

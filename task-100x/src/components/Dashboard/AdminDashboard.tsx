@@ -16,6 +16,7 @@ interface Resource {
   url: string;
   duration: number;
   tags: string[];
+  isOptional?: boolean;
 }
 
  interface AdminDashboardProps {

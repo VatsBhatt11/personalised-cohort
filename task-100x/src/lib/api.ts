@@ -42,6 +42,8 @@ interface Streak {
   currentStreak: number;
   bestStreak: number;
   lastUpdated: string;
+  weeklyStreak: number;
+  lastWeeklyStreakAwardedWeek: number;
 }
 
 export interface WeeklyProgress {
@@ -49,6 +51,14 @@ export interface WeeklyProgress {
   completedTasks: number;
   totalTasks: number;
   progress: number;
+}
+
+export interface LeaderboardEntry {
+  email: string;
+  completionRate: number;
+  dailyStreak: number;
+  weeklyStreak: number;
+  shortestCompletionTime: number;
 }
 
 export interface Resource {
@@ -59,6 +69,7 @@ export interface Resource {
   duration: number;
   tags: string[];
   weekNumber?: number;
+  isOptional?: boolean;
 }
 
 export interface WeekResource {
@@ -107,6 +118,20 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (
+      error.response &&
+      (error.response.status === 401 || error.response.status === 403)
+    ) {
+      localStorage.clear();
+      window.location.href = "/";
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Auth APIs
 export const auth = {
   login: async (email: string, password: string): Promise<AuthResponse> => {
@@ -141,12 +166,19 @@ export const learner = {
     const response = await api.post<Plan>("/api/plans", { cohortId, tasks });
     return response.data;
   },
-  getPlan: async (cohortId: string): Promise<Plan[]> => {
+  getPlan: async (
+    cohortId: string,
+    weekNumber?: number
+  ): Promise<Plan | null> => {
+    const url =
+      weekNumber !== undefined
+        ? `/api/plans/${cohortId}?week_number=${weekNumber}`
+        : `/api/plans/${cohortId}`;
     const response = await api.get<{
       success: boolean;
-      data: Plan[];
+      data: Plan | null;
       message: string;
-    }>(`/api/plans/${cohortId}`);
+    }>(url);
     return response.data.data;
   },
   completeTask: async (taskId: string): Promise<GenericTask> => {
@@ -158,8 +190,12 @@ export const learner = {
     return response.data.data.task;
   },
   getStreak: async (): Promise<Streak> => {
-    const response = await api.get<Streak>("/api/streaks/me");
-    return response.data;
+    const response = await api.get<{
+      success: boolean;
+      data: Streak;
+      message: string;
+    }>("/api/streaks/me");
+    return response.data.data;
   },
   getWeeklyProgress: async (): Promise<WeeklyProgress[]> => {
     const response = await api.get<{
@@ -185,6 +221,14 @@ export const learner = {
     }>(`/api/resources/all_by_cohort/${cohortId}`);
     return response.data.data;
   },
+  getLeaderboard: async (): Promise<LeaderboardEntry[]> => {
+    const response = await api.get<{
+      success: boolean;
+      data: LeaderboardEntry[];
+      message: string;
+    }>("/api/leaderboard");
+    return response.data.data;
+  },
 };
 
 // Instructor APIs
@@ -192,12 +236,13 @@ export const instructor = {
   assignResourcesToWeek: async (
     cohortId: string,
     weekNumber: number,
-    resources: Omit<Resource, "id">[]
+    resources: Omit<Resource, "id" | "isOptional">[]
   ): Promise<Resource[]> => {
-    const response = await api.post<Resource[]>(
-      `/api/resources/${cohortId}/${weekNumber}`,
-      resources
-    );
+    const response = await api.post<{
+      success: boolean;
+      data: Resource[];
+      message: string;
+    }>(`/api/resources/${cohortId}/${weekNumber}`, resources);
     return response.data.data;
   },
   deleteWeekResources: async (
