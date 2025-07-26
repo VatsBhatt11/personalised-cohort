@@ -270,7 +270,9 @@ export const learner = {
     }>("/api/leaderboard");
     return response.data.data;
   },
-  getQuiz: async (quizId: string): Promise<{
+  getQuiz: async (
+    quizId: string
+  ): Promise<{
     success: boolean;
     data: Quiz;
     message: string;
@@ -286,12 +288,12 @@ export const learner = {
     quizId: string,
     answers: { questionId: string; selectedOptionId: string }[]
   ): Promise<{ attempt_id: string }> => {
-    const response = await api.post<{ 
-      success: boolean; 
-      data: { attempt_id: string }; 
-      message: string; 
-    }>(`/api/quiz-attempts`, { quizId, answers }); 
-    return response.data.data;
+    const response = await api.post<{
+      success: boolean;
+      data: { attempt_id: string };
+      message: string;
+    }>(`/api/quiz-attempts`, { quizId, answers });
+    return response.data;
   },
   getQuizFeedback: async (attemptId: string): Promise<QuizFeedbackData> => {
     const response = await api.get<{

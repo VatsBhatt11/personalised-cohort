@@ -17,7 +17,7 @@ class PlanCreate(BaseModel):
 
 class QuizAnswerCreate(BaseModel):
     questionId: str
-    optionId: Optional[str] = None
+    selectedOptionId: Optional[str] = None
     answerText: Optional[str] = None
 
 class QuizAttemptCreate(BaseModel):
@@ -27,7 +27,7 @@ class QuizAttemptCreate(BaseModel):
 class FeedbackReportResponse(BaseModel):
     id: str
     quizAttemptId: str
-    feedbackText: str
+    reportContent: str
     createdAt: datetime
 
 class QuizAttemptResponse(BaseModel):
@@ -286,7 +286,7 @@ async def submit_quiz_attempt(attempt_data: QuizAttemptCreate, current_user = De
     feedback_report = await prisma.feedbackreport.create(
         data={
             "quizAttemptId": quiz_attempt.id,
-            "feedbackText": feedback_text,
+            "reportContent": feedback_text,
             "createdAt": datetime.now(timezone.utc)
         }
     )
@@ -313,11 +313,11 @@ async def submit_quiz_attempt(attempt_data: QuizAttemptCreate, current_user = De
         score=updated_quiz_attempt.score,
         submittedAt=updated_quiz_attempt.submittedAt,
         feedbackReport=FeedbackReportResponse(
-            id=feedback_report.id,
-            quizAttemptId=feedback_report.quizAttemptId,
-            feedbackText=feedback_report.feedbackText,
-            createdAt=feedback_report.createdAt
-        ) if feedback_report else None
+                id=feedback_report.id,
+                quizAttemptId=feedback_report.quizAttemptId,
+                reportContent=feedback_report.reportContent,
+                createdAt=feedback_report.createdAt
+            ) if feedback_report else None
     )
 
 @router.patch("/tasks/{task_id}/complete")

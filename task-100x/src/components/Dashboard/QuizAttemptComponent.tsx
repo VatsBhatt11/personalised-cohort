@@ -83,8 +83,9 @@ export const QuizAttemptComponent = ({ quizId, onAttemptComplete }: QuizAttemptP
         title: "Quiz Submitted",
         description: "Your quiz attempt has been submitted successfully.",
       });
-      onAttemptComplete(response.id);
+      onAttemptComplete(response?.feedbackReport?.quizAttemptId);
     } catch (error) {
+      console.error(error)
       if (isAxiosError(error)) {
         toast({
           variant: "destructive",
