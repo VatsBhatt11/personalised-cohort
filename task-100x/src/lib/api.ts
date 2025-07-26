@@ -1,5 +1,10 @@
 import axios, { AxiosResponse } from "axios";
-
+export interface Quiz {
+  id?: string;
+  cohortId: string;
+  weekNumber: number;
+  questions: Question[];
+}
 interface AuthResponse {
   token: string;
   user: {
@@ -9,41 +14,62 @@ interface AuthResponse {
   };
 }
 
-export interface TaskInPlan {
-  id: string;
-  resourceId: string;
-  dayIndex: number;
-  status: "PENDING" | "COMPLETED";
-  resource: Resource;
-  day?: string; // Add optional day property for display
+export interface Option {
+  id?: string;
+  optionText: string;
+  isCorrect?: boolean;
 }
 
-interface PlanTaskCreate {
-  resourceId: string;
-  dayIndex: number;
+export interface Question {
+  id?: string;
+  questionText: string;
+  questionType: "MULTIPLE_CHOICE" | "TRUE_FALSE" | "SHORT_ANSWER";
+  options: Option[];
+}
+
+export interface QuizAttemptData {
+  quizId: string;
+  answers: Array<{
+    questionId: string;
+    selectedOptionId?: string;
+    shortAnswerText?: string;
+  }>;
+}
+
+export interface PlanTaskCreate {
+  resource_id: string;
+  is_completed: boolean;
+}
+
+export interface TaskInPlan {
+  id: string;
+  resource_id: string;
+  is_completed: boolean;
+  resource: Resource;
+}
+
+export interface QuizAttemptStatus {
+  hasAttempted: boolean;
+  lastAttemptId?: string;
 }
 
 export interface Plan {
   id: string;
-  cohortId: string;
+  cohort_id: string;
+  week_number: number;
   tasks: TaskInPlan[];
 }
 
-// Keeping the original Task interface for other uses if any, renaming it to GenericTask
-interface GenericTask {
+export interface GenericTask {
   id: string;
-  title: string;
-  description: string;
-  dueDate: string;
-  status: "PENDING" | "COMPLETED";
+  resource_id: string;
+  is_completed: boolean;
 }
 
-interface Streak {
+export interface Streak {
   currentStreak: number;
-  bestStreak: number;
-  lastUpdated: string;
-  weeklyStreak: number;
-  lastWeeklyStreakAwardedWeek: number;
+  weeklyStreak?: number;
+  lastCompletedDate?: string | null;
 }
 
 export interface WeeklyProgress {
@@ -53,28 +79,43 @@ export interface WeeklyProgress {
   progress: number;
 }
 
-export interface LeaderboardEntry {
-  email: string;
-  completionRate: number;
-  dailyStreak: number;
-  weeklyStreak: number;
-  shortestCompletionTime: number;
+export interface QuizFeedbackData {
+  quiz_id: string;
+  quiz_title: string;
+  score: number;
+  total_questions: number;
+  feedback_questions: Array<{
+    question_id: string;
+    question_text: string;
+    user_answer_id: string;
+    correct_answer_id: string;
+    correct_answer_text: string;
+    is_correct: boolean;
+    explanation: string;
+  }>;
 }
 
 export interface Resource {
   id: string;
   title: string;
-  type: "VIDEO" | "ARTICLE" | "DOCUMENT";
+  type: "VIDEO" | "ARTICLE" | "DOCUMENT" | "QUIZ";
   url: string;
   duration: number;
   tags: string[];
-  weekNumber?: number;
   isOptional?: boolean;
 }
 
 export interface WeekResource {
   week: number;
   resources: Resource[];
+}
+
+export interface LeaderboardEntry {
+  email: string;
+  completionRate: number;
+  dailyStreak: number;
+  weeklyStreak: number;
+  shortestCompletionTime: number;
 }
 
 interface Cohort {
@@ -229,6 +270,45 @@ export const learner = {
     }>("/api/leaderboard");
     return response.data.data;
   },
+  getQuiz: async (quizId: string): Promise<{
+    success: boolean;
+    data: Quiz;
+    message: string;
+  }> => {
+    const response = await api.get<{
+      success: boolean;
+      data: Quiz;
+      message: string;
+    }>(`/api/quizzes/${quizId}`);
+    return response.data;
+  },
+  submitQuizAttempt: async (
+    quizId: string,
+    answers: { questionId: string; selectedOptionId: string }[]
+  ): Promise<{ attempt_id: string }> => {
+    const response = await api.post<{ 
+      success: boolean; 
+      data: { attempt_id: string }; 
+      message: string; 
+    }>(`/api/quiz-attempts`, { quizId, answers }); 
+    return response.data.data;
+  },
+  getQuizFeedback: async (attemptId: string): Promise<QuizFeedbackData> => {
+    const response = await api.get<{
+      success: boolean;
+      data: QuizFeedbackData;
+      message: string;
+    }>(`/api/quiz_attempts/${attemptId}/feedback`);
+    return response.data.data;
+  },
+  getQuizAttemptStatus: async (quizId: string): Promise<QuizAttemptStatus> => {
+    const response = await api.get<{
+      success: boolean;
+      data: QuizAttemptStatus;
+      message: string;
+    }>(`/api/quiz-attempts/${quizId}/status`);
+    return response.data.data;
+  },
 };
 
 // Instructor APIs
@@ -304,5 +384,30 @@ export const instructor = {
       message: string;
     }>("/api/cohorts", cohortData);
     return response;
+  },
+  getQuizzes: async (cohortId?: string): Promise<Quiz[]> => {
+    const response = await api.get<{
+      success: boolean;
+      data: Quiz[];
+      message: string;
+    }>("/api/quizzes", {
+      params: { cohortId },
+    });
+    return response.data.data;
+  },
+  createQuiz: async (quizData: Omit<Quiz, "id">): Promise<Quiz> => {
+    const response = await api.post<{
+      success: boolean;
+      data: Quiz;
+      message: string;
+    }>("/api/quizzes", quizData);
+    return response.data.data;
+  },
+  updateQuiz: async (id: string, quizData: Partial<Quiz>): Promise<Quiz> => {
+    const response = await api.put<Quiz>(`/api/quizzes/${id}`, quizData);
+    return response.data;
+  },
+  deleteQuiz: async (id: string): Promise<void> => {
+    await api.delete(`/api/quizzes/${id}`);
   },
 };

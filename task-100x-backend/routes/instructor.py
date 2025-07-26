@@ -11,6 +11,7 @@ class CohortCreate(BaseModel):
     startDate: Optional[datetime] = None
     endDate: Optional[datetime] = None
 
+from fastapi import APIRouter, Depends, HTTPException
 from .auth import get_current_user
 
 router = APIRouter()
@@ -25,6 +26,81 @@ class ResourceCreate(BaseModel):
     tags: List[str]
     weekNumber: int
     isOptional: Optional[bool] = False
+    sessionTitle: Optional[str] = None
+    sessionDescription: Optional[str] = None
+
+
+    sessionTitle: Optional[str] = None
+    sessionDescription: Optional[str] = None
+
+class OptionCreate(BaseModel):
+    optionText: str
+    isCorrect: bool
+
+class QuestionCreate(BaseModel):
+    questionText: str
+    questionType: str
+    options: List[OptionCreate]
+
+class QuizCreate(BaseModel):
+    cohortId: str
+    weekNumber: int
+    questions: List[QuestionCreate]
+
+@router.post("/quizzes")
+async def create_quiz(quiz_data: QuizCreate, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+    if current_user.role != "INSTRUCTOR":
+        raise HTTPException(status_code=403, detail="Only instructors can create quizzes")
+
+    new_quiz = await prisma.quiz.create(
+        data={
+            "cohortId": quiz_data.cohortId,
+            "weekNumber": quiz_data.weekNumber,
+            "questions": {
+                "create": [
+                    {
+                        "questionText": q.questionText,
+                        "questionType": q.questionType,
+                        "options": {
+                            "create": [
+                                {
+                                    "optionText": opt.optionText,
+                                    "isCorrect": opt.isCorrect
+                                } for opt in q.options
+                            ]
+                        }
+                    } for q in quiz_data.questions
+                ]
+            }
+        },
+        include={
+            "questions": {
+                "include": {
+                    "options": True
+                }
+            }
+        }
+    )
+
+    return {
+        "success": True,
+        "data": new_quiz,
+        "message": "Quiz created successfully"
+    }
+
+class OptionUpdate(BaseModel):
+    id: Optional[str] = None
+    optionText: str
+    isCorrect: bool
+
+class QuestionUpdate(BaseModel):
+    id: Optional[str] = None
+    questionText: str
+    questionType: str
+    options: List[OptionUpdate]
+
+class QuizUpdate(BaseModel):
+    questions: List[QuestionUpdate]
 
 class WeeklyResourcePayload(BaseModel):
     id: Optional[str] = None
@@ -34,6 +110,8 @@ class WeeklyResourcePayload(BaseModel):
     duration: int
     tags: List[str]
     isOptional: Optional[bool] = False
+    sessionTitle: Optional[str] = None
+    sessionDescription: Optional[str] = None
 
 @router.post("/resources")
 async def create_resource(resource: ResourceCreate, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)): 
@@ -50,7 +128,9 @@ async def create_resource(resource: ResourceCreate, current_user = Depends(get_c
             "tags": resource.tags,
             "isOptional": resource.isOptional,
             "weekNumber": resource.weekNumber,
-            "isOptional": resource.isOptional
+            "isOptional": resource.isOptional,
+            "sessionTitle": resource.sessionTitle,
+            "sessionDescription": resource.sessionDescription
         }
     )
     
@@ -59,6 +139,102 @@ async def create_resource(resource: ResourceCreate, current_user = Depends(get_c
         "data": new_resource,
         "message": "Resource created successfully"
     }
+
+@router.get("/quizzes/{quiz_id}")
+async def get_quiz(quiz_id: str, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+    if current_user.role != "INSTRUCTOR":
+        raise HTTPException(status_code=403, detail="Only instructors can view quizzes")
+
+    quiz = await prisma.quiz.find_unique(
+        where={
+            "id": quiz_id
+        },
+        include={
+            "questions": {
+                "include": {
+                    "options": True
+                }
+            }
+        }
+    )
+
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+
+    return {
+        "success": True,
+        "data": quiz,
+        "message": "Quiz retrieved successfully"
+    }
+
+@router.get("/quizzes")
+async def get_all_quizzes(cohortId: Optional[str] = None, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+    if current_user.role != "INSTRUCTOR":
+        raise HTTPException(status_code=403, detail="Only instructors can view quizzes")
+
+    where_clause = {}
+    if cohortId:
+        where_clause["cohortId"] = cohortId
+
+    quizzes = await prisma.quiz.find_many(
+        where=where_clause,
+        include={
+            "questions": {
+                "include": {
+                    "options": True
+                }
+            }
+        }
+    )
+
+    return {
+        "success": True,
+        "data": quizzes,
+        "message": "Quizzes retrieved successfully"
+    }
+
+@router.get("/cohorts/{cohort_id}/weeks/{week_number}/resources")
+async def get_resources_by_week(
+    cohort_id: str,
+    week_number: int,
+    current_user = Depends(get_current_user),
+    prisma: Prisma = Depends(get_prisma_client)
+):
+    try:
+        if current_user.role not in ["INSTRUCTOR", "LEARNER"]:
+            raise HTTPException(status_code=403, detail="Not authorized to view resources")
+
+        resources = await prisma.resource.find_many(
+            where={
+                "cohortId": cohort_id,
+                "weekNumber": week_number
+            }
+        )
+
+        # Convert Prisma resources to WeeklyResourcePayload format
+        formatted_resources = [
+            WeeklyResourcePayload(
+                id=str(res.id),
+                title=res.title,
+                url=res.url,
+                type=res.type,
+                duration=res.duration,
+                tags=res.tags,
+                isOptional=res.isOptional,
+                sessionTitle=res.sessionTitle,
+                sessionDescription=res.sessionDescription
+            ) for res in resources
+        ]
+
+        return {
+            "success": True,
+            "data": formatted_resources,
+            "message": f"Resources for cohort {cohort_id}, week {week_number} retrieved successfully"
+        }
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
 
 @router.get("/cohorts")
 async def get_cohorts(prisma: Prisma = Depends(get_prisma_client)):
@@ -70,6 +246,80 @@ async def get_cohorts(prisma: Prisma = Depends(get_prisma_client)):
         "success": True,
         "data": cohorts,
         "message": "Cohorts retrieved successfully"
+    }
+
+@router.put("/quizzes/{quiz_id}")
+async def update_quiz(quiz_id: str, quiz_data: QuizUpdate, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+    if current_user.role != "INSTRUCTOR":
+        raise HTTPException(status_code=403, detail="Only instructors can update quizzes")
+
+    existing_quiz = await prisma.quiz.find_unique(where={"id": quiz_id})
+    if not existing_quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+
+    # Update questions and options
+    for q_data in quiz_data.questions:
+        if q_data.id:
+            # Update existing question
+            await prisma.question.update(
+                where={"id": q_data.id},
+                data={
+                    "questionText": q_data.questionText,
+                    "questionType": q_data.questionType,
+                }
+            )
+            for opt_data in q_data.options:
+                if opt_data.id:
+                    # Update existing option
+                    await prisma.option.update(
+                        where={"id": opt_data.id},
+                        data={
+                            "optionText": opt_data.optionText,
+                            "isCorrect": opt_data.isCorrect
+                        }
+                    )
+                else:
+                    # Create new option for existing question
+                    await prisma.option.create(
+                        data={
+                            "questionId": q_data.id,
+                            "text": opt_data.optionText,
+                            "isCorrect": opt_data.isCorrect
+                        }
+                    )
+        else:
+            # Create new question for the quiz
+            new_question = await prisma.question.create(
+                data={
+                    "quizId": quiz_id,
+                    "questionText": q_data.questionText,
+                    "questionType": q_data.questionType,
+                    "options": {
+                        "create": [
+                            {
+                                "optionText": opt.optionText,
+                                "isCorrect": opt.isCorrect
+                            } for opt in q_data.options
+                        ]
+                    }
+                }
+            )
+
+    updated_quiz = await prisma.quiz.find_unique(
+        where={"id": quiz_id},
+        include={
+            "questions": {
+                "include": {
+                    "options": True
+                }
+            }
+        }
+    )
+
+    return {
+        "success": True,
+        "data": updated_quiz,
+        "message": "Quiz updated successfully"
     }
 
 @router.post("/cohorts")
@@ -96,6 +346,22 @@ async def create_cohort(cohort: CohortCreate, current_user = Depends(get_current
         "message": "Cohort created successfully"
     }
 
+@router.delete("/quizzes/{quiz_id}")
+async def delete_quiz(quiz_id: str, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+    if current_user.role != "INSTRUCTOR":
+        raise HTTPException(status_code=403, detail="Only instructors can delete quizzes")
+
+    existing_quiz = await prisma.quiz.find_unique(where={"id": quiz_id})
+    if not existing_quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+
+    await prisma.quiz.delete(where={"id": quiz_id})
+
+    return {
+        "success": True,
+        "message": "Quiz deleted successfully"
+    }
+
 @router.get("/resources/all_by_cohort/{cohort_id}")
 async def get_all_resources_for_cohort(cohort_id: str, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
     if current_user.role not in ["INSTRUCTOR", "LEARNER"]:
@@ -106,25 +372,50 @@ async def get_all_resources_for_cohort(cohort_id: str, current_user = Depends(ge
             "cohortId": cohort_id
         }
     )
+
+    quizzes = await prisma.quiz.find_many(
+        where={
+            "cohortId": cohort_id
+        }
+    )
     
-    # Group resources by week number
-    weekly_resources = {}
+    # Group resources and quizzes by week number
+    weekly_items = {}
+
     for resource in resources:
-        if resource.weekNumber not in weekly_resources:
-            weekly_resources[resource.weekNumber] = []
-        weekly_resources[resource.weekNumber].append({
+        if resource.weekNumber not in weekly_items:
+            weekly_items[resource.weekNumber] = []
+        weekly_items[resource.weekNumber].append({
             "id": resource.id,
             "title": resource.title,
             "type": resource.type,
             "url": resource.url,
             "duration": resource.duration,
-            "tags": resource.tags
+            "tags": resource.tags,
+            "isOptional": resource.isOptional,
+            "sessionTitle": resource.sessionTitle,
+            "sessionDescription": resource.sessionDescription
+        })
+
+    for quiz in quizzes:
+        if quiz.weekNumber not in weekly_items:
+            weekly_items[quiz.weekNumber] = []
+        weekly_items[quiz.weekNumber].append({
+            "id": quiz.id,
+            "title": f"Quiz for Week {quiz.weekNumber}", # Placeholder title
+            "type": "QUIZ",
+            "url": f"/quizzes/{quiz.id}", # Placeholder URL
+            "duration": 0, # Quizzes don't have a duration
+            "tags": [],
+            "isOptional": False, # Quizzes are generally not optional
+            "sessionTitle": None,
+            "sessionDescription": None
         })
     
     # Convert to list of WeekResource objects, sorted by week number
     result = [
-        {"week": week, "resources": weekly_resources[week]}
-        for week in sorted(weekly_resources.keys())
+        {"week": week, "resources": weekly_items[week]}
+        for week in sorted(weekly_items.keys())
     ]
     
     return {
@@ -205,7 +496,9 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
                 "duration": resource.duration,
                 "tags": resource.tags,
                 "weekNumber": week_number,
-                "isOptional": resource.isOptional
+                "isOptional": resource.isOptional,
+                "sessionTitle": resource.sessionTitle,
+                "sessionDescription": resource.sessionDescription
             }
         )
         created_resources.append(new_resource)

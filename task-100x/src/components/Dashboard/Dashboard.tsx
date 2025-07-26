@@ -1,14 +1,20 @@
 
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Plan } from '@/lib/api';
 import { Sidebar, SidebarProvider, SidebarMenu, SidebarMenuButton } from '@/components/ui/sidebar';
-import { Home, Trophy } from 'lucide-react';
+import { Home, Trophy, HelpCircle, BookOpen } from 'lucide-react';
+import { Resource } from '@/lib/api';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import axios from 'axios';
+import { QuizAttemptComponent } from './QuizAttemptComponent';
+import { QuizFeedbackComponent } from './QuizFeedbackComponent';
 import Leaderboard from "@/components/Dashboard/Leaderboard";
 import { Badge } from '@/components/ui/badge';
 import { Flame } from 'lucide-react';
 import GoalSettingModal from './GoalSettingModal';
 import GameRoadmap from './GameRoadmap';
-import { learner, WeeklyProgress, WeekResource } from '@/lib/api';
+import { learner, WeeklyProgress, WeekResource, QuizAttemptStatus } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
 import { AxiosError } from 'axios';
 
@@ -28,6 +34,11 @@ interface ApiError {
 
 const Dashboard = ({ userEmail }: DashboardProps) => {
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+  const [isQuizAttemptOpen, setIsQuizAttemptOpen] = useState(false);
+  const [isQuizFeedbackOpen, setIsQuizFeedbackOpen] = useState(false);
+  const [quizResource, setQuizResource] = useState<Resource | null>(null);
+    const [quizAttemptStatus, setQuizAttemptStatus] = useState<QuizAttemptStatus | null>(null);
+  const [lastAttemptId, setLastAttemptId] = useState<string | null>(null);
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
   const [weeklyPlan, setWeeklyPlan] = useState<Plan | null>(null);
   const [streakData, setStreakData] = useState<StreakData | null>(null);
@@ -80,6 +91,18 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
         const allResourcesResponse = await learner.getAllResources(cohortId);
         setAllResources(allResourcesResponse);
 
+        // Find the quiz resource for the current week if a week is selected
+        if (selectedWeek !== null) {
+          const weekResources = allResourcesResponse.find(wr => wr.week === selectedWeek);
+          if (weekResources) {
+            const quiz = weekResources.resources.find(r => r.type === 'QUIZ');
+            setQuizResource(quiz || null);
+            if (quiz) {
+              const response = await learner.getQuizAttemptStatus(quiz.id);
+              setQuizAttemptStatus(response);
+            }
+          }
+        }
 
       } catch (error) {
         console.error(error);
@@ -100,7 +123,13 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
     };
 
     initializeDashboard();
-  }, []);
+  }, [selectedWeek]); // Add selectedWeek to dependency array
+
+  const handleAttemptComplete = (attemptId: string) => {
+    setLastAttemptId(attemptId);
+    setIsQuizAttemptOpen(false);
+    setIsQuizFeedbackOpen(true);
+  };
 
   const handleLevelClick = async (weekId: number) => {
     setSelectedWeek(weekId);
@@ -109,6 +138,18 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
       try {
         const plan = await learner.getPlan(cohortId, weekId);
         setWeeklyPlan(plan);
+
+        // Update quiz resource and status when a new week is selected
+        const weekResources = allResources.find(wr => wr.week === weekId);
+        if (weekResources) {
+          const quiz = weekResources.resources.find(r => r.type === 'QUIZ');
+          setQuizResource(quiz || null);
+          if (quiz) {
+            const response = await learner.getQuizAttemptStatus(quiz.id);
+            setQuizAttemptStatus(response);
+          }
+        }
+
       } catch (error) {
         console.error("Error fetching plan for selected week:", error);
         toast({
@@ -150,6 +191,35 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
               <Trophy />
               Leaderboard
             </SidebarMenuButton>
+
+            <Dialog open={isQuizAttemptOpen} onOpenChange={setIsQuizAttemptOpen}>
+              <DialogContent className="sm:max-w-[800px]">
+                <DialogHeader>
+                  <DialogTitle>Quiz Attempt</DialogTitle>
+                </DialogHeader>
+                {quizResource && (
+                  <QuizAttemptComponent
+                    quizId={quizResource.id}
+                    onAttemptComplete={(attemptId) => {
+                      setQuizAttemptStatus({ hasAttempted: true, lastAttemptId: attemptId });
+                      setIsQuizAttemptOpen(false);
+                      setIsQuizFeedbackOpen(true);
+                    }}
+                  />
+                )}
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={isQuizFeedbackOpen} onOpenChange={setIsQuizFeedbackOpen}>
+              <DialogContent className="sm:max-w-[800px]">
+                <DialogHeader>
+                  <DialogTitle>Quiz Feedback</DialogTitle>
+                </DialogHeader>
+                {quizAttemptStatus?.lastAttemptId && (
+                  <QuizFeedbackComponent attemptId={quizAttemptStatus.lastAttemptId} />
+                )}
+              </DialogContent>
+            </Dialog>
           </SidebarMenu>
         </Sidebar>
         <div className="flex-1 flex flex-col">
@@ -187,6 +257,7 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
                 cohortId={cohortId}
                 weeklyPlan={weeklyPlan}
                 setWeeklyPlan={setWeeklyPlan}
+                allResources={allResources}
               />
             </>
           )}
@@ -196,6 +267,9 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
       {activeTab === 'leaderboard' && (
         <Leaderboard />
       )}
+
+
+
     </div>
     </div>
     </div>

@@ -1,13 +1,15 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { learner, TaskInPlan, Plan } from '@/lib/api';
+import { learner, TaskInPlan, Plan, WeekResource, Resource } from '@/lib/api';
 import { Modal } from '@/components/ui/modal';
+import { QuizAttemptComponent } from './QuizAttemptComponent';
+import { QuizFeedbackComponent } from './QuizFeedbackComponent';
 
 type WeeklyPlanData = Plan;
 
@@ -18,6 +20,12 @@ interface GoalSettingModalProps {
   cohortId: string | null;
   weeklyPlan: WeeklyPlanData | null;
   setWeeklyPlan: React.Dispatch<React.SetStateAction<WeeklyPlanData | null>>;
+  allResources: WeekResource[];
+}
+
+interface QuizAttemptStatus {
+  hasAttempted: boolean;
+  lastAttemptId?: string;
 }
 
 const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
@@ -27,17 +35,48 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
   cohortId,
   weeklyPlan,
   setWeeklyPlan,
+  allResources,
 }) => {
   const { toast } = useToast();
   const [resourceModalOpen, setResourceModalOpen] = useState(false);
   const [resourceStartTime, setResourceStartTime] = useState<number | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskInPlan | null>(null);
+  const [quizResource, setQuizResource] = useState<Resource | null>(null);
+  const [quizAttemptStatus, setQuizAttemptStatus] = useState<QuizAttemptStatus | null>(null);
+  const [isQuizAttemptOpen, setIsQuizAttemptOpen] = useState(false);
+  const [isQuizFeedbackOpen, setIsQuizFeedbackOpen] = useState(false);
+  const [lastAttemptId, setLastAttemptId] = useState<string | null>(null);
 
-  const handleResourceModalClose = async () => {
+  useEffect(() => {
+    if (selectedWeek !== null && allResources.length > 0) {
+      const weekResources = allResources.find(wr => wr.week === selectedWeek);
+      if (weekResources) {
+        const quiz = weekResources.resources.find(r => r.type === 'QUIZ');
+        setQuizResource(quiz || null);
+        if (quiz) {
+          const checkQuizAttemptStatus = async () => {
+            try {
+              const response = await learner.getQuizAttemptStatus(quiz.id);
+              setQuizAttemptStatus(response);
+              if (response.lastAttemptId) {
+                setLastAttemptId(response.lastAttemptId);
+              }
+            } catch (error) {
+              console.error("Error fetching quiz attempt status:", error);
+              setQuizAttemptStatus({ hasAttempted: false });
+            }
+          };
+          checkQuizAttemptStatus();
+        }
+      }
+    }
+  }, [selectedWeek, allResources]);
+
+  const handleResourceModalClose = useCallback(async () => {
     setResourceModalOpen(false);
     if (resourceStartTime && selectedTask) {
       const duration = Date.now() - resourceStartTime;
-      const timeToAccess = ((selectedTask.resource?.duration)*60) || 0; // Assuming timeToAccess is in seconds
+      const timeToAccess = ((selectedTask.resource?.duration) * 60) || 0;
 
       if (duration / 1000 >= timeToAccess) {
         try {
@@ -63,18 +102,38 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
       } else {
         toast({
           title: 'Resource Access',
-          description: `You need to spend at least ${timeToAccess} seconds on this resource to mark it as complete. You spent ${(duration / 1000).toFixed(2)} seconds.`, 
+          description: `You need to spend at least ${timeToAccess} seconds on this resource to mark it as complete. You spent ${(duration / 1000).toFixed(2)} seconds.`,
           variant: 'destructive',
         });
       }
     }
     setResourceStartTime(null);
-  };
+  }, [resourceStartTime, selectedTask, cohortId, selectedWeek, setWeeklyPlan, toast]);
 
+  const handleAttemptComplete = useCallback((attemptId: string) => {
+    setLastAttemptId(attemptId);
+    setIsQuizAttemptOpen(false);
+    setIsQuizFeedbackOpen(true);
+  }, []);
 
+  const handleQuizButtonClick = useCallback(() => {
+    if (quizAttemptStatus?.lastAttemptId) {
+      setLastAttemptId(quizAttemptStatus.lastAttemptId);
+      setIsQuizFeedbackOpen(true);
+    } else {
+      setIsQuizAttemptOpen(true);
+    }
+  }, [quizAttemptStatus]);
+
+  const handleClose = useCallback(() => {
+    setIsQuizAttemptOpen(false);
+    setIsQuizFeedbackOpen(false);
+    setLastAttemptId(null);
+    onClose();
+  }, [onClose]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="glass border-orange-500/20 max-w-3xl w-[95%] sm:max-w-3xl rounded-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl text-orange-500">
@@ -97,7 +156,9 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-
+                          {task.is_completed && (
+                            <Check className="w-5 h-5 text-green-500" />
+                          )}
                           <Button
                             className="w-full"
                             onClick={() => {
@@ -114,6 +175,25 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
                     </CardContent>
                   </Card>
                 ))}
+
+                {quizResource && (
+                  <Card className="bg-gray-900/50 border-orange-500/10 rounded-xl">
+                    <CardHeader>
+                      <CardTitle className="text-orange-300">Weekly Quiz</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-orange-300 font-medium">{quizResource.title}</p>
+                          <p className="text-sm text-gray-400">Test your knowledge for this week.</p>
+                        </div>
+                        <Button onClick={handleQuizButtonClick}>
+                          {quizAttemptStatus?.hasAttempted ? 'View Results' : 'Take Quiz'}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {resourceModalOpen && selectedTask && (
                   <Modal
@@ -134,6 +214,39 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
                       <Button onClick={handleResourceModalClose}>Close</Button>
                     </DialogFooter>
                   </Modal>
+                )}
+
+                {quizResource && isQuizAttemptOpen && (
+                  <Dialog open={isQuizAttemptOpen} onOpenChange={setIsQuizAttemptOpen}>
+                    <DialogContent className="glass border-orange-500/20 max-w-3xl w-[95%] sm:max-w-3xl rounded-2xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle className="text-2xl text-orange-500">
+                          Weekly Quiz Attempt
+                        </DialogTitle>
+                      </DialogHeader>
+                      <QuizAttemptComponent
+                        quizId={quizResource.id}
+                        onAttemptComplete={handleAttemptComplete}
+                        onClose={() => setIsQuizAttemptOpen(false)}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                )}
+
+                {quizResource && isQuizFeedbackOpen && lastAttemptId && (
+                  <Dialog open={isQuizFeedbackOpen} onOpenChange={setIsQuizFeedbackOpen}>
+                    <DialogContent className="glass border-orange-500/20 max-w-3xl w-[95%] sm:max-w-3xl rounded-2xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle className="text-2xl text-orange-500">
+                          Weekly Quiz Feedback
+                        </DialogTitle>
+                      </DialogHeader>
+                      <QuizFeedbackComponent
+                        attemptId={lastAttemptId}
+                        onClose={() => setIsQuizFeedbackOpen(false)}
+                      />
+                    </DialogContent>
+                  </Dialog>
                 )}
               </div>
             ) : (

@@ -2,9 +2,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BookOpen, Award, TrendingUp, Edit, Trash2, Loader2 } from 'lucide-react';
+import { Users, BookOpen, Award, TrendingUp, Edit, Trash2, Loader2, HelpCircle } from 'lucide-react';
+import QuizForm from './QuizForm';
+import QuizCard from './QuizCard';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+
 import AdminResourceModal from './AdminResourceModal';
 import CreateCohortModal from './CreateCohortModal';
+import QuizManagementComponent, { Quiz } from './QuizManagementComponent';
+import { CohortSelection } from './CohortSelection';
 import { useToast } from '@/components/ui/use-toast';
 import { instructor, learner, WeekResource } from '@/lib/api';
 import axios, { isAxiosError, type AxiosError } from 'axios';
@@ -42,6 +49,7 @@ interface Cohort {
 
 const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
   const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
+  const [isQuizManagementOpen, setIsQuizManagementOpen] = useState(false);
   const [selectedWeekForEdit, setSelectedWeekForEdit] = useState<number | null>(null);
   const [assignedWeeks, setAssignedWeeks] = useState<WeekResource[]>([]);
   const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
@@ -55,7 +63,38 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [hasSelectedCohort, setHasSelectedCohort] = useState<boolean>(false);
   const [isCreateCohortModalOpen, setIsCreateCohortModalOpen] = useState(false);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentQuiz, setCurrentQuiz] = useState<Quiz | null>(null);
   const { toast } = useToast();
+
+  const fetchQuizzes = useCallback(async (selectedCohortId: string | null) => {
+    if (!selectedCohortId) return; // Don't fetch if no cohort is selected
+    try {
+      const response = await instructor.getQuizzes(selectedCohortId);
+      setQuizzes(response);
+    } catch (error) {
+      if (isAxiosError(error)) {
+        toast({
+          variant: "destructive",
+          title: "Error fetching quizzes",
+          description: error.response?.data?.detail || "Please try again later.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error fetching quizzes",
+          description: "An unexpected error occurred. Please try again later.",
+        });
+      }
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    if (cohortId) {
+      fetchQuizzes(cohortId);
+    }
+  }, [fetchQuizzes, cohortId]);
 
   const fetchCohorts = useCallback(async () => {
     setLoading(true);
@@ -99,6 +138,97 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
       setHasSelectedCohort(false);
     }
   }, [cohortId]);
+
+  const handleCreateQuiz = () => {
+    if (!cohortId) {
+      toast({
+        variant: "destructive",
+        title: "No Cohort Selected",
+        description: "Please select a cohort before creating a quiz.",
+      });
+      return;
+    }
+    setCurrentQuiz({
+        questions: [
+          {
+            questionText: '',
+            questionType: 'MULTIPLE_CHOICE',
+            options: [],
+          },
+        ],
+        cohortId: cohortId,
+        weekNumber: 1,
+      });
+    setIsModalOpen(true);
+  };
+
+  const handleEditQuiz = (quiz: Quiz) => {
+    setCurrentQuiz(quiz);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteQuiz = async (quizId: string) => {
+    if (!window.confirm("Are you sure you want to delete this quiz?")) {
+      return;
+    }
+    try {
+      await instructor.deleteQuiz(quizId);
+      toast({
+        title: "Quiz deleted",
+        description: "The quiz has been successfully deleted.",
+      });
+      fetchQuizzes(cohortId);
+    } catch (error) {
+      if (isAxiosError(error)) {
+        toast({
+          variant: "destructive",
+          title: "Error deleting quiz",
+          description: error.response?.data?.detail || "Please try again later.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error deleting quiz",
+          description: "An unexpected error occurred. Please try again later.",
+        });
+      }
+    }
+  };
+
+  const handleSaveQuiz = async (quizData: Quiz) => {
+    try {
+      console.log("Payload sent to backend:", quizData);
+      if (quizData.id) {
+        await instructor.updateQuiz(quizData.id, quizData);
+        toast({
+          title: "Quiz updated",
+          description: "The quiz has been successfully updated.",
+        });
+      } else {
+        await instructor.createQuiz(quizData);
+        toast({
+          title: "Quiz created",
+          description: "The quiz has been successfully created.",
+        });
+      }
+      fetchQuizzes(cohortId);
+      setIsModalOpen(false);
+    } catch (error) {
+      if (isAxiosError(error)) {
+        toast({
+          variant: "destructive",
+          title: `Error ${quizData.id ? 'updating' : 'creating'} quiz`,
+          description: error.response?.data?.detail || "Please try again later.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: `Error ${quizData.id ? 'updating' : 'creating'} quiz`,
+          description: "An unexpected error occurred. Please try again later.",
+        });
+      }
+    }
+  };
 
 const fetchResources = async () => {
       try {
@@ -275,48 +405,35 @@ const fetchResources = async () => {
         onCohortCreated={handleCohortCreated}
       />
 
-      {!hasSelectedCohort ? (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4">
-          <Card className="w-full max-w-md">
-            <CardHeader>
-              <CardTitle>Select or Create Cohort</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {loading ? (
-                <div className="flex justify-center items-center">
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                  <span className="ml-2">Loading cohorts...</span>
-                </div>
-              ) : cohorts.length > 0 ? (
-                <div className="space-y-2">
-                  <label htmlFor="cohort-select" className="block text-sm font-medium text-gray-700">Select an existing cohort:</label>
-                  <select
-                    id="cohort-select"
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                    onChange={(e) => setCohortId(e.target.value)}
-                    defaultValue=""
-                  >
-                    <option value="" disabled>-- Select Cohort --</option>
-                    {cohorts.map((cohort) => (
-                      <option key={cohort.id} value={cohort.id}>
-                        {cohort.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ) : (
-                <p className="text-center text-gray-500">No cohorts found. Please create a new one.</p>
-              )}
-              <button
-                className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                onClick={() => setIsCreateCohortModalOpen(true)}
-              >
-                Create New Cohort
-              </button>
-            </CardContent>
-          </Card>
-        </div>
-      ) : (
+      <Dialog open={isQuizManagementOpen} onOpenChange={setIsQuizManagementOpen}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle>Quiz Management</DialogTitle>
+          </DialogHeader>
+          <QuizManagementComponent
+            quizzes={quizzes}
+            currentQuiz={currentQuiz}
+            isModalOpen={isModalOpen}
+            setIsModalOpen={setIsModalOpen}
+            handleCreateQuiz={handleCreateQuiz}
+            handleEditQuiz={handleEditQuiz}
+            handleDeleteQuiz={handleDeleteQuiz}
+            handleSaveQuiz={handleSaveQuiz}
+            cohortId={cohortId || ''}
+            totalWeeks={cohorts.find(c => c.id === cohortId)?.totalWeeks || 12}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <CohortSelection
+        cohorts={cohorts}
+        loading={loading}
+        setCohortId={setCohortId}
+        setIsCreateCohortModalOpen={setIsCreateCohortModalOpen}
+        hasSelectedCohort={hasSelectedCohort}
+      />
+
+      {hasSelectedCohort && (
         <div className="min-h-screen bg-black p-6">
       {/* Header */}
       <div className="mb-8">
@@ -364,6 +481,25 @@ const fetchResources = async () => {
             >
               {loading ? 'Assigning...' : 'Assign Resources'}
             </button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Quiz Management Section */}
+      <Card className="bg-gray-900/50 border-orange-500/20 mb-8 rounded-2xl">
+        <CardHeader>
+          <CardTitle className="text-orange-400">Quiz Management</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p className="text-gray-400">Create, edit, and manage quizzes for your learners.</p>
+            <Button
+              onClick={() => setIsQuizManagementOpen(true)}
+              className="px-6 py-3 bg-orange-500/20 text-orange-400 border border-orange-400/30 rounded-xl hover:bg-orange-500/30 transition-colors font-medium"
+            >
+              <HelpCircle className="mr-2 h-4 w-4" />
+              Manage Quizzes
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -436,8 +572,19 @@ const fetchResources = async () => {
         totalWeeks={cohorts.find(c => c.id === cohortId)?.totalWeeks || 12} // Pass totalWeeks of selected cohort
       />
     </div>
-  )
+  )}
+  </>)
 };
-</>)};
+
+
+
+
+
+
+
+
+
+
+
 
 export default AdminDashboard;

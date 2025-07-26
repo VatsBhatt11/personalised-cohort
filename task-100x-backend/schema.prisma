@@ -15,8 +15,9 @@ model User {
   role      Role
   plans     Plan[]
   streak    Streak?
-  cohortId  String?
-  createdAt DateTime @default(now())
+  cohortId    String?
+  createdAt   DateTime @default(now())
+  quizAttempts QuizAttempt[]
 }
 
 enum Role {
@@ -32,6 +33,7 @@ model Cohort {
   endDate    DateTime
   resources  Resource[]
   plans      Plan[]
+  quizzes    Quiz[]
   createdAt  DateTime   @default(now())
 }
 
@@ -43,10 +45,12 @@ model Resource {
   type       ResourceType
   duration   Int
   tags       String[]
-  weekNumber Int
-  isOptional Boolean      @default(false)
-  tasks      Task[]
-  cohort     Cohort       @relation(fields: [cohortId], references: [id])
+  weekNumber      Int
+  isOptional      Boolean      @default(false)
+  sessionTitle    String?
+  sessionDescription String?
+  tasks           Task[]
+  cohort          Cohort       @relation(fields: [cohortId], references: [id])
 }
 
 enum ResourceType {
@@ -90,4 +94,74 @@ model Streak {
   lastWeeklyStreakAwardedWeek Int?
   lastCompletedDate           DateTime
   user                        User     @relation(fields: [userId], references: [id])
+}
+
+model Quiz {
+  id          String   @id @default(uuid())
+  cohortId    String
+  weekNumber  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  questions   Question[]
+  cohort      Cohort   @relation(fields: [cohortId], references: [id])
+  quizAttempts QuizAttempt[]
+}
+
+model Question {
+  id          String   @id @default(uuid())
+  quizId      String
+  questionText String
+  questionType String // e.g., 'MCQ'
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options     Option[]
+  quizAnswers QuizAnswer[]
+}
+
+model Option {
+  id          String   @id @default(uuid())
+  questionId  String
+  optionText  String
+  isCorrect   Boolean
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  quizAnswers QuizAnswer[]
+}
+
+model QuizAttempt {
+  id            String   @id @default(uuid())
+  quizId        String
+  learnerId     String
+  submittedAt   DateTime @default(now())
+  score         Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  quiz          Quiz     @relation(fields: [quizId], references: [id])
+  learner       User     @relation(fields: [learnerId], references: [id])
+  quizAnswers   QuizAnswer[]
+  feedbackReport FeedbackReport?
+}
+
+model QuizAnswer {
+  id            String   @id @default(uuid())
+  quizAttemptId String
+  questionId    String
+  selectedOptionId String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  quizAttempt   QuizAttempt @relation(fields: [quizAttemptId], references: [id])
+  question      Question @relation(fields: [questionId], references: [id])
+  selectedOption Option @relation(fields: [selectedOptionId], references: [id])
+}
+
+model FeedbackReport {
+  id            String   @id @default(uuid())
+  quizAttemptId String   @unique
+  reportContent String
+  generatedAt   DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  quizAttempt   QuizAttempt @relation(fields: [quizAttemptId], references: [id])
 }

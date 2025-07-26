@@ -15,6 +15,41 @@ class PlanCreate(BaseModel):
     cohortId: str
     tasks: List[TaskCreate]
 
+class QuizAnswerCreate(BaseModel):
+    questionId: str
+    optionId: Optional[str] = None
+    answerText: Optional[str] = None
+
+class QuizAttemptCreate(BaseModel):
+    quizId: str
+    answers: List[QuizAnswerCreate]
+
+class FeedbackReportResponse(BaseModel):
+    id: str
+    quizAttemptId: str
+    feedbackText: str
+    createdAt: datetime
+
+class QuizAttemptResponse(BaseModel):
+    id: str
+    quizId: str
+    learnerId: str
+    score: Optional[float] = None
+    submittedAt: datetime
+    feedbackReport: Optional[FeedbackReportResponse] = None
+
+class QuestionResponse(BaseModel):
+    id: str
+    text: str
+    options: List[dict]
+    type: str
+
+class QuizResponse(BaseModel):
+    id: str
+    cohortId: str
+    weekNumber: int
+    questions: List[QuestionResponse]
+
 @router.post("/plans")
 async def create_plan(plan: PlanCreate, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)): 
     if current_user.role != "LEARNER":
@@ -40,12 +75,83 @@ async def create_plan(plan: PlanCreate, current_user = Depends(get_current_user)
             "tasks": True
         }
     )
+
+@router.get("/quiz-attempts/{quiz_id}/status")
+async def get_quiz_attempt_status(quiz_id: str, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+    quiz_attempt = await prisma.quizattempt.find_first(
+        where={
+            "quizId": quiz_id,
+            "learnerId": current_user.id
+        },
+        order={
+            "submittedAt": "desc"
+        }
+    )
+
+    if not quiz_attempt:
+        return {
+            "success": True,
+            "data": {
+                "status": "NOT_ATTEMPTED"
+            },
+            "message": "Quiz not yet attempted"
+        }
+
+    if quiz_attempt.score is not None:
+        return {
+            "success": True,
+            "data": {
+                "status": "COMPLETED",
+                "score": quiz_attempt.score
+            },
+            "message": "Quiz completed with score"
+        }
+    else:
+        return {
+            "success": True,
+            "data": {
+                "status": "IN_PROGRESS"
+            },
+            "message": "Quiz in progress"
+        }
     
     return {
         "success": True,
         "data": new_plan,
         "message": "Plan created successfully"
     }
+
+@router.get("/quizzes/{quiz_id}", response_model=QuizResponse)
+async def get_quiz_for_resource(quiz_id: str, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+    quiz = await prisma.quiz.find_unique(
+        where={
+            "id": quiz_id
+        },
+        include={
+            "questions": {
+                "include": {
+                    "options": True
+                }
+            }
+        }
+    )
+
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found for this resource")
+
+    return QuizResponse(
+        id=quiz.id,
+        cohortId=quiz.cohortId,
+        weekNumber=quiz.weekNumber,
+        questions=[
+            QuestionResponse(
+                id=q.id,
+                text=q.questionText,
+                options=[{"id": opt.id, "text": opt.optionText} for opt in q.options],
+                type=q.questionType
+            ) for q in quiz.questions
+        ]
+    )
 
 @router.get("/plans/{cohort_id}")
 async def get_plan(cohort_id: str, week_number: Optional[int] = None, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):  
@@ -132,6 +238,88 @@ async def get_plan(cohort_id: str, week_number: Optional[int] = None, current_us
         "data": plan,
         "message": "Plan retrieved successfully"
     }
+
+@router.post("/quiz-attempts", response_model=QuizAttemptResponse)
+async def submit_quiz_attempt(attempt_data: QuizAttemptCreate, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+    # 1. Validate Quiz and Questions
+    quiz = await prisma.quiz.find_unique(
+        where={
+            "id": attempt_data.quizId
+        },
+        include={
+            "questions": {
+                "include": {
+                    "options": True
+                }
+            }
+        }
+    )
+
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+
+    # 2. Create QuizAttempt
+    quiz_attempt = await prisma.quizattempt.create(
+        data={
+            "quizId": attempt_data.quizId,
+            "learnerId": current_user.id,
+            "submittedAt": datetime.now(timezone.utc),
+            "quizAnswers": {
+                "create": [
+                    {
+                        "questionId": ans.questionId,
+                        "selectedOptionId": ans.optionId if ans.optionId else None,
+                        "answerText": ans.answerText
+                    } for ans in attempt_data.answers
+                ]
+            }
+        },
+        include={
+            "quizAnswers": True
+        }
+    )
+
+    # 3. Generate Feedback (using Groq API)
+    # This is a placeholder. You'll need to integrate with Groq API here.
+    # For now, let's create a dummy feedback report.
+    feedback_text = "This is a dummy feedback report. Integrate with Groq API for real feedback."
+
+    feedback_report = await prisma.feedbackreport.create(
+        data={
+            "quizAttemptId": quiz_attempt.id,
+            "feedbackText": feedback_text,
+            "createdAt": datetime.now(timezone.utc)
+        }
+    )
+
+    # 4. Calculate Score (dummy for now, implement actual scoring logic)
+    score = 0.0 # Placeholder for actual scoring logic
+
+    updated_quiz_attempt = await prisma.quizattempt.update(
+        where={
+            "id": quiz_attempt.id
+        },
+        data={
+            "score": score
+        },
+        include={
+            "feedbackReport": True
+        }
+    )
+
+    return QuizAttemptResponse(
+        id=updated_quiz_attempt.id,
+        quizId=updated_quiz_attempt.quizId,
+        learnerId=updated_quiz_attempt.learnerId,
+        score=updated_quiz_attempt.score,
+        submittedAt=updated_quiz_attempt.submittedAt,
+        feedbackReport=FeedbackReportResponse(
+            id=feedback_report.id,
+            quizAttemptId=feedback_report.quizAttemptId,
+            feedbackText=feedback_report.feedbackText,
+            createdAt=feedback_report.createdAt
+        ) if feedback_report else None
+    )
 
 @router.patch("/tasks/{task_id}/complete")
 async def complete_task(task_id: str, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):

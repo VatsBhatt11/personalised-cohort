@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,6 +27,8 @@ interface Resource {
   duration: number;
   tags: string[];
   isOptional?: boolean;
+  sessionTitle?: string;
+  sessionDescription?: string;
 }
 
 const AdminResourceModal = ({
@@ -39,6 +42,10 @@ const AdminResourceModal = ({
 }: AdminResourceModalProps) => {
   const [selectedWeek, setSelectedWeek] = useState<number>(editingWeek || 1);
   const [resources, setResources] = useState<Resource[]>([]);
+  const [sessionDetails, setSessionDetails] = useState({
+    sessionTitle: '',
+    sessionDescription: ''
+  });
   const [newResource, setNewResource] = useState({
     title: '',
     type: 'VIDEO' as 'VIDEO' | 'ARTICLE' | 'DOCUMENT', // Changed to 'type' and default to 'VIDEO'
@@ -82,6 +89,15 @@ const AdminResourceModal = ({
       });
       return false;
     }
+    // Check session details from sessionDetails state
+    if (sessionDetails.sessionTitle && !sessionDetails.sessionTitle.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Session Title",
+        description: "Session title cannot be empty if provided."
+      });
+      return false;
+    }
     return true;
   };
 
@@ -95,11 +111,20 @@ const AdminResourceModal = ({
       url: newResource.url.trim(), // Changed to 'url'
       duration: newResource.duration || 0,
       tags: newResource.tags || [],
-      isOptional: newResource.isOptional || false
+      isOptional: newResource.isOptional || false,
+      sessionTitle: sessionDetails.sessionTitle.trim(),
+      sessionDescription: sessionDetails.sessionDescription.trim()
     };
     const updatedResources = [...resources, resource];
     setResources(updatedResources);
-    setNewResource({ title: '', type: 'VIDEO', url: '', duration: 0, tags: [], isOptional: false });
+    setNewResource({ 
+      title: '', 
+      type: 'VIDEO', 
+      url: '', 
+      duration: 0, 
+      tags: [], 
+      isOptional: false
+    });
     toast({
       title: "Resource added",
       description: "The resource has been added to the list."
@@ -143,6 +168,10 @@ const AdminResourceModal = ({
       tags: resource.tags || [],
       isOptional: resource.isOptional || false
     });
+    setSessionDetails({
+      sessionTitle: resource.sessionTitle || '',
+      sessionDescription: resource.sessionDescription || ''
+    });
   };
 
   const updateResource = async () => {
@@ -157,13 +186,26 @@ const AdminResourceModal = ({
             url: newResource.url.trim(), 
             duration: newResource.duration || 0,
             tags: newResource.tags || [],
-            isOptional: newResource.isOptional || false
+            isOptional: newResource.isOptional || false,
+            sessionTitle: sessionDetails.sessionTitle.trim(),
+            sessionDescription: sessionDetails.sessionDescription.trim()
           }
         : r
     );
     setResources(updatedResources);
     setEditingResourceIndex(null);
-    setNewResource({ title: '', type: 'VIDEO', url: '', duration: 0, tags: [], isOptional: false });
+    setNewResource({ 
+      title: '', 
+      type: 'VIDEO', 
+      url: '', 
+      duration: 0, 
+      tags: [], 
+      isOptional: false
+    });
+    setSessionDetails({
+      sessionTitle: '',
+      sessionDescription: ''
+    });
     toast({
       title: "Resource updated",
       description: "The resource has been updated successfully."
@@ -192,7 +234,9 @@ const AdminResourceModal = ({
       const resourcesToSend = resources.map(r => ({
         ...r,
         type: r.type.toUpperCase() as 'VIDEO' | 'ARTICLE' | 'DOCUMENT',
-        isOptional: r.isOptional || false
+        isOptional: r.isOptional || false,
+        sessionTitle: sessionDetails.sessionTitle || '',
+        sessionDescription: sessionDetails.sessionDescription || ''
       }));
 
       await onResourcesAssigned(selectedWeek, resourcesToSend);
@@ -216,7 +260,18 @@ const AdminResourceModal = ({
     onClose();
     // Reset resources and newResource state when modal closes
     setResources([]);
-    setNewResource({ title: '', type: 'VIDEO', url: '', duration: 0, tags: [], isOptional: false });
+    setNewResource({ 
+      title: '', 
+      type: 'VIDEO', 
+      url: '', 
+      duration: 0, 
+      tags: [], 
+      isOptional: false
+    });
+    setSessionDetails({
+      sessionTitle: '',
+      sessionDescription: ''
+    });
     setEditingResourceIndex(null);
     setSelectedWeek(1); // Reset selected week to default
   };
@@ -229,6 +284,15 @@ const AdminResourceModal = ({
       if (editingWeek) {
         setSelectedWeek(editingWeek);
         setResources(existingResources || []);
+        
+        // If there are resources with session details, use the first one to set session details
+        const resourceWithSessionDetails = existingResources?.find(r => r.sessionTitle || r.sessionDescription);
+        if (resourceWithSessionDetails) {
+          setSessionDetails({
+            sessionTitle: resourceWithSessionDetails.sessionTitle || '',
+            sessionDescription: resourceWithSessionDetails.sessionDescription || ''
+          });
+        }
       } else {
         setResources([]);
         setSelectedWeek(1);
@@ -270,6 +334,37 @@ const AdminResourceModal = ({
             </Select>
           </div>
 
+          {/* Session Details */}
+          <Card className="bg-gray-900/50 border-orange-500/20 rounded-2xl">
+            <CardContent className="p-4 space-y-4">
+              <h3 className="text-orange-400 font-medium">Session Details</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="text-orange-300 text-sm">Session Title</label>
+                  <input
+                    type="text"
+                    value={sessionDetails.sessionTitle}
+                    onChange={(e) => setSessionDetails({ ...sessionDetails, sessionTitle: e.target.value })}
+                    className="w-full bg-gray-800 border border-gray-600 text-orange-300 px-3 py-2 rounded-xl focus:border-orange-500 focus:outline-none"
+                    placeholder="Session title (optional)"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-orange-300 text-sm">Session Description</label>
+                  <textarea
+                    value={sessionDetails.sessionDescription}
+                    onChange={(e) => setSessionDetails({ ...sessionDetails, sessionDescription: e.target.value })}
+                    className="w-full bg-gray-800 border border-gray-600 text-orange-300 px-3 py-2 rounded-xl focus:border-orange-500 focus:outline-none"
+                    placeholder="Session description (optional)"
+                    rows={3}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Add/Edit Resource Form */}
           <Card className="bg-gray-900/50 border-orange-500/20 rounded-2xl">
             <CardContent className="p-4 space-y-4">
@@ -287,30 +382,30 @@ const AdminResourceModal = ({
                     className="w-full bg-gray-800 border border-gray-600 text-orange-300 px-3 py-2 rounded-xl focus:border-orange-500 focus:outline-none"
                     placeholder="Resource title"
                   />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label htmlFor="duration" className="text-sm font-medium text-gray-300">Duration (minutes)</label>
-                <input
-                  id="duration"
-                  type="number"
-                  className="flex h-10 w-full rounded-md border border-orange-500/30 bg-black/20 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white"
-                  value={newResource.duration}
-                  onChange={(e) => setNewResource({ ...newResource, duration: parseInt(e.target.value) || 0 })}
-                  placeholder="e.g., 60"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="tags" className="text-sm font-medium text-gray-300">Tags (comma-separated)</label>
-                <input
-                  id="tags"
-                  className="flex h-10 w-full rounded-md border border-orange-500/30 bg-black/20 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white"
-                  value={newResource.tags.join(', ')}
-                  onChange={(e) => setNewResource({ ...newResource, tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag !== '') })}
-                  placeholder="e.g., Python, AI, Beginner"
-                />
-              </div>
-            </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label htmlFor="duration" className="text-sm font-medium text-gray-300">Duration (minutes)</label>
+                    <input
+                      id="duration"
+                      type="number"
+                      className="flex h-10 w-full rounded-md border border-orange-500/30 bg-black/20 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white"
+                      value={newResource.duration}
+                      onChange={(e) => setNewResource({ ...newResource, duration: parseInt(e.target.value) || 0 })}
+                      placeholder="e.g., 60"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="tags" className="text-sm font-medium text-gray-300">Tags (comma-separated)</label>
+                    <input
+                      id="tags"
+                      className="flex h-10 w-full rounded-md border border-orange-500/30 bg-black/20 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white"
+                      value={newResource.tags.join(', ')}
+                      onChange={(e) => setNewResource({ ...newResource, tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag !== '') })}
+                      placeholder="e.g., Python, AI, Beginner"
+                    />
+                  </div>
+                </div>
                 
                 <div>
                   <label className="text-orange-300 text-sm">Content Type</label>
@@ -338,14 +433,14 @@ const AdminResourceModal = ({
               </div>
 
               <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="isOptional"
-                  className="h-4 w-4 rounded border border-gray-600 bg-gray-800 text-orange-500 focus:ring-orange-500 focus:ring-offset-gray-900"
-                  checked={newResource.isOptional}
-                  onChange={(e) => setNewResource({ ...newResource, isOptional: e.target.checked })}
-                />
-                <label htmlFor="isOptional" className="text-orange-300 text-sm cursor-pointer">Optional Resource</label>
+                  <input
+                    type="checkbox"
+                    id="isOptional"
+                    className="h-4 w-4 rounded border border-gray-600 bg-gray-800 text-orange-500 focus:ring-orange-500 focus:ring-offset-gray-900"
+                    checked={newResource.isOptional}
+                    onChange={(e) => setNewResource({ ...newResource, isOptional: e.target.checked })}
+                  />
+                  <label htmlFor="isOptional" className="text-orange-300 text-sm cursor-pointer">Optional Resource</label>
               </div>
               
               <div className="flex gap-2">
