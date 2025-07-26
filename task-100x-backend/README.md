@@ -1,110 +1,76 @@
-# Cohort Learning Platform Backend
+# Backend API (task-100x-backend)
 
-A FastAPI backend for a cohort-based learning platform that personalizes and gamifies weekly content consumption.
+This directory contains the backend API for the Personalised Cohort Learning Platform.
 
-## Features
+## Technologies Used
 
-- User authentication with JWT tokens
-- Role-based access control (Learner/Instructor)
-- Resource management for cohorts
-- Task planning and tracking
-- Streak system for engagement
-- Analytics dashboard for instructors
+This project is built with:
 
-## Tech Stack
+- Python
+- FastAPI (for API endpoints)
+- Prisma (for ORM and database interactions)
+- PostgreSQL (database)
 
-- **FastAPI**: Modern Python web framework
-- **Prisma**: Next-generation ORM
-- **PostgreSQL**: Database (via Supabase)
-- **Docker**: Containerization
+## Setup and Development
+
+To get the backend API up and running, follow these steps:
+
+1.  **Navigate to the backend directory:**
+
+    ```sh
+    cd task-100x-backend
+    ```
+
+2.  **Create a Virtual Environment (Recommended):**
+
+    ```sh
+    python -m venv venv
+    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+    ```
+
+3.  **Install Dependencies:**
+
+    ```sh
+    pip install -r requirements.txt
+    ```
+
+4.  **Set up Database (Prisma Migrate):**
+
+    Ensure your PostgreSQL database is running and configured correctly. Then, apply migrations:
+
+    ```sh
+    npx prisma migrate dev --name init
+    ```
+
+    *Note: You might need to install `npm` and `npx` if you don't have them, as Prisma CLI is typically distributed via npm.*
+
+5.  **Generate Prisma Client:**
+
+    ```sh
+    npx prisma generate
+    ```
+
+6.  **Start the Development Server:**
+
+    ```sh
+    uvicorn main:app --reload
+    ```
+
+    The API will be accessible at `http://localhost:8000` (default FastAPI port).
 
 ## API Endpoints
 
-### Authentication
-- `POST /auth/signup`: Register new user
-- `POST /auth/login`: User login
+Key API endpoints are defined in `routes/` directory:
 
-### Learner Endpoints
-- `POST /api/plans`: Generate task plan
-- `GET /api/plans/{cohort_id}`: Get cohort plan
-- `PATCH /api/tasks/{task_id}/complete`: Complete task
-- `GET /api/streaks/me`: Get streak info
-- `GET /api/progress/weekly`: Get weekly progress
-
-### Instructor Endpoints
-- `POST /api/resources`: Add resource
-- `GET /api/resources/{cohort_id}/{week_number}`: Get weekly resources
-- `GET /api/dashboard/{cohort_id}`: Get cohort analytics
-
-## Setup
-
-1. Clone the repository
-2. Copy `.env.example` to `.env` and update the values
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Generate Prisma client:
-   ```bash
-   prisma generate
-   ```
-
-5. Start the development server:
-   ```bash
-   uvicorn main:app --reload
-   ```
-
-## Docker Setup
-
-1. Build and start containers:
-   ```bash
-   docker-compose up --build
-   ```
-
-2. The API will be available at `http://localhost:8000`
-
-## API Documentation
-
-Once the server is running, visit:
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
+-   `auth.py`: User authentication and authorization.
+-   `instructor.py`: Endpoints for instructor-specific functionalities.
+-   `learner.py`: Endpoints for learner-specific functionalities, including quiz submission.
 
 ## Database Schema
 
-- **User**: Authentication and role management
-- **Cohort**: Group management
-- **Resource**: Learning materials
-- **Plan**: User's learning plan
-- **Task**: Individual assignments
-- **Streak**: Engagement tracking
+The database schema is defined in `schema.prisma`. It includes models for `User`, `Cohort`, `Quiz`, `Question`, `Option`, `QuizAttempt`, `QuizAnswer`, and more.
 
-## Response Format
+## Important Notes
 
-All API endpoints follow a consistent response format:
-
-```json
-{
-  "success": true,
-  "data": {},
-  "message": "Operation successful"
-}
-```
-
-## Error Handling
-
-Errors are returned in the following format:
-
-```json
-{
-  "detail": "Error message"
-}
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit changes
-4. Push to the branch
-5. Create a Pull Request
+-   Ensure environment variables for database connection are set (e.g., `DATABASE_URL`).
+-   For frontend-related issues or setup, refer to the `task-100x/README.md` file.
