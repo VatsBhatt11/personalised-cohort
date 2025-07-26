@@ -261,15 +261,14 @@ async def submit_quiz_attempt(attempt_data: QuizAttemptCreate, current_user = De
     # 2. Create QuizAttempt
     quiz_attempt = await prisma.quizattempt.create(
         data={
-            "quizId": attempt_data.quizId,
-            "learnerId": current_user.id,
+            "quiz": {"connect": {"id": attempt_data.quizId}},
+            "learner": {"connect": {"id": current_user.id}},
             "submittedAt": datetime.now(timezone.utc),
             "quizAnswers": {
                 "create": [
                     {
                         "questionId": ans.questionId,
-                        "selectedOptionId": ans.optionId if ans.optionId else None,
-                        "answerText": ans.answerText
+                        "selectedOptionId": ans.selectedOptionId if ans.selectedOptionId else None,
                     } for ans in attempt_data.answers
                 ]
             }

@@ -18,6 +18,8 @@ model User {
   cohortId    String?
   createdAt   DateTime @default(now())
   quizAttempts QuizAttempt[]
+  notifications Notification[]
+  launchpad     Launchpad?
 }
 
 enum Role {
@@ -164,4 +166,32 @@ model FeedbackReport {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   quizAttempt   QuizAttempt @relation(fields: [quizAttemptId], references: [id])
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  studentId   String
+  sessionId   String
+  message     String
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [studentId], references: [id])
+}
+
+model Launchpad {
+  id                String    @id @default(uuid())
+  userId            String    @unique
+  name              String
+  email             String
+  phoneNumber       String?
+  isStudent         Boolean
+  workExperience    Boolean
+  studyStream       String
+  expectedOutcomes  String
+  codingFamiliarity String
+  pythonFamiliarity String
+  languages         String
+  yearsOfExperience String
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id])
 }
