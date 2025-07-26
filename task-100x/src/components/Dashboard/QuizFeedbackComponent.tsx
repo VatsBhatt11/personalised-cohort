@@ -71,7 +71,7 @@ export const QuizFeedbackComponent = ({ attemptId }: QuizFeedbackProps) => {
               <CardTitle>Question {index + 1}: {q.question_text}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="mb-2">Your Answer: <span className={q.is_correct ? "text-green-500" : "text-red-500"}>{q.user_answer_id}</span></p>
+              <p className="mb-2">Your Answer: <span className={q.is_correct ? "text-green-500" : "text-red-500"}>{q.user_answer_text}</span></p>
               <p className="mb-2">Correct Answer: <span className="text-green-500">{q.correct_answer_text}</span></p>
               <p className="text-sm text-muted-foreground">Explanation: {q.explanation}</p>
             </CardContent>

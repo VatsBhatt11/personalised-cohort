@@ -269,6 +269,7 @@ async def submit_quiz_attempt(attempt_data: QuizAttemptCreate, current_user = De
                     {
                         "questionId": ans.questionId,
                         "selectedOptionId": ans.selectedOptionId if ans.selectedOptionId else None,
+                        "answerText": ans.answerText if ans.answerText else None,
                     } for ans in attempt_data.answers
                 ]
             }
@@ -538,6 +539,87 @@ async def get_weekly_progress(current_user = Depends(get_current_user), prisma: 
     ]
 
     
+
+@router.get("/quiz-attempts/{attempt_id}/feedback")
+async def get_quiz_feedback(attempt_id: str, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+    quiz_attempt = await prisma.quizattempt.find_unique(
+        where={
+            "id": attempt_id,
+            "learnerId": current_user.id
+        },
+        include={
+            "quiz": {
+                "include": {
+                    "questions": {
+                        "include": {
+                            "options": True
+                        }
+                    }
+                }
+            },
+            "quizAnswers": {
+                "include": {
+                    "question": {
+                        "include": {
+                            "options": True
+                        }
+                    },
+                    "selectedOption": True
+                }
+            },
+            "feedbackReport": True
+        }
+    )
+
+    if not quiz_attempt:
+        raise HTTPException(status_code=404, detail="Quiz attempt not found or not authorized")
+
+    if not quiz_attempt.quiz:
+        raise HTTPException(status_code=404, detail="Associated quiz not found")
+
+    feedback_questions = []
+    score = 0
+    total_questions = len(quiz_attempt.quiz.questions)
+
+    for qa in quiz_attempt.quizAnswers:
+        question = qa.question
+        selected_option = qa.selectedOption
+        correct_option = next((opt for opt in question.options if opt.isCorrect), None)
+
+        is_correct = False
+        if selected_option and correct_option and selected_option.id == correct_option.id:
+            is_correct = True
+            score += 1
+
+        user_answer_text = None
+        if qa.answerText:
+            user_answer_text = qa.answerText
+        elif selected_option:
+            user_answer_text = selected_option.optionText
+
+        feedback_questions.append({
+            "question_id": question.id,
+            "question_text": question.questionText,
+            "user_answer_id": selected_option.id if selected_option else None,
+            "user_answer_text": user_answer_text,
+            "correct_answer_id": correct_option.id if correct_option else None,
+            "correct_answer_text": correct_option.optionText if correct_option else "N/A",
+            "is_correct": is_correct,
+            "explanation": "No explanation provided for this question type."
+        })
+
+    return {
+        "success": True,
+        "data": {
+            "quiz_id": quiz_attempt.quiz.id,
+            "quiz_title": f"Quiz Week {quiz_attempt.quiz.weekNumber}", # Or fetch actual quiz title if available
+            "score": score,
+            "total_questions": total_questions,
+            "feedback_questions": feedback_questions,
+            "feedback_report_content": quiz_attempt.feedbackReport.reportContent if quiz_attempt.feedbackReport else None
+        },
+        "message": "Quiz feedback retrieved successfully"
+    }
 
 @router.get("/leaderboard")
 async def get_leaderboard(current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):

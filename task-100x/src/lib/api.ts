@@ -84,11 +84,13 @@ export interface QuizFeedbackData {
   quiz_title: string;
   score: number;
   total_questions: number;
+  attempt_id?: string;
   feedback_questions: Array<{
     question_id: string;
     question_text: string;
-    user_answer_id: string;
-    correct_answer_id: string;
+    user_answer_id?: string;
+    user_answer_text?: string;
+    correct_answer_id?: string;
     correct_answer_text: string;
     is_correct: boolean;
     explanation: string;
@@ -288,11 +290,7 @@ export const learner = {
     quizId: string,
     answers: { questionId: string; selectedOptionId: string }[]
   ): Promise<{ attempt_id: string }> => {
-    const response = await api.post<{
-      success: boolean;
-      data: { attempt_id: string };
-      message: string;
-    }>(`/api/quiz-attempts`, { quizId, answers });
+    const response = await api.post<{ attempt_id: string }>(`/api/quiz-attempts`, { quizId, answers });
     return response.data;
   },
   getQuizFeedback: async (attemptId: string): Promise<QuizFeedbackData> => {
@@ -300,7 +298,7 @@ export const learner = {
       success: boolean;
       data: QuizFeedbackData;
       message: string;
-    }>(`/api/quiz_attempts/${attemptId}/feedback`);
+    }>(`/api/quiz-attempts/${attemptId}/feedback`);
     return response.data.data;
   },
   getQuizAttemptStatus: async (quizId: string): Promise<QuizAttemptStatus> => {
