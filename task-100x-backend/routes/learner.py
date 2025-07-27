@@ -5,6 +5,10 @@ from datetime import datetime, timezone, timedelta
 from typing import List, Optional
 from .auth import get_current_user
 from main import get_prisma_client
+from groq import Groq
+import os
+
+groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 router = APIRouter()
 
@@ -49,6 +53,36 @@ class QuizResponse(BaseModel):
     cohortId: str
     weekNumber: int
     questions: List[QuestionResponse]
+
+class HeartbeatRequest(BaseModel):
+    taskId: str
+    timeSpentSeconds: int
+
+@router.post("/track-resource-time")
+async def track_resource_time(heartbeat: HeartbeatRequest, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+    # Ensure the task belongs to the current user
+    task = await prisma.task.find_first(
+        where={
+            "id": heartbeat.taskId,
+            "plan": {
+                "userId": current_user.id
+            }
+        }
+    )
+
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found or does not belong to user")
+
+    # Update the time_spent_seconds for the task
+    await prisma.task.update(
+        where={
+            "id": heartbeat.taskId
+        },
+        data={
+            "time_spent_seconds": heartbeat.timeSpentSeconds
+        }
+    )
+    return {"message": "Resource time updated successfully"}
 
 @router.post("/plans")
 async def create_plan(plan: PlanCreate, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)): 
@@ -281,9 +315,49 @@ async def submit_quiz_attempt(attempt_data: QuizAttemptCreate, current_user = De
     )
 
     # 3. Generate Feedback (using Groq API)
-    # This is a placeholder. You'll need to integrate with Groq API here.
-    # For now, let's create a dummy feedback report.
-    feedback_text = "This is a dummy feedback report. Integrate with Groq API for real feedback."
+    # Prepare context for Groq API
+    quiz_details = {
+        "quiz_id": quiz.id,
+        "quiz_title": f"Quiz Week {quiz.weekNumber}",
+        "questions": [
+            {
+                "question_id": q.id,
+                "question_text": q.questionText,
+                "options": [{
+                    "id": opt.id,
+                    "option_text": opt.optionText,
+                    "is_correct": opt.isCorrect
+                } for opt in q.options]
+            } for q in quiz.questions
+        ]
+    }
+
+    attempt_details = [
+        {
+            "question_id": ans.questionId,
+            "selected_option_id": ans.selectedOptionId,
+            "answer_text": ans.answerText
+        } for ans in attempt_data.answers
+    ]
+
+    prompt = f"""Provide direct, informal, and honest feedback on the learner's quiz performance. Do NOT make up correct answers if the learner got a question wrong. Clearly state concepts or topics where the learner demonstrated understanding (answered correctly) and areas where they need to improve (answered incorrectly). For questions answered incorrectly, briefly explain the correct answer or concept in general terms, focusing on what they should know. The feedback should be constructive and help the learner understand their mistakes and progress. Keep it concise, not exceeding 500 characters. Do not provide question-by-question feedback.\n\nQuiz Details: {quiz_details}\nLearner's Attempt: {attempt_details}\n\nFeedback Report:"""
+
+    try:
+        chat_completion = groq_client.chat.completions.create(
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            model="llama3-8b-8192", # You can choose a different model if needed
+            temperature=0.7,
+            max_tokens=500,
+        )
+        feedback_text = chat_completion.choices[0].message.content
+    except Exception as e:
+        print(f"Error generating feedback with Groq API: {e}")
+        feedback_text = "Failed to generate detailed feedback. Please try again later." # Fallback in case of API error
 
     feedback_report = await prisma.feedbackreport.create(
         data={
@@ -606,7 +680,7 @@ async def get_quiz_feedback(attempt_id: str, current_user = Depends(get_current_
             "correct_answer_id": correct_option.id if correct_option else None,
             "correct_answer_text": correct_option.optionText if correct_option else "N/A",
             "is_correct": is_correct,
-            "explanation": "No explanation provided for this question type."
+            "explanation": "" # Explanation will be part of the overall feedback report
         })
 
     return {

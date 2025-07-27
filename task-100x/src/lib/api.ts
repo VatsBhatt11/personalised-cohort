@@ -45,7 +45,9 @@ export interface TaskInPlan {
   id: string;
   resource_id: string;
   is_completed: boolean;
+  time_spent_seconds: number;
   resource: Resource;
+  status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
 }
 
 export interface QuizAttemptStatus {
@@ -85,16 +87,7 @@ export interface QuizFeedbackData {
   score: number;
   total_questions: number;
   attempt_id?: string;
-  feedback_questions: Array<{
-    question_id: string;
-    question_text: string;
-    user_answer_id?: string;
-    user_answer_text?: string;
-    correct_answer_id?: string;
-    correct_answer_text: string;
-    is_correct: boolean;
-    explanation: string;
-  }>;
+  feedback_text: string;
 }
 
 export interface Resource {
@@ -208,6 +201,12 @@ export const learner = {
   ): Promise<Plan> => {
     const response = await api.post<Plan>("/api/plans", { cohortId, tasks });
     return response.data;
+  },
+  trackResourceTime: async (taskId: string, timeSpentSeconds: number): Promise<any> => {
+    await api.post(
+      `/api/track-resource-time`,
+      { taskId, timeSpentSeconds }
+    );
   },
   getPlan: async (
     cohortId: string,

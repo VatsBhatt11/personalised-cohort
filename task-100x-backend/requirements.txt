@@ -11,3 +11,4 @@ fastapi-cors>=0.0.6
 pandas==2.2.2
 pytest==8.2.2
 pytest-asyncio==0.23.6
+groq

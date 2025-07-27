@@ -40,6 +40,7 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
   const { toast } = useToast();
   const [resourceModalOpen, setResourceModalOpen] = useState(false);
   const [resourceStartTime, setResourceStartTime] = useState<number | null>(null);
+  const [timeSpentOnResource, setTimeSpentOnResource] = useState<number>(0);
   const [selectedTask, setSelectedTask] = useState<TaskInPlan | null>(null);
   const [quizResource, setQuizResource] = useState<Resource | null>(null);
   const [quizAttemptStatus, setQuizAttemptStatus] = useState<QuizAttemptStatus | null>(null);
@@ -72,24 +73,64 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
     }
   }, [selectedWeek, allResources]);
 
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    if (resourceModalOpen && selectedTask) {
+      // Initialize timeSpentOnResource from the task's current time_spent_seconds
+      // Assuming task.time_spent_seconds exists and is passed from backend
+      // If not, it will default to 0
+      setTimeSpentOnResource(selectedTask.time_spent_seconds || 0);
+      // When opening the resource, set resourceStartTime to current time
+      setResourceStartTime(Date.now());
+
+      intervalId = setInterval(async () => {
+        // Check if the tab is active and in focus
+        if (document.visibilityState === 'visible' && document.hasFocus()) {
+          setTimeSpentOnResource((prevTime) => {
+            const newTime = prevTime + 10; // Increment by 10 seconds
+            // Send heartbeat to backend
+            learner.trackResourceTime(selectedTask.id, newTime).then(() => {
+              setSelectedTask(prevSelectedTask => {
+                if (prevSelectedTask) {
+                  return { ...prevSelectedTask, time_spent_seconds: newTime };
+                }
+                return null;
+              });
+            }).catch(error => {
+              console.error("Error tracking resource time:", error);
+            });
+            return newTime;
+          });
+        }
+      }, 10000); // Send heartbeat every 10 seconds
+    }
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [resourceModalOpen, selectedTask]); // Depend on modal open state and selected task
+
   const handleResourceModalClose = useCallback(async () => {
     setResourceModalOpen(false);
     if (resourceStartTime && selectedTask) {
-      const duration = Date.now() - resourceStartTime;
       const timeToAccess = ((selectedTask.resource?.duration) * 60) || 0;
 
-      if (duration / 1000 >= timeToAccess) {
+      if (timeSpentOnResource >= timeToAccess) {
         try {
           await learner.completeTask(selectedTask.id);
           toast({
             title: 'Task Completed',
-            description: 'Task marked as complete successfully.',
+            description: `Task marked as complete successfully. You spent ${timeSpentOnResource} seconds on this resource.`, 
           });
-          if (cohortId && selectedWeek !== null) {
-            const updatedPlan = await learner.getPlan(cohortId, selectedWeek);
-            if (updatedPlan) {
-              setWeeklyPlan(updatedPlan);
-            }
+          if (selectedTask) {
+            setWeeklyPlan((prevPlan) => {
+              if (!prevPlan) return null;
+              const updatedTasks = prevPlan.tasks.map((task) =>
+                task.id === selectedTask.id ? { ...task, is_completed: true } : task
+              );
+              return { ...prevPlan, tasks: updatedTasks };
+            });
           }
         } catch (error) {
           console.error('Failed to mark task as complete:', error);
@@ -102,13 +143,13 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
       } else {
         toast({
           title: 'Resource Access',
-          description: `You need to spend at least ${timeToAccess} seconds on this resource to mark it as complete. You spent ${(duration / 1000).toFixed(2)} seconds.`,
+          description: `You need to spend at least ${timeToAccess} seconds on this resource to mark it as complete. You spent ${timeSpentOnResource.toFixed(2)} seconds.`, 
           variant: 'destructive',
         });
       }
     }
     setResourceStartTime(null);
-  }, [resourceStartTime, selectedTask, cohortId, selectedWeek, setWeeklyPlan, toast]);
+  }, [resourceStartTime, selectedTask, cohortId, selectedWeek, setWeeklyPlan, toast, timeSpentOnResource]);
 
   const handleAttemptComplete = useCallback((attemptId: string) => {
     setLastAttemptId(attemptId);
@@ -156,18 +197,18 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          {task.is_completed && (
-                            <Check className="w-5 h-5 text-green-500" />
+                          {task.status==="COMPLETED" && (
+                            <Badge variant="secondary" className="bg-green-500 text-white">Completed</Badge>
                           )}
                           <Button
                             className="w-full"
                             onClick={() => {
                               setSelectedTask(task);
                               setResourceModalOpen(true);
-                              setResourceStartTime(Date.now());
                             }}
+                            disabled={task.is_completed} // Disable button if task is completed
                           >
-                            Open Resource
+                            {task.is_completed ? 'View Resource' : 'Open Resource'}
                           </Button>
 
                         </div>
@@ -188,7 +229,7 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
                           <p className="text-sm text-gray-400">Test your knowledge for this week.</p>
                         </div>
                         <Button onClick={handleQuizButtonClick}>
-                          {lastAttemptId ? 'View Results' : 'Take Quiz'}
+                          {lastAttemptId ? 'View Feedback' : 'Take Quiz'}
                         </Button>
                       </div>
                     </CardContent>
@@ -243,7 +284,10 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
                       </DialogHeader>
                       <QuizFeedbackComponent
                         attemptId={lastAttemptId}
-                        onClose={() => setIsQuizFeedbackOpen(false)}
+                        onClose={() => {
+                          setIsQuizFeedbackOpen(false);
+                          setLastAttemptId(null);
+                        }}
                       />
                     </DialogContent>
                   </Dialog>

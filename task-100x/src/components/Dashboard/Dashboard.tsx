@@ -258,6 +258,7 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
                 weeklyPlan={weeklyPlan}
                 setWeeklyPlan={setWeeklyPlan}
                 allResources={allResources}
+                setWeeklyProgress={setWeeklyProgress}
               />
             </>
           )}

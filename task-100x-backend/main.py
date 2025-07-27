@@ -18,9 +18,7 @@ async def lifespan(app: FastAPI):
     retries = 5
     while retries > 0:
         try:
-            print("entered")
             await prisma_client.connect()
-            print("connected")
             break
         except Exception as e:
             print(f"Could not connect to Prisma, retrying... ({retries} attempts left): {e}")
@@ -30,7 +28,6 @@ async def lifespan(app: FastAPI):
     if retries == 0:
         raise Exception("Failed to connect to Prisma after multiple retries")
     yield
-    print('disconnected')
     await prisma_client.disconnect()
 
 app = FastAPI(lifespan=lifespan)

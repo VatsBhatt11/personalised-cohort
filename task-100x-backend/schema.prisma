@@ -79,10 +79,11 @@ model Task {
   planId       String
   resourceId   String
 
-  status       TaskStatus
-  timestamp    DateTime   @default(now())
-  assignedDate DateTime?
-  completedAt  DateTime?
+  status            TaskStatus
+  timestamp         DateTime   @default(now())
+  assignedDate      DateTime?
+  completedAt       DateTime?
+  time_spent_seconds Int        @default(0)
   plan         Plan       @relation(fields: [planId], references: [id])
   resource     Resource   @relation(fields: [resourceId], references: [id], onDelete: Cascade)
 }
