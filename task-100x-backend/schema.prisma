@@ -143,7 +143,7 @@ model QuizAttempt {
   score         Int?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  quiz          Quiz     @relation(fields: [quizId], references: [id])
+  quiz          Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
   learner       User     @relation(fields: [learnerId], references: [id])
   quizAnswers   QuizAnswer[]
   feedbackReport FeedbackReport?
@@ -157,8 +157,8 @@ model QuizAnswer {
   answerText       String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  quizAttempt   QuizAttempt @relation(fields: [quizAttemptId], references: [id])
-  question      Question @relation(fields: [questionId], references: [id])
+  quizAttempt   QuizAttempt @relation(fields: [quizAttemptId], references: [id], onDelete: Cascade)
+  question      Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   selectedOption Option? @relation(fields: [selectedOptionId], references: [id])
 }
 
@@ -169,7 +169,7 @@ model FeedbackReport {
   generatedAt   DateTime @default(now())
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  quizAttempt   QuizAttempt @relation(fields: [quizAttemptId], references: [id])
+  quizAttempt   QuizAttempt @relation(fields: [quizAttemptId], references: [id], onDelete: Cascade)
 }
 
 model Notification {

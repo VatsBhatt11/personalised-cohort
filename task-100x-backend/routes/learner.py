@@ -102,7 +102,8 @@ async def get_quiz_attempt_status(quiz_id: str, current_user = Depends(get_curre
             "success": True,
             "data": {
                 "status": "COMPLETED",
-                "score": quiz_attempt.score
+                "score": quiz_attempt.score,
+                "lastAttemptId": quiz_attempt.id
             },
             "message": "Quiz completed with score"
         }

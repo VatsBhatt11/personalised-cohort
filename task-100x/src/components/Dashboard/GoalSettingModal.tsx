@@ -117,8 +117,8 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
   }, []);
 
   const handleQuizButtonClick = useCallback(() => {
-    if (quizAttemptStatus?.lastAttemptId) {
-      setLastAttemptId(quizAttemptStatus.lastAttemptId);
+    if (lastAttemptId) {
+      setLastAttemptId(lastAttemptId);
       setIsQuizFeedbackOpen(true);
     } else {
       setIsQuizAttemptOpen(true);
@@ -188,7 +188,7 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
                           <p className="text-sm text-gray-400">Test your knowledge for this week.</p>
                         </div>
                         <Button onClick={handleQuizButtonClick}>
-                          {quizAttemptStatus?.hasAttempted ? 'View Results' : 'Take Quiz'}
+                          {lastAttemptId ? 'View Results' : 'Take Quiz'}
                         </Button>
                       </div>
                     </CardContent>
