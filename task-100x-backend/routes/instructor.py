@@ -3,16 +3,12 @@ from pydantic import BaseModel
 from prisma import Prisma
 from main import get_prisma_client
 from typing import List, Optional
-from datetime import datetime, timedelta, timezone
-
-class CohortCreate(BaseModel):
-    name: str
-    totalWeeks: int
-    startDate: Optional[datetime] = None
-    endDate: Optional[datetime] = None
-
-from fastapi import APIRouter, Depends, HTTPException
-from .auth import get_current_user
+from datetime import datetime, timezone, timedelta
+from typing import List
+from fastapi import APIRouter, Body, Depends, HTTPException
+from prisma import Prisma
+from modules.groq_client import generate_personalized_message
+from routes.auth import get_current_user
 
 router = APIRouter()
 
@@ -101,6 +97,10 @@ class QuestionUpdate(BaseModel):
 
 class QuizUpdate(BaseModel):
     questions: List[QuestionUpdate]
+
+class CohortCreate(BaseModel):
+    name: str
+    totalWeeks: int
 
 class WeeklyResourcePayload(BaseModel):
     id: Optional[str] = None
@@ -502,7 +502,51 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
             }
         )
         created_resources.append(new_resource)
-    
+
+    # Fetch all users with their launchpad data
+    users_with_launchpad = await prisma.user.find_many(
+        where={
+            "launchpad": {
+                "isNot": None  # Only users who have filled out the launchpad
+            }
+        },
+        include={
+            "launchpad": True
+        }
+    )
+
+    # Generate and store personalized notifications for each user
+    for user in users_with_launchpad:
+        if user.launchpad and resource.sessionTitle and resource.sessionDescription:
+            # Construct the context for the prompt
+            context = {
+                "student_background": {
+                    "education": user.launchpad.studyStream,
+                    "experience": user.launchpad.workExperience,
+                    "current_role": user.launchpad.yearsOfExperience
+                },
+                "student_interests": {
+                    "coding_familiarity": user.launchpad.codingFamiliarity,
+                    "python_familiarity": user.launchpad.pythonFamiliarity,
+                    "languages": user.launchpad.languages
+                },
+                "student_future_goals": user.launchpad.expectedOutcomes,
+                "upcoming_session_title": resource.sessionTitle,
+                "upcoming_session_description": resource.sessionDescription
+            }
+
+            # Call Groq API to generate message
+            personalized_message = await generate_personalized_message(context)
+
+            # Store notification
+            await prisma.notification.create(
+                data={
+                    "studentId": user.id,
+                    "sessionId": new_resource.id, # Assuming resource ID can be session ID
+                    "message": personalized_message
+                }
+            )
+
     # Re-create tasks for existing plans based on the new resources
     for plan in plans_to_update:
         tasks_to_create = []
