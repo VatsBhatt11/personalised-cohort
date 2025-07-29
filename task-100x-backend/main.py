@@ -1,8 +1,9 @@
-import asyncio
-from fastapi import FastAPI, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
+import os
 from contextlib import asynccontextmanager
+
+from dotenv import load_dotenv
+from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from prisma import Prisma
 
 # Load environment variables
@@ -47,8 +48,15 @@ async def health_check():
     return {"status": "healthy", "message": "API is running"}
 
 # Import and include routers
-from routes import auth, learner, instructor
+from routes import auth, instructor, learner
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(learner.router, prefix="/api", tags=["learner"])
 app.include_router(instructor.router, prefix="/api", tags=["instructor"])
+
+# For development - run with: python main.py
+if __name__ == "__main__":
+    import uvicorn
+    host = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host=host, port=port)
