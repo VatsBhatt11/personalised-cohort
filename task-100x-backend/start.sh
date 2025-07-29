@@ -56,16 +56,36 @@ else
     echo "⚠️  Binary not found at expected location, fetching and copying..."
     prisma py fetch
     
-    # Find and copy the binary
-    SOURCE_BINARY=$(find /tmp/.cache/prisma-python -name "query-engine-debian-openssl-1.1.x" -path "*/node_modules/@prisma/engines/*" 2>/dev/null | head -1)
+    # Debug: Show what files were downloaded
+    echo "Files in Prisma cache:"
+    find /tmp/.cache/prisma-python -type f 2>/dev/null | head -20
+    
+    # Look for any query engine binary in multiple possible locations
+    SOURCE_BINARY=""
+    
+    # Try different possible paths
+    for pattern in "query-engine-debian-openssl-1.1.x" "query_engine-debian-openssl-1.1.x" "*query*engine*" "prisma-query-engine-*"; do
+        echo "Searching for pattern: $pattern"
+        FOUND=$(find /tmp/.cache/prisma-python -name "$pattern" -type f 2>/dev/null | head -1)
+        if [ -n "$FOUND" ] && [ -f "$FOUND" ]; then
+            SOURCE_BINARY="$FOUND"
+            echo "Found binary with pattern '$pattern': $SOURCE_BINARY"
+            break
+        fi
+    done
+    
     if [ -n "$SOURCE_BINARY" ] && [ -f "$SOURCE_BINARY" ]; then
-        TARGET_DIR=$(dirname "$SOURCE_BINARY" | sed "s|/node_modules/@prisma/engines||")
+        # Copy to the expected location
+        TARGET_DIR="/tmp/.cache/prisma-python/binaries/5.17.0/393aa359c9ad4a4bb28630fb5613f9c281cde053"
         TARGET_BINARY="$TARGET_DIR/prisma-query-engine-debian-openssl-1.1.x"
+        mkdir -p "$TARGET_DIR"
         cp "$SOURCE_BINARY" "$TARGET_BINARY"
         chmod +x "$TARGET_BINARY"
         echo "✅ Copied binary from $SOURCE_BINARY to $TARGET_BINARY"
     else
-        echo "❌ Could not find source binary"
+        echo "❌ Could not find any query engine binary"
+        echo "All files in cache:"
+        find /tmp/.cache/prisma-python -type f 2>/dev/null
     fi
 fi
 

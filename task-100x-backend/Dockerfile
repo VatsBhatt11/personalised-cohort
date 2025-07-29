@@ -20,6 +20,8 @@ COPY . .
 
 # Set basic Prisma environment variables
 ENV HOME=/tmp
+ENV PRISMA_CLI_BINARY_TARGETS="debian-openssl-1.1.x"
+ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 
 # Create cache directories and set proper permissions
 RUN mkdir -p /tmp/.cache/prisma-python && \
@@ -29,8 +31,10 @@ RUN mkdir -p /tmp/.cache/prisma-python && \
 RUN prisma py fetch
 RUN prisma generate
 
-# Find and copy the query engine binary to the expected location
-RUN find /tmp/.cache/prisma-python -name "query-engine-debian-openssl-1.1.x" -path "*/node_modules/@prisma/engines/*" -exec sh -c 'for binary; do dir=$(dirname "$binary" | sed "s|/node_modules/@prisma/engines||"); cp "$binary" "$dir/prisma-query-engine-debian-openssl-1.1.x"; chmod +x "$dir/prisma-query-engine-debian-openssl-1.1.x"; echo "Copied $binary to $dir/prisma-query-engine-debian-openssl-1.1.x"; done' _ {} +
+# Debug: Show what was generated
+RUN echo "=== Prisma files after generation ===" && \
+    find /tmp/.cache/prisma-python -type f 2>/dev/null | head -10 && \
+    echo "=== End debug ==="
 
 # Copy and make startup script executable
 COPY start.sh .
