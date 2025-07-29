@@ -18,11 +18,22 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
+# Set Prisma environment variables to avoid permission issues
+ENV PRISMA_CLI_QUERY_ENGINE_BINARY=/tmp/prisma-query-engine
+ENV HOME=/tmp
+
 # Generate Prisma client
 RUN prisma generate
 
 # Create a startup script that handles migrations
 RUN echo '#!/bin/bash\n\
+set -e\n\
+echo "Waiting for database to be ready..."\n\
+until nc -z $(echo $DATABASE_URL | sed -e "s|postgresql://[^@]*@||" -e "s|:[0-9]*/.*||") $(echo $DATABASE_URL | sed -e "s|.*:||" -e "s|/.*||") 2>/dev/null; do\n\
+  echo "Database not ready, waiting..."\n\
+  sleep 2\n\
+done\n\
+echo "Database is ready!"\n\
 echo "Running Prisma migrations..."\n\
 prisma migrate deploy\n\
 echo "Starting FastAPI server..."\n\
