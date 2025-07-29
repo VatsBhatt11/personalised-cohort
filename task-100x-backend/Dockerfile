@@ -18,16 +18,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Set environment variables for Prisma
-ENV PRISMA_CLI_QUERY_ENGINE_BINARY=/app/prisma-query-engine-debian-openssl-1.1.x
-ENV PRISMA_QUERY_ENGINE_BINARY=/app/prisma-query-engine-debian-openssl-1.1.x
-ENV PRISMA_CLI_QUERY_ENGINE_TYPE=binary
+# Set basic Prisma environment variables
 ENV HOME=/tmp
 
 # Create cache directories
 RUN mkdir -p /tmp/.cache/prisma-python
 
-# Fetch Prisma binaries and generate client
+# Fetch Prisma binaries and generate client (without custom binary path first)
 RUN prisma py fetch
 RUN prisma generate
 
@@ -38,6 +35,11 @@ RUN find /tmp/.cache/prisma-python -name "prisma-query-engine-*" -executable 2>/
 
 # Make the binary executable
 RUN chmod +x /app/prisma-query-engine-debian-openssl-1.1.x 2>/dev/null || true
+
+# Now set the environment variables for runtime
+ENV PRISMA_CLI_QUERY_ENGINE_BINARY=/app/prisma-query-engine-debian-openssl-1.1.x
+ENV PRISMA_QUERY_ENGINE_BINARY=/app/prisma-query-engine-debian-openssl-1.1.x
+ENV PRISMA_CLI_QUERY_ENGINE_TYPE=binary
 
 # Copy and make startup script executable
 COPY start.sh .
