@@ -1,4 +1,4 @@
-FROM python:3.9-slim-bullseye
+FROM python:3.11-slim-bullseye
 
 WORKDIR /app
 
@@ -18,38 +18,22 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Set basic Prisma environment variables
-ENV HOME=/tmp
-ENV PRISMA_CLI_BINARY_TARGETS="debian-openssl-1.1.x"
-ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
-
-# Create cache directories and set proper permissions
-RUN mkdir -p /tmp/.cache/prisma-python && \
-    mkdir -p /root/.cache/prisma-python
-
-# Fetch Prisma binaries and generate client (without custom binary path)
+# Ensure Prisma binaries are fetched for the correct platform
 RUN prisma py fetch
-RUN prisma generate
 
-# Debug: Show what was generated
-RUN echo "=== Prisma files after generation ===" && \
-    find /tmp/.cache/prisma-python -type f 2>/dev/null | head -10 && \
-    echo "=== End debug ==="
+# Generate Prisma client
+RUN prisma generate
 
 # Copy and make startup script executable
 COPY start.sh .
 RUN chmod +x start.sh
 
-# Create a non-root user and give proper permissions
+# Create non-root user and set permissions
 RUN useradd -m -u 1000 app && \
-    chown -R app:app /app && \
-    chown -R app:app /tmp/.cache 2>/dev/null || true && \
-    chown -R app:app /root/.cache 2>/dev/null || true
+    chown -R app:app /app
 
 USER app
 
-# Expose port (Render uses PORT environment variable)
 EXPOSE $PORT
 
-# Start the application with migrations
 CMD ["./start.sh"]
