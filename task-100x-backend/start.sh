@@ -49,12 +49,56 @@ echo "Checking Prisma binaries..."
 if [ ! -f "/app/prisma-query-engine-debian-openssl-1.1.x" ]; then
     echo "Prisma query engine not found, fetching..."
     prisma py fetch
-    # Try to copy the binary to the expected location
-    find /tmp/.cache/prisma-python -name "prisma-query-engine-*" -executable -exec cp {} /app/prisma-query-engine-debian-openssl-1.1.x \; 2>/dev/null || true
+    
+    # Try to find and copy the binary from multiple possible locations
+    BINARY_FOUND=false
+    
+    # Check in /tmp/.cache/prisma-python
+    if [ -d "/tmp/.cache/prisma-python" ]; then
+        BINARY_PATH=$(find /tmp/.cache/prisma-python -name "prisma-query-engine-*" -executable 2>/dev/null | head -1)
+        if [ -n "$BINARY_PATH" ] && [ -f "$BINARY_PATH" ]; then
+            cp "$BINARY_PATH" /app/prisma-query-engine-debian-openssl-1.1.x
+            chmod +x /app/prisma-query-engine-debian-openssl-1.1.x
+            echo "✅ Copied Prisma binary from $BINARY_PATH"
+            BINARY_FOUND=true
+        fi
+    fi
+    
+    # Check in /root/.cache/prisma-python if not found yet
+    if [ "$BINARY_FOUND" = false ] && [ -d "/root/.cache/prisma-python" ]; then
+        BINARY_PATH=$(find /root/.cache/prisma-python -name "prisma-query-engine-*" -executable 2>/dev/null | head -1)
+        if [ -n "$BINARY_PATH" ] && [ -f "$BINARY_PATH" ]; then
+            cp "$BINARY_PATH" /app/prisma-query-engine-debian-openssl-1.1.x
+            chmod +x /app/prisma-query-engine-debian-openssl-1.1.x
+            echo "✅ Copied Prisma binary from $BINARY_PATH"
+            BINARY_FOUND=true
+        fi
+    fi
+    
+    if [ "$BINARY_FOUND" = false ]; then
+        echo "❌ Could not find Prisma query engine binary in cache directories"
+        echo "Available files in /tmp/.cache/prisma-python:"
+        find /tmp/.cache/prisma-python -type f 2>/dev/null || echo "Directory not found"
+        echo "Available files in /root/.cache/prisma-python:"
+        find /root/.cache/prisma-python -type f 2>/dev/null || echo "Directory not found"
+        
+        # Try running without custom binary path
+        echo "Attempting to run migrations without custom binary path..."
+        unset PRISMA_QUERY_ENGINE_BINARY
+        unset PRISMA_CLI_QUERY_ENGINE_BINARY
+    fi
+else
+    echo "✅ Prisma query engine binary found at /app/prisma-query-engine-debian-openssl-1.1.x"
 fi
 
 # Run Prisma migrations
 echo "Running Prisma migrations..."
+
+# Debug: Show current environment variables
+echo "Current Prisma environment variables:"
+echo "PRISMA_QUERY_ENGINE_BINARY: ${PRISMA_QUERY_ENGINE_BINARY:-not set}"
+echo "PRISMA_CLI_QUERY_ENGINE_BINARY: ${PRISMA_CLI_QUERY_ENGINE_BINARY:-not set}"
+
 if ! prisma migrate deploy; then
     echo "❌ ERROR: Prisma migrations failed"
     echo "Check your database connection and migration files"
