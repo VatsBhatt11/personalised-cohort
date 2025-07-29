@@ -25,20 +25,9 @@ ENV HOME=/tmp
 # Generate Prisma client
 RUN prisma generate
 
-# Create a startup script that handles migrations
-RUN echo '#!/bin/bash\n\
-set -e\n\
-echo "Waiting for database to be ready..."\n\
-until nc -z $(echo $DATABASE_URL | sed -e "s|postgresql://[^@]*@||" -e "s|:[0-9]*/.*||") $(echo $DATABASE_URL | sed -e "s|.*:||" -e "s|/.*||") 2>/dev/null; do\n\
-  echo "Database not ready, waiting..."\n\
-  sleep 2\n\
-done\n\
-echo "Database is ready!"\n\
-echo "Running Prisma migrations..."\n\
-prisma migrate deploy\n\
-echo "Starting FastAPI server..."\n\
-exec uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}' > start.sh \
-&& chmod +x start.sh
+# Copy and make startup script executable
+COPY start.sh .
+RUN chmod +x start.sh
 
 # Create a non-root user
 RUN useradd -m -u 1000 app && chown -R app:app /app
