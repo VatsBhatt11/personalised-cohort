@@ -44,9 +44,44 @@ test_database() {
 # Test database connectivity first
 test_database
 
+# Ensure Prisma binaries are available
+echo "Checking Prisma binaries..."
+
+# Verify the binary exists at the expected location
+EXPECTED_BINARY="/tmp/.cache/prisma-python/binaries/5.17.0/393aa359c9ad4a4bb28630fb5613f9c281cde053/prisma-query-engine-debian-openssl-1.1.x"
+if [ -f "$EXPECTED_BINARY" ]; then
+    echo "✅ Prisma query engine binary found at $EXPECTED_BINARY"
+    chmod +x "$EXPECTED_BINARY" 2>/dev/null || true
+else
+    echo "⚠️  Binary not found at expected location, fetching and copying..."
+    prisma py fetch
+    
+    # Find and copy the binary
+    SOURCE_BINARY=$(find /tmp/.cache/prisma-python -name "query-engine-debian-openssl-1.1.x" -path "*/node_modules/@prisma/engines/*" 2>/dev/null | head -1)
+    if [ -n "$SOURCE_BINARY" ] && [ -f "$SOURCE_BINARY" ]; then
+        TARGET_DIR=$(dirname "$SOURCE_BINARY" | sed "s|/node_modules/@prisma/engines||")
+        TARGET_BINARY="$TARGET_DIR/prisma-query-engine-debian-openssl-1.1.x"
+        cp "$SOURCE_BINARY" "$TARGET_BINARY"
+        chmod +x "$TARGET_BINARY"
+        echo "✅ Copied binary from $SOURCE_BINARY to $TARGET_BINARY"
+    else
+        echo "❌ Could not find source binary"
+    fi
+fi
+
 # Run Prisma migrations
 echo "Running Prisma migrations..."
-prisma migrate deploy
+
+# Debug: Show current environment variables
+echo "Current Prisma environment variables:"
+echo "PRISMA_QUERY_ENGINE_BINARY: ${PRISMA_QUERY_ENGINE_BINARY:-not set}"
+echo "PRISMA_CLI_QUERY_ENGINE_BINARY: ${PRISMA_CLI_QUERY_ENGINE_BINARY:-not set}"
+
+if ! prisma migrate deploy; then
+    echo "❌ ERROR: Prisma migrations failed"
+    echo "Check your database connection and migration files"
+    exit 1
+fi
 
 echo "✅ Migrations completed successfully"
 

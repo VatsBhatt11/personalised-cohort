@@ -25,15 +25,12 @@ ENV HOME=/tmp
 RUN mkdir -p /tmp/.cache/prisma-python && \
     mkdir -p /root/.cache/prisma-python
 
-# Fetch Prisma binaries and generate client
+# Fetch Prisma binaries and generate client (without custom binary path)
 RUN prisma py fetch
-
-# Find the query engine binary and move it to a predictable location
-RUN find / -name "prisma-query-engine-*" -executable -exec mv {} /app/prisma-query-engine-debian-openssl-1.1.x \;
-
-# Now that the binary is in a known location, set the env var and generate the client
-ENV PRISMA_QUERY_ENGINE_BINARY=/app/prisma-query-engine-debian-openssl-1.1.x
 RUN prisma generate
+
+# Find and copy the query engine binary to the expected location
+RUN find /tmp/.cache/prisma-python -name "query-engine-debian-openssl-1.1.x" -path "*/node_modules/@prisma/engines/*" -exec sh -c 'for binary; do dir=$(dirname "$binary" | sed "s|/node_modules/@prisma/engines||"); cp "$binary" "$dir/prisma-query-engine-debian-openssl-1.1.x"; chmod +x "$dir/prisma-query-engine-debian-openssl-1.1.x"; echo "Copied $binary to $dir/prisma-query-engine-debian-openssl-1.1.x"; done' _ {} +
 
 # Copy and make startup script executable
 COPY start.sh .
