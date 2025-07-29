@@ -4,11 +4,20 @@ from prisma import Prisma
 from main import get_prisma_client
 from typing import List, Optional
 from datetime import datetime, timezone, timedelta
+import os
+from twilio.rest import Client
 from typing import List
 from fastapi import APIRouter, Body, Depends, HTTPException
 from prisma import Prisma
 from modules.groq_client import generate_personalized_message
 from routes.auth import get_current_user
+
+# Initialize Twilio Client
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
+TWILIO_WHATSAPP_FROM = os.environ.get('TWILIO_WHATSAPP_FROM')
+
+twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 router = APIRouter()
 
@@ -539,13 +548,25 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
             personalized_message = await generate_personalized_message(context)
 
             # Store notification
-            await prisma.notification.create(
+            new_notification = await prisma.notification.create(
                 data={
                     "studentId": user.id,
                     "sessionId": new_resource.id, # Assuming resource ID can be session ID
                     "message": personalized_message
                 }
             )
+
+            # Send WhatsApp notification if user has a phone number
+            if user.phoneNumber and TWILIO_WHATSAPP_FROM:
+                try:
+                    twilio_client.messages.create(
+                        from_=f'whatsapp:{TWILIO_WHATSAPP_FROM}',
+                        to=f'whatsapp:{user.phoneNumber}',
+                        body=personalized_message
+                    )
+                    print(f"WhatsApp message sent to {user.phoneNumber} for session {new_resource.id}")
+                except Exception as e:
+                    print(f"Error sending WhatsApp message to {user.phoneNumber}: {e}")
 
     # Re-create tasks for existing plans based on the new resources
     for plan in plans_to_update:
