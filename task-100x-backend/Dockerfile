@@ -9,33 +9,26 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements file
+# Copy requirements and install
 COPY requirements.txt .
-
-# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
 
-# Copy and make startup script executable
-COPY start.sh .
+# Set environment to avoid binary path issues
+ENV PRISMA_CLI_BINARY_TARGETS="debian-openssl-1.1.x"
+ENV PRISMA_SKIP_POSTINSTALL_GENERATE=false
+
+# Generate everything as root, create world-readable cache
+RUN prisma py fetch && \
+    prisma generate && \
+    chmod -R 755 /root/.cache 2>/dev/null || true
+
+# Make startup script executable
 RUN chmod +x start.sh
 
-# Generate Prisma client as root (this usually works better)
-RUN prisma generate
-
-# Create non-root user and set permissions
-RUN useradd -m -u 1000 app && \
-    chown -R app:app /app && \
-    mkdir -p /home/app/.cache && \
-    chown -R app:app /home/app/.cache
-
-USER app
-
-# Set environment for runtime
-ENV HOME=/home/app
-
+# Don't switch users - run as root in production
 EXPOSE $PORT
 
 CMD ["./start.sh"]

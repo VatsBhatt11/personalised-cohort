@@ -40,11 +40,7 @@ test_database() {
 # Test database connectivity
 test_database
 
-# Handle Prisma binaries at runtime
-echo "Setting up Prisma..."
-prisma py fetch || echo "Warning: Could not fetch Prisma binaries"
-
-# Run Prisma migrations
+# Run Prisma migrations (skip binary checks)
 echo "Running Prisma migrations..."
 if ! prisma migrate deploy; then
     echo "❌ ERROR: Prisma migrations failed"
