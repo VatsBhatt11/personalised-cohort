@@ -41,11 +41,6 @@ RUN useradd -m -u 1000 app && \
 
 USER app
 
-# Set the environment variables for runtime (these will be overridden if binary not found)
-ENV PRISMA_CLI_QUERY_ENGINE_BINARY=/app/prisma-query-engine-debian-openssl-1.1.x
-ENV PRISMA_QUERY_ENGINE_BINARY=/app/prisma-query-engine-debian-openssl-1.1.x
-ENV PRISMA_CLI_QUERY_ENGINE_TYPE=binary
-
 # Expose port (Render uses PORT environment variable)
 EXPOSE $PORT
 
