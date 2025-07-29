@@ -18,21 +18,23 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Ensure Prisma binaries are fetched for the correct platform
-RUN prisma py fetch
-
-# Generate Prisma client
-RUN prisma generate
-
 # Copy and make startup script executable
 COPY start.sh .
 RUN chmod +x start.sh
 
+# Generate Prisma client as root (this usually works better)
+RUN prisma generate
+
 # Create non-root user and set permissions
 RUN useradd -m -u 1000 app && \
-    chown -R app:app /app
+    chown -R app:app /app && \
+    mkdir -p /home/app/.cache && \
+    chown -R app:app /home/app/.cache
 
 USER app
+
+# Set environment for runtime
+ENV HOME=/home/app
 
 EXPOSE $PORT
 
