@@ -16,29 +16,7 @@ async def get_prisma_client():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    retries = 5
-    while retries > 0:
-        try:
-            # Try to fetch Prisma binaries before connecting
-            if retries == 5:  # Only on first attempt
-                try:
-                    import subprocess
-                    print("Ensuring Prisma binaries are available...")
-                    subprocess.run(["prisma", "py", "fetch"], check=True, capture_output=True)
-                    print("✅ Prisma binaries fetched successfully")
-                except Exception as fetch_error:
-                    print(f"Warning: Could not fetch Prisma binaries: {fetch_error}")
-            
-            await prisma_client.connect()
-            print("✅ Successfully connected to Prisma")
-            break
-        except Exception as e:
-            print(f"Could not connect to Prisma, retrying... ({retries} attempts left): {e}")
-            retries -= 1
-            import asyncio
-            await asyncio.sleep(5) # Wait for 5 seconds before retrying
-    if retries == 0:
-        raise Exception("Failed to connect to Prisma after multiple retries")
+    await prisma_client.connect()
     yield
     await prisma_client.disconnect()
 
