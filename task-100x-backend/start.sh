@@ -44,6 +44,15 @@ test_database() {
 # Test database connectivity first
 test_database
 
+# Ensure Prisma binaries are available
+echo "Checking Prisma binaries..."
+if [ ! -f "/app/prisma-query-engine-debian-openssl-1.1.x" ]; then
+    echo "Prisma query engine not found, fetching..."
+    prisma py fetch
+    # Try to copy the binary to the expected location
+    find /tmp/.cache/prisma-python -name "prisma-query-engine-*" -executable -exec cp {} /app/prisma-query-engine-debian-openssl-1.1.x \; 2>/dev/null || true
+fi
+
 # Run Prisma migrations
 echo "Running Prisma migrations..."
 if ! prisma migrate deploy; then
