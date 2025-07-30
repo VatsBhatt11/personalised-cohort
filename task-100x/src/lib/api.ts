@@ -136,7 +136,8 @@ interface DashboardMetrics {
   }>;
 }
 
-const API_BASE_URL = "http://localhost:8000";
+// const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "https://one00x-be.onrender.com";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -202,11 +203,17 @@ export const learner = {
     const response = await api.post<Plan>("/api/plans", { cohortId, tasks });
     return response.data;
   },
-  trackResourceTime: async (taskId: string, timeSpentSeconds: number): Promise<any> => {
-    await api.post(
-      `/api/track-resource-time`,
-      { taskId, timeSpentSeconds }
-    );
+  trackResourceTime: async (
+    taskId: string,
+    timeSpentSeconds: number
+  ): Promise<any> => {
+    await api.post(`/api/track-resource-time`, { taskId, timeSpentSeconds });
+  },
+  trackQuizTime: async (
+    quizId: string,
+    timeSpentSeconds: number
+  ): Promise<any> => {
+    await api.post(`/api/track-quiz-time`, { quizId, timeSpentSeconds });
   },
   getPlan: async (
     cohortId: string,
@@ -289,7 +296,10 @@ export const learner = {
     quizId: string,
     answers: { questionId: string; selectedOptionId: string }[]
   ): Promise<{ attempt_id: string }> => {
-    const response = await api.post<{ attempt_id: string }>(`/api/quiz-attempts`, { quizId, answers });
+    const response = await api.post<{ attempt_id: string }>(
+      `/api/quiz-attempts`,
+      { quizId, answers }
+    );
     return response.data;
   },
   getQuizFeedback: async (attemptId: string): Promise<QuizFeedbackData> => {

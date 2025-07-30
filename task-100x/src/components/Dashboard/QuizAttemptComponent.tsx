@@ -15,11 +15,49 @@ interface QuizAttemptProps {
   onClose: () => void;
 }
 
-export const QuizAttemptComponent = ({ quizId, onAttemptComplete }: QuizAttemptProps) => {
+export const QuizAttemptComponent = ({ quizId, onAttemptComplete, onClose }: QuizAttemptProps) => {
   const [quizData, setQuizData] = useState<Quiz | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Answer[]>([]);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [timeSpentSeconds, setTimeSpentSeconds] = useState<number>(0);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setStartTime(Date.now());
+
+    const handleBeforeUnload = () => {
+      if (startTime !== null) {
+        const elapsed = (Date.now() - startTime) / 1000;
+        setTimeSpentSeconds(prev => prev + elapsed);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (startTime !== null) {
+        const elapsed = (Date.now() - startTime) / 1000;
+        setTimeSpentSeconds(prev => prev + elapsed);
+      }
+    };
+  }, [startTime]);
+
+  useEffect(() => {
+    return () => {
+      if (startTime !== null) {
+        const elapsed = (Date.now() - startTime) / 1000;
+        const finalTimeSpent = timeSpentSeconds + elapsed;
+        if (finalTimeSpent > 0) {
+          learner.trackQuizTime(quizId, Math.round(finalTimeSpent)).catch(error => {
+            console.error("Error tracking quiz time on unmount:", error);
+          });
+        }
+      }
+      onClose();
+    };
+  }, [quizId, startTime, timeSpentSeconds, onClose]);
 
   useEffect(() => {
     const fetchQuiz = async () => {
