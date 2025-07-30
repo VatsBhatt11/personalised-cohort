@@ -137,10 +137,10 @@ interface DashboardMetrics {
 }
 
 // const API_BASE_URL = "http://localhost:8000";
-const API_BASE_URL = "https://one00x-be.onrender.com";
+// const API_BASE_URL = "https://one00x-be.onrender.com";
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -206,13 +206,13 @@ export const learner = {
   trackResourceTime: async (
     taskId: string,
     timeSpentSeconds: number
-  ): Promise<any> => {
+  ): Promise<void> => {
     await api.post(`/api/track-resource-time`, { taskId, timeSpentSeconds });
   },
   trackQuizTime: async (
     quizId: string,
     timeSpentSeconds: number
-  ): Promise<any> => {
+  ): Promise<void> => {
     await api.post(`/api/track-quiz-time`, { quizId, timeSpentSeconds });
   },
   getPlan: async (

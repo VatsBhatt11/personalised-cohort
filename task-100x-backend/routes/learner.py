@@ -58,6 +58,10 @@ class HeartbeatRequest(BaseModel):
     taskId: str
     timeSpentSeconds: int
 
+class QuizTimeRequest(BaseModel):
+    quizId: str
+    timeSpentSeconds: int
+
 @router.post("/track-resource-time")
 async def track_resource_time(heartbeat: HeartbeatRequest, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
     # Ensure the task belongs to the current user
@@ -83,6 +87,30 @@ async def track_resource_time(heartbeat: HeartbeatRequest, current_user = Depend
         }
     )
     return {"message": "Resource time updated successfully"}
+
+@router.post("/track-quiz-time")
+async def track_quiz_time(quiz_time: QuizTimeRequest, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+    # Ensure the quiz attempt belongs to the current user
+    quiz_attempt = await prisma.quizattempt.find_first(
+        where={
+            "quizId": quiz_time.quizId,
+            "learnerId": current_user.id
+        }
+    )
+
+    if not quiz_attempt:
+        raise HTTPException(status_code=404, detail="Quiz attempt not found or does not belong to user")
+
+    # Update the time_spent_seconds for the quiz attempt
+    await prisma.quizattempt.update(
+        where={
+            "id": quiz_attempt.id
+        },
+        data={
+            "time_spent_seconds": quiz_time.timeSpentSeconds
+        }
+    )
+    return {"message": "Quiz time updated successfully"}
 
 @router.post("/plans")
 async def create_plan(plan: PlanCreate, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)): 
