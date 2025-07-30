@@ -6,6 +6,7 @@ from typing import List, Optional
 from datetime import datetime, timezone, timedelta
 import os
 from twilio.rest import Client
+import asyncio
 from typing import List
 from fastapi import APIRouter, Body, Depends, HTTPException
 from prisma import Prisma
@@ -524,10 +525,8 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
         }
     )
 
-    # Generate and store personalized notifications for each user
-    for user in users_with_launchpad:
-        if user.launchpad and resource.sessionTitle and resource.sessionDescription:
-            # Construct the context for the prompt
+    async def _send_notifications_in_background(user, new_resource, prisma_client, twilio_from):
+        if user.launchpad and new_resource.sessionTitle and new_resource.sessionDescription:
             context = {
                 "student_background": {
                     "education": user.launchpad.studyStream,
@@ -540,33 +539,34 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
                     "languages": user.launchpad.languages
                 },
                 "student_future_goals": user.launchpad.expectedOutcomes,
-                "upcoming_session_title": resource.sessionTitle,
-                "upcoming_session_description": resource.sessionDescription
+                "upcoming_session_title": new_resource.sessionTitle,
+                "upcoming_session_description": new_resource.sessionDescription
             }
 
             # Call Groq API to generate message
             personalized_message = await generate_personalized_message(context)
 
-            # Store notification
-            new_notification = await prisma.notification.create(
+            await prisma_client.notification.create(
                 data={
                     "studentId": user.id,
-                    "sessionId": new_resource.id, # Assuming resource ID can be session ID
+                    "sessionId": new_resource.id,
                     "message": personalized_message
                 }
             )
 
-            # Send WhatsApp notification if user has a phone number
-            if user.phoneNumber and TWILIO_WHATSAPP_FROM:
+            if user.phoneNumber and twilio_from:
                 try:
                     twilio_client.messages.create(
-                        from_=f'whatsapp:{TWILIO_WHATSAPP_FROM}',
+                        from_=f'whatsapp:{twilio_from}',
                         to=f'whatsapp:{user.phoneNumber}',
                         body=personalized_message
                     )
                     print(f"WhatsApp message sent to {user.phoneNumber} for session {new_resource.id}")
                 except Exception as e:
                     print(f"Error sending WhatsApp message to {user.phoneNumber}: {e}")
+
+    for user in users_with_launchpad:
+        asyncio.create_task(_send_notifications_in_background(user, new_resource, prisma, TWILIO_WHATSAPP_FROM))
 
     # Re-create tasks for existing plans based on the new resources
     for plan in plans_to_update:
