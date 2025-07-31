@@ -1,0 +1,44 @@
+import httpx
+import os
+
+AISENSY_API_KEY = os.environ.get('AISENSY_API_KEY')
+AISENSY_CAMPAIGN_NAME = os.environ.get('AISENSY_CAMPAIGN_NAME')
+AISENSY_API_URL = "https://panel.aisensy.com/api/v1/campaign/" # This is based on the documentation found
+
+async def send_whatsapp_message(
+    destination: str,
+    user_name: str,
+    message_body: str,
+    api_key: str = AISENSY_API_KEY,
+    campaign_name: str = AISENSY_CAMPAIGN_NAME
+):
+    if not api_key or not campaign_name:
+        print("AiSensy API key or campaign name not configured.")
+        return
+
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "apiKey": api_key,
+        "campaignName": campaign_name,
+        "destination": destination,
+        "userName": user_name,
+        "templateParams": [message_body] # Assuming the message_body is the only template parameter
+    }
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(AISENSY_API_URL, headers=headers, json=payload)
+            response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
+            print(f"AiSensy WhatsApp message sent to {destination}: {response.json()}")
+            return response.json()
+    except httpx.RequestError as e:
+        print(f"An error occurred while requesting AiSensy API: {e}")
+    except httpx.HTTPStatusError as e:
+        print(f"AiSensy API returned an error: {e.response.status_code} - {e.response.text}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+    return None

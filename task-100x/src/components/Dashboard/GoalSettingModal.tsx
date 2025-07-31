@@ -84,26 +84,11 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
       // When opening the resource, set resourceStartTime to current time
       setResourceStartTime(Date.now());
 
-      intervalId = setInterval(async () => {
-        // Check if the tab is active and in focus
-        if (document.visibilityState === 'visible' && document.hasFocus()) {
-          setTimeSpentOnResource((prevTime) => {
-            const newTime = prevTime + 10; // Increment by 10 seconds
-            // Send heartbeat to backend
-            learner.trackResourceTime(selectedTask.id, newTime).then(() => {
-              setSelectedTask(prevSelectedTask => {
-                if (prevSelectedTask) {
-                  return { ...prevSelectedTask, time_spent_seconds: newTime };
-                }
-                return null;
-              });
-            }).catch(error => {
-              console.error("Error tracking resource time:", error);
-            });
-            return newTime;
-          });
-        }
-      }, 10000); // Send heartbeat every 10 seconds
+
+      // Initialize timeSpentOnResource from the task's current time_spent_seconds
+      // Assuming task.time_spent_seconds exists and is passed from backend
+      // If not, it will default to 0
+      setTimeSpentOnResource(selectedTask.time_spent_seconds || 0);
     }
 
     return () => {
@@ -114,42 +99,43 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
   const handleResourceModalClose = useCallback(async () => {
     setResourceModalOpen(false);
     if (resourceStartTime && selectedTask) {
-      const timeToAccess = ((selectedTask.resource?.duration) * 60) || 0;
+      const newTimeSpent = timeSpentOnResource + (Date.now() - resourceStartTime) / 1000;
+      try {
+        await learner.trackResourceTime(selectedTask.id, Math.ceil(newTimeSpent));
+        const timeToAccess = ((selectedTask.resource?.duration) * 60) || 0;
 
-      if (timeSpentOnResource >= timeToAccess) {
-        try {
+        if (newTimeSpent >= timeToAccess) {
           await learner.completeTask(selectedTask.id);
           toast({
             title: 'Task Completed',
-            description: `Task marked as complete successfully. You spent ${timeSpentOnResource} seconds on this resource.`, 
+            description: `Task marked as complete successfully. You spent ${newTimeSpent.toFixed(2)} seconds on this resource.`, 
           });
-          if (selectedTask) {
-            setWeeklyPlan((prevPlan) => {
-              if (!prevPlan) return null;
-              const updatedTasks = prevPlan.tasks.map((task) =>
-                task.id === selectedTask.id ? { ...task, is_completed: true } : task
-              );
-              return { ...prevPlan, tasks: updatedTasks };
-            });
-          }
-        } catch (error) {
-          console.error('Failed to mark task as complete:', error);
+          setWeeklyPlan((prevPlan) => {
+            if (!prevPlan) return null;
+            const updatedTasks = prevPlan.tasks.map((task) =>
+              task.id === selectedTask.id ? { ...task, is_completed: true } : task
+            );
+            return { ...prevPlan, tasks: updatedTasks };
+          });
+        } else {
           toast({
-            title: 'Error',
-            description: 'Failed to mark task as complete.',
+            title: 'Resource Access',
+            description: `You need to spend at least ${timeToAccess} seconds on this resource to mark it as complete. You spent ${newTimeSpent.toFixed(2)} seconds.`, 
             variant: 'destructive',
           });
         }
-      } else {
+      } catch (error) {
+        console.error('Failed to track resource time or mark task as complete:', error);
         toast({
-          title: 'Resource Access',
-          description: `You need to spend at least ${timeToAccess} seconds on this resource to mark it as complete. You spent ${timeSpentOnResource.toFixed(2)} seconds.`, 
+          title: 'Error',
+          description: 'Failed to update resource time or mark task as complete.',
           variant: 'destructive',
         });
       }
     }
     setResourceStartTime(null);
-  }, [resourceStartTime, selectedTask, cohortId, selectedWeek, setWeeklyPlan, toast, timeSpentOnResource]);
+    setTimeSpentOnResource(0);
+  }, [resourceStartTime, selectedTask, setWeeklyPlan, toast, timeSpentOnResource]);
 
   const handleAttemptComplete = useCallback((attemptId: string) => {
     setLastAttemptId(attemptId);

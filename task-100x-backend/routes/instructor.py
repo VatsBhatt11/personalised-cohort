@@ -5,20 +5,13 @@ from main import get_prisma_client
 from typing import List, Optional
 from datetime import datetime, timezone, timedelta
 import os
-from twilio.rest import Client
 import asyncio
 from typing import List
 from fastapi import APIRouter, Body, Depends, HTTPException
 from prisma import Prisma
 from modules.groq_client import generate_personalized_message
 from routes.auth import get_current_user
-
-# Initialize Twilio Client
-TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
-TWILIO_WHATSAPP_FROM = os.environ.get('TWILIO_WHATSAPP_FROM')
-
-twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+from modules.aisensy_client import send_whatsapp_message
 
 router = APIRouter()
 
@@ -525,7 +518,7 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
         }
     )
 
-    async def _send_notifications_in_background(user, new_resource, prisma_client, twilio_from):
+    async def _send_notifications_in_background(user, new_resource, prisma):
         if user.launchpad and new_resource.sessionTitle and new_resource.sessionDescription:
             context = {
                 "student_background": {
@@ -554,19 +547,19 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
                 }
             )
 
-            if user.phoneNumber and twilio_from:
+            if user.phoneNumber:
                 try:
-                    twilio_client.messages.create(
-                        from_=f'whatsapp:{twilio_from}',
-                        to=f'whatsapp:{user.phoneNumber}',
-                        body=personalized_message
+                    await send_whatsapp_message(
+                        destination=user.phoneNumber,
+                        user_name=user.firstName, # Assuming user.firstName exists and can be used as user_name
+                        message_body=personalized_message
                     )
                     print(f"WhatsApp message sent to {user.phoneNumber} for session {new_resource.id}")
                 except Exception as e:
                     print(f"Error sending WhatsApp message to {user.phoneNumber}: {e}")
 
     for user in users_with_launchpad:
-        asyncio.create_task(_send_notifications_in_background(user, new_resource, prisma, TWILIO_WHATSAPP_FROM))
+        asyncio.create_task(_send_notifications_in_background(user, new_resource, prisma))
 
     # Re-create tasks for existing plans based on the new resources
     for plan in plans_to_update:
