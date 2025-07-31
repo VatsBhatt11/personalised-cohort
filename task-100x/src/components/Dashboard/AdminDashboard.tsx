@@ -479,7 +479,7 @@ const fetchResources = async () => {
               className="px-6 py-3 bg-orange-500/20 text-orange-400 border border-orange-400/30 rounded-xl hover:bg-orange-500/30 transition-colors font-medium"
               disabled={loading}
             >
-              {loading ? 'Assigning...' : 'Assign Resources'}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Assign Resources
             </button>
           </div>
         </CardContent>

@@ -109,7 +109,7 @@ const CreateCohortModal: React.FC<CreateCohortModalProps> = ({ isOpen, onClose, 
             Cancel
           </Button>
           <Button onClick={handleCreateCohort} disabled={loading}>
-            {loading ? <span className="mr-2 h-4 w-4 animate-spin">⌛</span> : null}
+            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Create Cohort
           </Button>
         </DialogFooter>

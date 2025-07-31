@@ -530,7 +530,7 @@ const AdminResourceModal = ({
               disabled={resources.length === 0 || loading}
               className="bg-orange-500 hover:bg-orange-600 text-black font-medium rounded-xl"
             >
-              {loading ? 'Processing...' : (editingWeek ? 'Update Resources' : 'Assign Resources')}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} {editingWeek ? 'Update Resources' : 'Assign Resources'}
             </Button>
           </div>
         </div>
