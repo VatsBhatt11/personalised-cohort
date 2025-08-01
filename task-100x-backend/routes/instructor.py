@@ -548,15 +548,18 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
             )
 
             if user.phoneNumber:
+                print(f"Attempting to send WhatsApp message to {user.phoneNumber} for session {new_resource.id}")
                 try:
                     await send_whatsapp_message(
                         destination=user.phoneNumber,
                         user_name=user.firstName, # Assuming user.firstName exists and can be used as user_name
                         message_body=personalized_message
                     )
-                    print(f"WhatsApp message sent to {user.phoneNumber} for session {new_resource.id}")
+                    print(f"Successfully sent WhatsApp message to {user.phoneNumber} for session {new_resource.id}")
                 except Exception as e:
-                    print(f"Error sending WhatsApp message to {user.phoneNumber}: {e}")
+                    print(f"Error sending WhatsApp message to {user.phoneNumber} for session {new_resource.id}: {e}")
+            else:
+                print(f"User {user.id} does not have a phone number. Skipping WhatsApp notification.")
 
     for new_res in created_resources:
         for user in users_with_launchpad:
