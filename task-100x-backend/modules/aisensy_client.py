@@ -3,7 +3,7 @@ import os
 
 AISENSY_API_KEY = os.environ.get('AISENSY_API_KEY')
 AISENSY_CAMPAIGN_NAME = os.environ.get('AISENSY_CAMPAIGN_NAME')
-AISENSY_API_URL = "https://panel.aisensy.com/api/v1/campaign/" # This is based on the documentation found
+AISENSY_API_URL = os.environ.get('AISENSY_API_URL')
 
 async def send_whatsapp_message(
     destination: str,
