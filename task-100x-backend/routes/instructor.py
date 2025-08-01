@@ -518,7 +518,7 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
         }
     )
 
-    async def _send_notifications_in_background(user, new_resource, prisma):
+    async def _send_notifications_in_background(user, new_resource, prisma: Prisma):
         if user.launchpad and new_resource.sessionTitle and new_resource.sessionDescription:
             context = {
                 "student_background": {
@@ -539,7 +539,7 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
             # Call Groq API to generate message
             personalized_message = await generate_personalized_message(context)
 
-            await prisma_client.notification.create(
+            await prisma.notification.create(
                 data={
                     "studentId": user.id,
                     "sessionId": new_resource.id,
@@ -558,8 +558,9 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
                 except Exception as e:
                     print(f"Error sending WhatsApp message to {user.phoneNumber}: {e}")
 
-    for user in users_with_launchpad:
-        asyncio.create_task(_send_notifications_in_background(user, new_resource, prisma))
+    for new_res in created_resources:
+        for user in users_with_launchpad:
+            asyncio.create_task(_send_notifications_in_background(user, new_res, prisma)) # Pass prisma client
 
     # Re-create tasks for existing plans based on the new resources
     for plan in plans_to_update:
