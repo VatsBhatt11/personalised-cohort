@@ -25,7 +25,7 @@ async def send_whatsapp_message(
         "campaignName": campaign_name,
         "destination": destination,
         "userName": user_name,
-        "templateParams": [message_body] # Assuming the message_body is the only template parameter
+        "templateParams": [message_body] 
     }
 
     try:
