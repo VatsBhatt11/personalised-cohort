@@ -138,18 +138,18 @@ model Option {
 }
 
 model QuizAttempt {
-  id                 String          @id @default(uuid())
-  quizId             String
-  learnerId          String
-  submittedAt        DateTime        @default(now())
-  score              Int?
-  time_spent_seconds Int             @default(0)
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
-  quiz               Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  learner            User            @relation(fields: [learnerId], references: [id])
-  quizAnswers        QuizAnswer[]
-  feedbackReport     FeedbackReport?
+  id          String   @id @default(uuid())
+  quizId      String
+  learnerId   String
+  submittedAt DateTime @default(now())
+  score       Int?
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  quiz           Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  learner        User            @relation(fields: [learnerId], references: [id])
+  quizAnswers    QuizAnswer[]
+  feedbackReport FeedbackReport?
 }
 
 model QuizAnswer {
