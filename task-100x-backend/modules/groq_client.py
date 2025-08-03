@@ -87,10 +87,9 @@ async def generate_quiz_from_transcription(transcription: str) -> dict:
     You are an AI assistant specialized in generating quizzes from session transcriptions.
     Your task is to create a quiz in a specific JSON format based on the provided transcription.
 
-    The quiz should consist of multiple-choice questions (MCQ), true/false questions, and short answer questions.
-    Each question should have a 'questionText', 'questionType', and 'options' (for MCQ and True/False).
-    For MCQ and True/False questions, each option should have 'optionText' and 'isCorrect' (boolean).
-    For short answer questions, the 'options' array should be empty.
+    The quiz should consist ONLY of multiple-choice questions (MCQ).
+    Each question MUST have a 'questionText', 'questionType' (which MUST be 'MULTIPLE_CHOICE'), and 'options'.
+    Each option MUST have 'optionText' and 'isCorrect' (boolean).
 
     The output MUST be a JSON object with a single key 'questions', which is an array of question objects.
 
@@ -106,19 +105,7 @@ async def generate_quiz_from_transcription(transcription: str) -> dict:
                     {"optionText": "Rome", "isCorrect": false}
                 ]
             },
-            {
-                "questionText": "The Earth is flat.",
-                "questionType": "TRUE_FALSE",
-                "options": [
-                    {"optionText": "True", "isCorrect": false},
-                    {"optionText": "False", "isCorrect": true}
-                ]
-            },
-            {
-                "questionText": "What is the main purpose of a 'for' loop in programming?",
-                "questionType": "SHORT_ANSWER",
-                "options": []
-            }
+
         ]
     }
 

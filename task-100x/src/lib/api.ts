@@ -348,7 +348,7 @@ export const instructor = {
       weekNumber,
       transcription,
     });
-    return response.data;
+    return response.data.data;
   },
   deleteWeekResources: async (
     cohortId: string,

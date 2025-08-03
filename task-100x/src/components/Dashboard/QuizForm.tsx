@@ -22,7 +22,7 @@ const QuizForm: React.FC<QuizFormProps> = ({
   cohortId,
   totalWeeks,
 }) => {
-  const [formState, setFormState] = useState<Quiz>(initialData || {
+  const [formState, setFormState] = useState<Quiz>(initialData ? { ...initialData, questions: initialData.questions || [] } : {
     cohortId: cohortId,
     weekNumber: 1,
     questions: [],
@@ -31,7 +31,7 @@ const QuizForm: React.FC<QuizFormProps> = ({
 
   useEffect(() => {
     if (initialData) {
-      setFormState(initialData);
+      setFormState({ ...initialData, questions: initialData.questions || [] });
       setCurrentQuestionIndex(0); // Reset to first question when initialData changes
     } else {
       setFormState({
