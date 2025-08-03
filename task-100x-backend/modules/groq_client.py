@@ -67,3 +67,74 @@ async def generate_personalized_message(context: dict) -> str:
     )
 
     return chat_completion.choices[0].message.content.strip()
+
+async def generate_quiz_from_transcription(transcription: str) -> dict:
+    client = Groq(
+        api_key=os.environ.get("GROQ_API_KEY"),
+    )
+
+    system_prompt = """
+    You are an AI assistant specialized in generating quizzes from session transcriptions.
+    Your task is to create a quiz in a specific JSON format based on the provided transcription.
+
+    The quiz should consist of multiple-choice questions (MCQ), true/false questions, and short answer questions.
+    Each question should have a 'questionText', 'questionType', and 'options' (for MCQ and True/False).
+    For MCQ and True/False questions, each option should have 'optionText' and 'isCorrect' (boolean).
+    For short answer questions, the 'options' array should be empty.
+
+    The output MUST be a JSON object with a single key 'questions', which is an array of question objects.
+
+    Example JSON format:
+    {
+        "questions": [
+            {
+                "questionText": "What is the capital of France?",
+                "questionType": "MULTIPLE_CHOICE",
+                "options": [
+                    {"optionText": "Berlin", "isCorrect": false},
+                    {"optionText": "Paris", "isCorrect": true},
+                    {"optionText": "Rome", "isCorrect": false}
+                ]
+            },
+            {
+                "questionText": "The Earth is flat.",
+                "questionType": "TRUE_FALSE",
+                "options": [
+                    {"optionText": "True", "isCorrect": false},
+                    {"optionText": "False", "isCorrect": true}
+                ]
+            },
+            {
+                "questionText": "What is the main purpose of a 'for' loop in programming?",
+                "questionType": "SHORT_ANSWER",
+                "options": []
+            }
+        ]
+    }
+
+    Ensure the questions are relevant to the transcription and cover key concepts.
+    """
+
+    user_message = f"""
+    Generate a quiz based on the following session transcription:
+
+    {transcription}
+    """
+
+    chat_completion = client.chat.completions.create(
+        messages=[
+            {
+                "role": "system",
+                "content": system_prompt,
+            },
+            {
+                "role": "user",
+                "content": user_message,
+            },
+        ],
+        model="llama3-8b-8192", # Using a suitable Groq model
+        response_model={"type": "object", "properties": {"questions": {"type": "array", "items": {"type": "object"}}}},
+        temperature=0.7,
+    )
+
+    return chat_completion.choices[0].message.content

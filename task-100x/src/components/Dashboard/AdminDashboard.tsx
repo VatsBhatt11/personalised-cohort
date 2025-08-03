@@ -66,6 +66,7 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentQuiz, setCurrentQuiz] = useState<Quiz | null>(null);
+  const [isGenerateAIModalOpen, setIsGenerateAIModalOpen] = useState(false);
   const { toast } = useToast();
 
   const fetchQuizzes = useCallback(async (selectedCohortId: string | null) => {
@@ -165,6 +166,12 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
   const handleEditQuiz = (quiz: Quiz) => {
     setCurrentQuiz(quiz);
     setIsModalOpen(true);
+  };
+
+  const handleGenerateQuizFromAI = (quiz: Quiz) => {
+    setCurrentQuiz(quiz);
+    setIsModalOpen(true);
+    setIsGenerateAIModalOpen(false);
   };
 
   const handleDeleteQuiz = async (quizId: string) => {
@@ -421,6 +428,9 @@ const fetchResources = async () => {
             handleSaveQuiz={handleSaveQuiz}
             cohortId={cohortId || ''}
             totalWeeks={cohorts.find(c => c.id === cohortId)?.totalWeeks || 12}
+            handleGenerateQuizFromAI={handleGenerateQuizFromAI}
+            isGenerateAIModalOpen={isGenerateAIModalOpen}
+            setIsGenerateAIModalOpen={setIsGenerateAIModalOpen}
           />
         </DialogContent>
       </Dialog>

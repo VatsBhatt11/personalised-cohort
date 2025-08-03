@@ -338,6 +338,18 @@ export const instructor = {
     }>(`/api/resources/${cohortId}/${weekNumber}`, resources);
     return response.data.data;
   },
+  generateQuizFromAI: async (
+    cohortId: string,
+    weekNumber: number,
+    transcription: string
+  ): Promise<Quiz> => {
+    const response = await api.post<Quiz>("/instructor/quizzes/generate-ai", {
+      cohortId,
+      weekNumber,
+      transcription,
+    });
+    return response.data;
+  },
   deleteWeekResources: async (
     cohortId: string,
     weekNumber: number

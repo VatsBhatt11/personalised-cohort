@@ -30,7 +30,9 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('+91');
+  const [countryCode, setCountryCode] = useState('91');
+  const [mobileNumber, setMobileNumber] = useState('');
+  const [displayMobileNumber, setDisplayMobileNumber] = useState('');
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [selectedCohortId, setSelectedCohortId] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
@@ -62,7 +64,7 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
     
     // Validate phone number for signup
     if (!isLogin) {
-      const phoneDigits = phoneNumber.replace(/\D/g, '');
+      const phoneDigits = mobileNumber.replace(/\D/g, '');
       if (phoneDigits.length < 7 || phoneDigits.length > 14) {
         toast({
           title: 'Error',
@@ -78,7 +80,7 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
     try {
       const response = isLogin
         ? await auth.login(email, password)
-        : await auth.signup(email, password, 'LEARNER', selectedCohortId, name, phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`);
+        : await auth.signup(email, password, 'LEARNER', selectedCohortId, name, `+${countryCode}${mobileNumber}`);
 
        toast({
          title: isLogin ? 'Login Successful' : 'Account Created',
@@ -145,10 +147,11 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
                 <div className="flex space-x-2">
                   <div className="w-1/4">
                     <Select
-                      onValueChange={(value) => setPhoneNumber(prev => {
-                        const number = prev.replace(/^\+\d+/, '');
-                        return `+${value}${number}`;
-                      })}
+                      onValueChange={(value) => {
+                           setCountryCode(value);
+                           // When country code changes, update mobile number display if needed
+                           // For now, just keep the display as is, it will be validated on submit
+                         }}
                       defaultValue="91"
                       disabled={isLoading}
                     >
@@ -168,17 +171,15 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
                   <div className="w-3/4">
                     <Input
                       id="phoneNumber"
-                      type="tel"
-                      value={phoneNumber.replace(/^\+\d+/, '')}
-                      onChange={(e) => {
-                        // Extract country code from current phoneNumber
-                        const countryCode = phoneNumber.match(/^\+\d+/) || '+91';
-                        // Validate: only digits and max length 14
-                        const digitsOnly = e.target.value.replace(/\D/g, '');
-                        if (digitsOnly.length <= 14) {
-                          setPhoneNumber(`${countryCode}${digitsOnly}`);
-                        }
-                      }}
+                      type="text"
+                      value={displayMobileNumber}
+                       onChange={(e) => {
+                         const digitsOnly = e.target.value.replace(/\D/g, '');
+                         if (digitsOnly.length <= 14) {
+                           setDisplayMobileNumber(digitsOnly);
+                           setMobileNumber(digitsOnly);
+                         }
+                       }}
                       className="input-neon"
                       placeholder="Enter your phone number"
                       required

@@ -9,7 +9,7 @@ import asyncio
 from typing import List
 from fastapi import APIRouter, Body, Depends, HTTPException
 from prisma import Prisma
-from modules.groq_client import generate_personalized_message
+from modules.groq_client import generate_personalized_message, generate_quiz_from_transcription
 from routes.auth import get_current_user
 from modules.aisensy_client import send_whatsapp_message
 
@@ -45,6 +45,11 @@ class QuizCreate(BaseModel):
     cohortId: str
     weekNumber: int
     questions: List[QuestionCreate]
+
+class GenerateQuizAI(BaseModel):
+    cohortId: str
+    weekNumber: int
+    transcription: str
 
 @router.post("/quizzes")
 async def create_quiz(quiz_data: QuizCreate, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
@@ -86,6 +91,39 @@ async def create_quiz(quiz_data: QuizCreate, current_user = Depends(get_current_
         "data": new_quiz,
         "message": "Quiz created successfully"
     }
+
+@router.post("/quizzes/generate-ai")
+async def generate_quiz_ai(quiz_ai_data: GenerateQuizAI, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+    if current_user.role != "INSTRUCTOR":
+        raise HTTPException(status_code=403, detail="Only instructors can generate quizzes using AI")
+
+    try:
+        generated_quiz_content = await generate_quiz_from_transcription(quiz_ai_data.transcription)
+        # Assuming generated_quiz_content is a dictionary with a 'questions' key
+        # and the structure matches QuizCreate's questions field
+        # We need to convert the generated questions into the QuestionCreate format
+        questions_for_db = []
+        for q_data in generated_quiz_content.get('questions', []):
+            options_for_db = []
+            for o_data in q_data.get('options', []):
+                options_for_db.append(OptionCreate(optionText=o_data['optionText'], isCorrect=o_data['isCorrect']))
+            questions_for_db.append(QuestionCreate(questionText=q_data['questionText'], questionType=q_data['questionType'], options=options_for_db))
+
+        # Return the generated quiz data in a format that can be used by the frontend
+        # The frontend expects a Quiz object, so we'll construct one with a placeholder ID
+        # and the cohortId and weekNumber from the request.
+        return {
+            "success": True,
+            "data": {
+                "id": "", # Placeholder ID, as it's not yet saved to DB
+                "cohortId": quiz_ai_data.cohortId,
+                "weekNumber": quiz_ai_data.weekNumber,
+                "questions": questions_for_db
+            },
+            "message": "Quiz generated successfully using AI"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate quiz using AI: {e}")
 
 class OptionUpdate(BaseModel):
     id: Optional[str] = None

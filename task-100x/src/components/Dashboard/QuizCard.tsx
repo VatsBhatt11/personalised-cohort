@@ -5,11 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Edit, Trash2 } from 'lucide-react';
 
 interface QuizCardProps {
-  quiz: {
-    id: string;
-    cohortId: string;
-    weekNumber: number;
-  };
+  quiz: Quiz;
   onEdit: (quiz: Quiz) => void;
   onDelete: (quizId: string) => void;
 }
