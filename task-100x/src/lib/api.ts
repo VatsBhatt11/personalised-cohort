@@ -182,13 +182,17 @@ export const auth = {
     email: string,
     password: string,
     role: string,
-    cohortId?: string
+    cohortId?: string,
+    name?: string,
+    phoneNumber?: string
   ): Promise<AuthResponse> => {
     const response = await api.post<AuthResponse>("/auth/signup", {
       email,
       password,
       role,
       cohortId,
+      name,
+      phoneNumber,
     });
     return response.data;
   },

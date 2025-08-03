@@ -26,6 +26,8 @@ class UserCreate(BaseModel):
     password: str
     role: str
     cohortId: Optional[str] = None
+    name: Optional[str] = None
+    phoneNumber: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: str
@@ -82,7 +84,9 @@ async def signup(user: UserCreate, prisma: Prisma = Depends(get_db)):
             "email": user.email,
             "password": hashed_password,
             "role": user.role,
-            "cohortId": user.cohortId
+            "cohortId": user.cohortId,
+            "name": user.name,
+            "phoneNumber": user.phoneNumber
         }
     )
     

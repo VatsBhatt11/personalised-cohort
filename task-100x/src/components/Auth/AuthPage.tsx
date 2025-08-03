@@ -9,6 +9,7 @@ import { auth, instructor } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
 import axios from 'axios';
 
+
 interface User {
   id: string;
   email: string;
@@ -29,6 +30,7 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('+91');
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [selectedCohortId, setSelectedCohortId] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
@@ -57,12 +59,26 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate phone number for signup
+    if (!isLogin) {
+      const phoneDigits = phoneNumber.replace(/\D/g, '');
+      if (phoneDigits.length < 7 || phoneDigits.length > 14) {
+        toast({
+          title: 'Error',
+          description: 'Please enter a valid phone number (7-14 digits)',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+    
     setIsLoading(true);
 
     try {
       const response = isLogin
         ? await auth.login(email, password)
-        : await auth.signup(email, password, 'LEARNER', selectedCohortId);
+        : await auth.signup(email, password, 'LEARNER', selectedCohortId, name, phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`);
 
        toast({
          title: isLogin ? 'Login Successful' : 'Account Created',
@@ -121,6 +137,57 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
                   required
                   disabled={isLoading}
                 />
+              </div>
+            )}
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="phoneNumber" className="text-orange-500">Phone Number</Label>
+                <div className="flex space-x-2">
+                  <div className="w-1/4">
+                    <Select
+                      onValueChange={(value) => setPhoneNumber(prev => {
+                        const number = prev.replace(/^\+\d+/, '');
+                        return `+${value}${number}`;
+                      })}
+                      defaultValue="91"
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger className="input-neon">
+                        <SelectValue placeholder="+91" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-800 text-white border-orange-500/20">
+                        <SelectItem value="91">+91 (IN)</SelectItem>
+                        <SelectItem value="1">+1 (US)</SelectItem>
+                        <SelectItem value="44">+44 (UK)</SelectItem>
+                        <SelectItem value="61">+61 (AU)</SelectItem>
+                        <SelectItem value="65">+65 (SG)</SelectItem>
+                        <SelectItem value="971">+971 (UAE)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-3/4">
+                    <Input
+                      id="phoneNumber"
+                      type="tel"
+                      value={phoneNumber.replace(/^\+\d+/, '')}
+                      onChange={(e) => {
+                        // Extract country code from current phoneNumber
+                        const countryCode = phoneNumber.match(/^\+\d+/) || '+91';
+                        // Validate: only digits and max length 14
+                        const digitsOnly = e.target.value.replace(/\D/g, '');
+                        if (digitsOnly.length <= 14) {
+                          setPhoneNumber(`${countryCode}${digitsOnly}`);
+                        }
+                      }}
+                      className="input-neon"
+                      placeholder="Enter your phone number"
+                      required
+                      disabled={isLoading}
+                      pattern="[0-9]*"
+                      inputMode="numeric"
+                    />
+                  </div>
+                </div>
               </div>
             )}
             {!isLogin && cohorts.length > 0 && (
