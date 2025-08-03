@@ -133,7 +133,7 @@ async def generate_quiz_from_transcription(transcription: str) -> dict:
             },
         ],
         model="llama3-8b-8192", # Using a suitable Groq model
-        response_model={"type": "object", "properties": {"questions": {"type": "array", "items": {"type": "object"}}}},
+
         temperature=0.7,
     )
 

@@ -343,7 +343,7 @@ export const instructor = {
     weekNumber: number,
     transcription: string
   ): Promise<Quiz> => {
-    const response = await api.post<Quiz>("/instructor/quizzes/generate-ai", {
+    const response = await api.post<Quiz>("/api/quizzes/generate-ai", {
       cohortId,
       weekNumber,
       transcription,

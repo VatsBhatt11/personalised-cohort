@@ -130,46 +130,46 @@ const QuizManagementComponent: React.FC<QuizManagementComponentProps> = ({
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Quiz Management</h2>
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogTrigger asChild>
-              <div className="flex gap-2">
-                <Button onClick={handleCreateQuiz}>Create New Quiz</Button>
-                <Dialog open={isGenerateAIModalOpen} onOpenChange={setIsGenerateAIModalOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline">Create Quiz using AI</Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[600px]">
-                    <DialogHeader>
-                      <DialogTitle>Generate Quiz with AI</DialogTitle>
-                    </DialogHeader>
-                    {cohortId && (
-                      <GenerateQuizAIModal
-                        cohortId={cohortId}
-                        totalWeeks={totalWeeks}
-                        onQuizGenerated={handleGenerateQuizFromAI}
-                        onClose={() => setIsGenerateAIModalOpen(false)}
-                      />
-                    )}
-                  </DialogContent>
-                </Dialog>
-              </div>
+        <div className="flex gap-2">
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={handleCreateQuiz}>Create New Quiz</Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[800px]">
+            <DialogContent className="sm:max-w-[800px]" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
               <DialogHeader>
                 <DialogTitle>{currentQuiz ? 'Edit Quiz' : 'Create New Quiz'}</DialogTitle>
               </DialogHeader>
               {cohortId && <QuizForm initialData={currentQuiz} onSave={handleSaveQuiz} cohortId={cohortId} totalWeeks={totalWeeks} />}
             </DialogContent>
           </Dialog>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[calc(100vh-200px)] overflow-y-auto">
-          {quizzes?.filter(quiz => quiz.id).map((quiz) => (
-            <QuizCard key={quiz.id} quiz={quiz} onEdit={handleEditQuiz} onDelete={handleDeleteQuiz} />
-          ))}
+
+          <Dialog open={isGenerateAIModalOpen} onOpenChange={setIsGenerateAIModalOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">Create Quiz using AI</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+              <DialogHeader>
+                <DialogTitle>Generate Quiz with AI</DialogTitle>
+              </DialogHeader>
+              {cohortId && (
+                <GenerateQuizAIModal
+                  cohortId={cohortId}
+                  totalWeeks={totalWeeks}
+                  onQuizGenerated={handleGenerateQuizFromAI}
+                  onClose={() => setIsGenerateAIModalOpen(false)}
+                />
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
-    );
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+        {quizzes?.filter(quiz => quiz.id).map((quiz) => (
+          <QuizCard key={quiz.id} quiz={quiz} onEdit={handleEditQuiz} onDelete={handleDeleteQuiz} />
+        ))}
+      </div>
+    </div>
+  );
 };
 
 export default QuizManagementComponent;
