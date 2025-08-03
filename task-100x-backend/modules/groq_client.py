@@ -66,7 +66,9 @@ async def generate_personalized_message(context: dict) -> str:
         max_tokens=100, # Adjust max_tokens to fit message length requirements
     )
 
-    return chat_completion.choices[0].message.content.strip()
+    response_content = chat_completion.choices[0].message.content
+    print(f"Groq API raw response: {response_content}") # Log the raw response
+    return response_content.strip()
 
 async def generate_quiz_from_transcription(transcription: str) -> dict:
     client = Groq(
