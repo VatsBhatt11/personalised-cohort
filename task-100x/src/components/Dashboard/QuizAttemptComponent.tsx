@@ -44,20 +44,20 @@ export const QuizAttemptComponent = ({ quizId, onAttemptComplete, onClose }: Qui
     };
   }, [startTime]);
 
-  useEffect(() => {
-    return () => {
-      if (startTime !== null) {
-        const elapsed = (Date.now() - startTime) / 1000;
-        const finalTimeSpent = timeSpentSeconds + elapsed;
-        if (finalTimeSpent > 0) {
-          learner.trackQuizTime(quizId, Math.round(finalTimeSpent)).catch(error => {
-            console.error("Error tracking quiz time on unmount:", error);
-          });
-        }
-      }
-      onClose();
-    };
-  }, [quizId, startTime, timeSpentSeconds, onClose]);
+  // useEffect(() => {
+  //   return () => {
+  //     if (startTime !== null) {
+  //       const elapsed = (Date.now() - startTime) / 1000;
+  //       const finalTimeSpent = timeSpentSeconds + elapsed;
+  //       if (finalTimeSpent > 0) {
+  //         learner.trackQuizTime(quizId, Math.round(finalTimeSpent)).catch(error => {
+  //           console.error("Error tracking quiz time on unmount:", error);
+  //         });
+  //       }
+  //     }
+  //     onClose();
+  //   };
+  // }, [quizId, startTime, timeSpentSeconds, onClose]);
 
   useEffect(() => {
     const fetchQuiz = async () => {
