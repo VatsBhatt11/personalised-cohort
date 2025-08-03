@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { instructor } from '@/lib/api';
-import axios from 'axios';
+import { instructor, Cohort } from '@/lib/api';
+import axios, { AxiosError } from 'axios';
 import { Loader2 } from 'lucide-react';
 
 interface CreateCohortModalProps {
@@ -14,9 +14,7 @@ interface CreateCohortModalProps {
   onCohortCreated: (cohortId: string) => void;
 }
 
-interface ApiError {
-  detail: string;
-}
+
 
 const CreateCohortModal: React.FC<CreateCohortModalProps> = ({ isOpen, onClose, onCohortCreated }) => {
   const [cohortName, setCohortName] = useState('');
@@ -64,13 +62,7 @@ const CreateCohortModal: React.FC<CreateCohortModalProps> = ({ isOpen, onClose, 
     formData.append('csv_file', csvFile);
 
     try {
-      const response = await axios.post('http://localhost:8000/instructor/cohorts', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${localStorage.getItem('token')}` // Assuming token is stored in localStorage
-        }
-      });
-      const newCohort = response.data.data; // Adjust based on your API response structure
+      const newCohort: Cohort = await instructor.createCohort(formData);
 
       toast({
         title: "Cohort created successfully!",
@@ -80,11 +72,11 @@ const CreateCohortModal: React.FC<CreateCohortModalProps> = ({ isOpen, onClose, 
       onClose();
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const axiosError = error.response?.data as ApiError;
+        const axiosError = error as AxiosError<{ detail: string }>;
         toast({
           variant: "destructive",
           title: "Error creating cohort",
-          description: axiosError?.detail || "Please try again later."
+          description: axiosError.response?.data?.detail || "Please try again later."
         });
       } else {
         toast({

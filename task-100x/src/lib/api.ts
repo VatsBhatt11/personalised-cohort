@@ -113,7 +113,7 @@ export interface LeaderboardEntry {
   shortestCompletionTime: number;
 }
 
-interface Cohort {
+export interface Cohort {
   id: string;
   name: string;
   totalWeeks: number;
@@ -397,18 +397,13 @@ export const instructor = {
     }>("/api/cohorts");
     return response.data.data;
   },
-  createCohort: async (cohortData: {
-    name: string;
-    totalWeeks: number;
-  }): Promise<
-    AxiosResponse<{ success: boolean; data: Cohort; message: string }>
-  > => {
-    const response = await api.post<{
-      success: boolean;
-      data: Cohort;
-      message: string;
-    }>("/api/cohorts", cohortData);
-    return response;
+  createCohort: async (cohortData: FormData): Promise<Cohort> => {
+    const response = await api.post<Cohort>("/api/cohorts", cohortData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
   },
   getQuizzes: async (cohortId?: string): Promise<Quiz[]> => {
     const response = await api.get<{
