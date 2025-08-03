@@ -68,7 +68,7 @@ async def generate_personalized_message(context: dict) -> str:
 
     response_content = chat_completion.choices[0].message.content
     print(f"Groq API raw response: {response_content}") # Log the raw response
-    return response_content.strip()
+    return response_content
 
 async def generate_quiz_from_transcription(transcription: str) -> dict:
     client = Groq(
@@ -135,7 +135,6 @@ async def generate_quiz_from_transcription(transcription: str) -> dict:
             },
         ],
         model="llama3-8b-8192", # Using a suitable Groq model
-
         temperature=0.7,
     )
 

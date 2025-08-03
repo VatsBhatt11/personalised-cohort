@@ -100,7 +100,10 @@ async def generate_quiz_ai(quiz_ai_data: GenerateQuizAI, current_user = Depends(
     try:
         generated_quiz_content_str = await generate_quiz_from_transcription(quiz_ai_data.transcription)
         import json
-        generated_quiz_content = json.loads(generated_quiz_content_str)
+        try:
+            generated_quiz_content = json.loads(generated_quiz_content_str)
+        except json.JSONDecodeError as e:
+            raise HTTPException(status_code=500, detail=f"Failed to parse Groq API response as JSON: {e}. Raw response: {generated_quiz_content_str}")
 
         # Assuming generated_quiz_content is a dictionary with a 'questions' key
         # and the structure matches QuizCreate's questions field
