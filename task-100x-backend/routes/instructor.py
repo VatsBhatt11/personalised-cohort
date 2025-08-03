@@ -98,7 +98,10 @@ async def generate_quiz_ai(quiz_ai_data: GenerateQuizAI, current_user = Depends(
         raise HTTPException(status_code=403, detail="Only instructors can generate quizzes using AI")
 
     try:
-        generated_quiz_content = await generate_quiz_from_transcription(quiz_ai_data.transcription)
+        generated_quiz_content_str = await generate_quiz_from_transcription(quiz_ai_data.transcription)
+        import json
+        generated_quiz_content = json.loads(generated_quiz_content_str)
+
         # Assuming generated_quiz_content is a dictionary with a 'questions' key
         # and the structure matches QuizCreate's questions field
         # We need to convert the generated questions into the QuestionCreate format
