@@ -68,6 +68,14 @@ async def generate_personalized_message(context: dict) -> str:
 
     response_content = chat_completion.choices[0].message.content
     print(f"Groq API raw response: {response_content}") # Log the raw response
+    
+    # Extract JSON from markdown code block if present
+    if '```json' in response_content:
+        json_start = response_content.find('{')
+        json_end = response_content.rfind('}')
+        if json_start != -1 and json_end != -1:
+            return response_content[json_start:json_end+1]
+    
     return response_content
 
 async def generate_quiz_from_transcription(transcription: str) -> dict:
