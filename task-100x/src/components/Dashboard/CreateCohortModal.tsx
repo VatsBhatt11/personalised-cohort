@@ -21,8 +21,15 @@ interface ApiError {
 const CreateCohortModal: React.FC<CreateCohortModalProps> = ({ isOpen, onClose, onCohortCreated }) => {
   const [cohortName, setCohortName] = useState('');
   const [totalWeeks, setTotalWeeks] = useState<number>(12);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      setCsvFile(event.target.files[0]);
+    }
+  };
 
   const handleCreateCohort = async () => {
     if (!cohortName.trim()) {
@@ -41,10 +48,30 @@ const CreateCohortModal: React.FC<CreateCohortModalProps> = ({ isOpen, onClose, 
       });
       return;
     }
+    if (!csvFile) {
+      toast({
+        variant: "destructive",
+        title: "CSV file is required",
+        description: "Please upload a CSV file with user data."
+      });
+      return;
+    }
 
     setLoading(true);
+    const formData = new FormData();
+    formData.append('cohort_name', cohortName);
+    formData.append('total_weeks', totalWeeks.toString());
+    formData.append('csv_file', csvFile);
+
     try {
-      const newCohort = await instructor.createCohort({ name: cohortName, totalWeeks });
+      const response = await axios.post('http://localhost:8000/instructor/cohorts', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${localStorage.getItem('token')}` // Assuming token is stored in localStorage
+        }
+      });
+      const newCohort = response.data.data; // Adjust based on your API response structure
+
       toast({
         title: "Cohort created successfully!",
         description: `Cohort '${newCohort.name}' with ${newCohort.totalWeeks} weeks has been created.`
@@ -101,6 +128,19 @@ const CreateCohortModal: React.FC<CreateCohortModalProps> = ({ isOpen, onClose, 
               onChange={(e) => setTotalWeeks(parseInt(e.target.value) || 0)}
               className="col-span-3"
               min="1"
+              disabled={loading}
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="csvFile" className="text-right">
+              Upload CSV
+            </Label>
+            <Input
+              id="csvFile"
+              type="file"
+              accept=".csv"
+              onChange={handleFileChange}
+              className="col-span-3"
               disabled={loading}
             />
           </div>

@@ -7,11 +7,13 @@ from datetime import datetime, timezone, timedelta
 import os
 import asyncio
 from typing import List
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, Form, UploadFile, File
+import csv
 from prisma import Prisma
 from modules.groq_client import generate_personalized_message, generate_quiz_from_transcription
 from routes.auth import get_current_user
 from modules.aisensy_client import send_whatsapp_message
+from modules.db_connector import DBConnection
 
 router = APIRouter()
 
@@ -370,22 +372,57 @@ async def update_quiz(quiz_id: str, quiz_data: QuizUpdate, current_user = Depend
     }
 
 @router.post("/cohorts")
-async def create_cohort(cohort: CohortCreate, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+async def create_cohort(cohort_name: str = Form(...), total_weeks: int = Form(...), csv_file: UploadFile = File(...), current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
     if current_user.role != "INSTRUCTOR":
         raise HTTPException(status_code=403, detail="Only instructors can create cohorts")
     
     # Calculate start and end dates
     start_date = datetime.utcnow()
-    end_date = start_date + timedelta(weeks=cohort.totalWeeks)
+    end_date = start_date + timedelta(weeks=total_weeks)
 
     new_cohort = await prisma.cohort.create(
         data={
-            "name": cohort.name,
-            "totalWeeks": cohort.totalWeeks,
+            "name": cohort_name,
+            "totalWeeks": total_weeks,
             "startDate": start_date,
             "endDate": end_date
         }
     )
+
+    # Process the CSV file
+    try:
+        csv_content = await csv_file.read()
+        db_connection = DBConnection()
+        await db_connection.connect()
+
+        if not db_connection.connected:
+            raise HTTPException(status_code=500, detail="Failed to connect to database for CSV processing.")
+
+        csv_reader = csv.reader(csv_content.decode('utf-8').splitlines())
+        header = [h.strip() for h in next(csv_reader)] # Read and strip header row
+
+        for row_values in csv_reader:
+            row_data = dict(zip(header, row_values))
+            # Map CSV columns to expected keys by insert_user_from_row
+            mapped_row_data = {
+                "Email": row_data.get("Email"),
+                "Name": row_data.get("Name"),
+                "PhoneNumber": row_data.get("PhoneNumber") if row_data.get("PhoneNumber") else None,
+                "Student": row_data.get("Student"),
+                "Work Experience": row_data.get("Work Experience"),
+                "Study Stream": row_data.get("Study Stream"),
+                "Expected Outcomes": row_data.get("Expected Outcomes"),
+                "Coding Familiarity": row_data.get("Coding Familiarity"),
+                "Python Familiarity": row_data.get("Python Familiarity"),
+                "Languages": row_data.get("Languages"),
+                "Years of Experience": row_data.get("Years of Experience")
+            }
+            result = await db_connection.insert_user_from_row(mapped_row_data, cohort_id=new_cohort.id)
+            if result["status"] == "failure":
+                print(f"Failed to insert user {result.get('email')}: {result.get('error')}")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to process CSV file: {e}")
     
     return {
         "success": True,
