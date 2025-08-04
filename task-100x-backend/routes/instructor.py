@@ -633,7 +633,7 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
                 try:
                     await send_whatsapp_message(
                         destination=user.phoneNumber,
-                        user_name=user.name, # Assuming user.firstName exists and can be used as user_name
+                        user_name=user.name, 
                         message_body=personalized_message
                     )
                     print(f"Successfully sent WhatsApp message to {user.phoneNumber} for session {new_resource.id}")

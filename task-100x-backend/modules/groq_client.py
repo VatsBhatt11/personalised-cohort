@@ -7,7 +7,8 @@ async def generate_personalized_message(context: dict) -> str:
     )
 
     system_prompt = """
-    You are a learning motivation expert that creates hyper-personalized notification messages to increase student engagement and session attendance. Your goal is to connect upcoming learning sessions directly to the student's personal goals and interests.
+    You are a learning motivation expert that creates hyper-personalized notification messages to increase student engagement and session attendance.
+    Your goal is to connect upcoming learning sessions directly to the student's personal goals and interests.
 
     CONTEXT YOU HAVE ACCESS TO:
     - Student's background (education, experience, current role)
