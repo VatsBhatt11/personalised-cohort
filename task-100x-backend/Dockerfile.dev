@@ -1,0 +1,50 @@
+FROM python:3.11-slim-bullseye
+
+WORKDIR /app
+
+# Install system dependencies for development
+RUN apt-get update && apt-get install -y \
+    gcc \
+    netcat-traditional \
+    curl \
+    git \
+    vim \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install development dependencies
+RUN pip install --no-cache-dir \
+    black \
+    flake8 \
+    mypy \
+    pytest-watch \
+    ipython
+
+# Copy application code
+COPY . .
+
+# Set environment to avoid binary path issues
+ENV PRISMA_CLI_BINARY_TARGETS="debian-openssl-1.1.x"
+ENV PRISMA_SKIP_POSTINSTALL_GENERATE=false
+ENV PYTHONPATH=/app
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Generate Prisma client as root first
+RUN prisma py fetch && \
+    prisma generate && \
+    chmod -R 755 /root/.cache 2>/dev/null || true
+
+# Make startup script executable
+RUN chmod +x start.sh
+
+# For development, run as root to avoid permission issues
+# In production, you should use a non-root user
+EXPOSE 8000
+
+# Development command with auto-reload
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
