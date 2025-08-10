@@ -36,7 +36,7 @@ const App = () => {
                 user?.role === 'INSTRUCTOR' ? (
                   <AdminDashboard userEmail={user.email} />
                 ) : (
-                  <Dashboard userEmail={user.email} />
+                  <Dashboard userEmail={user.email} userName={user.name}/>
                 )
               }
             />

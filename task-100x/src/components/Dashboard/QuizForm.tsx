@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Quiz, Option, Question } from "../../lib/api";
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface QuizFormProps {
   initialData: Quiz | null;
@@ -122,8 +123,35 @@ const QuizForm: React.FC<QuizFormProps> = ({
   };
 
   const handleSubmit = () => {
+    if (formState.questions.length === 0) {
+      toast.error("Please add at least one question.");
+      return;
+    }
+    for (const question of formState.questions) {
+      if (!question.questionText.trim()) {
+        toast.error("Question text cannot be empty.");
+        return;
+      }
+      if (question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'TRUE_FALSE') {
+        if (!question.options || question.options.length === 0) {
+          toast.error("Multiple choice/True-False questions must have at least one option.");
+          return;
+        }
+        for (const option of question.options) {
+          if (!option.optionText.trim()) {
+            toast.error("Option text cannot be empty.");
+            return;
+          }
+        }
+        if (!question.options.some(opt => opt.isCorrect)) {
+          toast.error("At least one option must be marked as correct.");
+          return;
+        }
+      }
+    }
     console.log("Quiz form state on submit:", formState);
     onSave(formState);
+    toast.success("Quiz saved successfully!");
   };
 
   const navigateQuestions = (direction: 'prev' | 'next') => {
@@ -137,19 +165,19 @@ const QuizForm: React.FC<QuizFormProps> = ({
   const currentQuestion = formState.questions[currentQuestionIndex];
 
   return (
-    <div className="grid gap-4 py-4 max-h-[calc(100vh-150px)] overflow-y-auto">
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="week-select" className="text-right">Week Number</Label>
+    <div className="grid gap-6 py-6 max-h-[calc(100vh-180px)] overflow-y-auto pr-2">
+      <div className="space-y-2">
+        <Label htmlFor="week-select" className="text-orange-300 font-medium">Week Number</Label>
         <Select
           onValueChange={(value) => setFormState(prev => ({ ...prev, weekNumber: Number(value) }))}
           value={String(formState.weekNumber)}
         >
-          <SelectTrigger id="week-select" className="col-span-3">
+          <SelectTrigger id="week-select" className="w-full p-3 border border-orange-500/30 rounded-xl bg-gray-900 text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 ease-in-out shadow-lg hover:border-orange-400">
             <SelectValue placeholder="Select a week" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-gray-900 text-white border border-orange-500/30 rounded-xl shadow-xl max-h-60 overflow-y-auto">
             {Array.from({ length: totalWeeks }, (_, i) => i + 1).map((week) => (
-              <SelectItem key={week} value={String(week)}>
+              <SelectItem key={week} value={String(week)} className="hover:bg-orange-500/20 focus:bg-orange-500/20 cursor-pointer py-2 px-4 transition-colors duration-200 ease-in-out">
                 Week {week}
               </SelectItem>
             ))}
@@ -157,7 +185,7 @@ const QuizForm: React.FC<QuizFormProps> = ({
         </Select>
       </div>
 
-      <h3 className="text-xl font-semibold mt-4">Questions</h3>
+      <h3 className="text-xl font-bold text-orange-400 mt-6">Questions</h3>
       {formState.questions.length > 0 ? (
         <div className="flex items-center justify-between mb-4">
           <Button
@@ -165,10 +193,11 @@ const QuizForm: React.FC<QuizFormProps> = ({
             size="icon"
             onClick={() => navigateQuestions('prev')}
             disabled={currentQuestionIndex === 0}
+            className="border-orange-500/50 text-orange-400 hover:bg-orange-500/20 rounded-full shadow-md transition-all duration-200 ease-in-out"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-5 w-5" />
           </Button>
-          <span className="text-lg font-medium">
+          <span className="text-lg font-semibold text-orange-300">
             Question {currentQuestionIndex + 1} of {formState.questions.length}
           </span>
           <Button
@@ -176,28 +205,38 @@ const QuizForm: React.FC<QuizFormProps> = ({
             size="icon"
             onClick={() => navigateQuestions('next')}
             disabled={currentQuestionIndex === formState.questions.length - 1}
+            className="border-orange-500/50 text-orange-400 hover:bg-orange-500/20 rounded-full shadow-md transition-all duration-200 ease-in-out"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-5 w-5" />
           </Button>
         </div>
       ) : null}
 
       {currentQuestion ? (
-        <Card key={currentQuestion.id || currentQuestionIndex} className="mb-4 p-4">
+        <Card key={currentQuestion.id || currentQuestionIndex} className="mb-4 p-6 bg-gray-800 border-orange-500/30 rounded-2xl shadow-xl">
           <CardHeader className="flex flex-row justify-between items-center p-0 pb-4">
-            <CardTitle>Question {currentQuestionIndex + 1}</CardTitle>
-            <Button variant="destructive" size="sm" onClick={() => removeQuestion(currentQuestionIndex)}>
-              <Trash2 className="h-4 w-4" />
+            <CardTitle className="text-xl font-bold text-orange-400">Question {currentQuestionIndex + 1}</CardTitle>
+            <Button variant="destructive" size="sm" onClick={() => removeQuestion(currentQuestionIndex)} className="bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-md transition-all duration-200 ease-in-out">
+              <Trash2 className="h-4 w-4 mr-2" /> Delete Question
             </Button>
           </CardHeader>
-          <CardContent className="p-0">
-            <div className="grid gap-2 mb-4">
-              <Label htmlFor={`questionText-${currentQuestionIndex}`}>Question Text</Label>
-              <Input id={`questionText-${currentQuestionIndex}`} value={currentQuestion.questionText} onChange={(e) => handleQuestionChange(currentQuestionIndex, 'questionText', e.target.value)} />
+          <CardContent className="p-0 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor={`questionText-${currentQuestionIndex}`} className="text-orange-300 font-medium">Question Text</Label>
+              <Input
+                id={`questionText-${currentQuestionIndex}`}
+                value={currentQuestion.questionText}
+                onChange={(e) => handleQuestionChange(currentQuestionIndex, 'questionText', e.target.value)}
+                className="w-full bg-gray-800 border border-orange-600/50 text-orange-300 px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out placeholder:text-gray-500"
+                placeholder="Enter question text"
+              />
             </div>
-            <div className="grid gap-2 mb-4">
-              <Label htmlFor={`questionType-${currentQuestionIndex}`}>Question Type</Label>
-              <Select value={currentQuestion.questionType} onValueChange={(value: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER') => handleQuestionChange(currentQuestionIndex, 'questionType', value)}>
+            <div className="space-y-2">
+              <Label htmlFor={`questionType-${currentQuestionIndex}`} className="text-orange-300 font-medium">Question Type</Label>
+              <Select
+                value={currentQuestion.questionType}
+                onValueChange={(value: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER') => handleQuestionChange(currentQuestionIndex, 'questionType', value)}
+              >
                 <SelectTrigger id={`questionType-${currentQuestionIndex}`}><SelectValue placeholder="Select a type" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="MULTIPLE_CHOICE">Multiple Choice</SelectItem>

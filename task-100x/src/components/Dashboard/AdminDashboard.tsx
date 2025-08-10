@@ -444,117 +444,118 @@ const fetchResources = async () => {
       />
 
       {hasSelectedCohort && (
-        <div className="min-h-screen bg-black p-6">
+        <div className="min-h-screen bg-gray-800 p-6 font-sans">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-orange-400">Admin Dashboard</h1>
-            <p className="text-gray-400 mt-1">Welcome back, {userEmail}</p>
+            <h1 className="text-4xl font-extrabold text-orange-500 tracking-tight">Admin Dashboard</h1>
+            <p className="text-gray-400 mt-2 text-lg">Welcome back, <span className="font-semibold text-orange-300">{userEmail}</span></p>
           </div>
-          <Badge className="bg-orange-500/20 text-orange-400 border-orange-400/30 px-4 py-2 rounded-xl">
+          <Badge className="bg-orange-600/20 text-orange-400 border-orange-500/30 px-5 py-2 rounded-full text-base font-medium shadow-lg">
             Administrator
           </Badge>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         {stats.map((stat, index) => (
-          <Card key={index} className="bg-gray-900/50 border-orange-500/20 rounded-2xl">
-            <CardHeader className="pb-2">
+          <Card key={index} className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg hover:shadow-orange-500/20 transition-all duration-300 ease-in-out">
+            <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm text-gray-400">{stat.title}</CardTitle>
-                <stat.icon className="w-5 h-5 text-orange-400" />
+                <CardTitle className="text-sm font-medium text-gray-300">{stat.title}</CardTitle>
+                <stat.icon className="w-6 h-6 text-orange-400" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-400 mb-1">{stat.value}</div>
-              <p className="text-xs text-cyan-400">{stat.change} from last month</p>
+              <div className="text-3xl font-bold text-orange-500 mb-1">{stat.value}</div>
+              <p className="text-xs text-gray-400">{stat.change} from last month</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Resource Management Section */}
-      <Card className="bg-gray-900/50 border-orange-500/20 mb-8 rounded-2xl">
-        <CardHeader>
-          <CardTitle className="text-orange-400">Resource Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <p className="text-gray-400">Create and assign learning resources to different weeks for learners.</p>
-            <button 
-              onClick={handleNewAssignment}
-              className="px-6 py-3 bg-orange-500/20 text-orange-400 border border-orange-400/30 rounded-xl hover:bg-orange-500/30 transition-colors font-medium"
-              disabled={loading}
-            >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Assign Resources
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Resource and Quiz Management Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+        <Card className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-orange-400">Resource Management</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-5">
+              <p className="text-gray-300 text-lg">Create and assign learning resources to different weeks for learners.</p>
+              <Button 
+                onClick={handleNewAssignment}
+                className="px-8 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+                disabled={loading}
+              >
+                {loading ? <Loader2 className="h-5 w-5 animate-spin mr-3" /> : null} Assign Resources
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Quiz Management Section */}
-      <Card className="bg-gray-900/50 border-orange-500/20 mb-8 rounded-2xl">
-        <CardHeader>
-          <CardTitle className="text-orange-400">Quiz Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <p className="text-gray-400">Create, edit, and manage quizzes for your learners.</p>
-            <Button
-              onClick={() => setIsQuizManagementOpen(true)}
-              className="px-6 py-3 bg-orange-500/20 text-orange-400 border border-orange-400/30 rounded-xl hover:bg-orange-500/30 transition-colors font-medium"
-            >
-              <HelpCircle className="mr-2 h-4 w-4" />
-              Manage Quizzes
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        <Card className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-orange-400">Quiz Management</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-5">
+              <p className="text-gray-300 text-lg">Create, edit, and manage quizzes for your learners.</p>
+              <Button
+                onClick={() => setIsQuizManagementOpen(true)}
+                className="px-8 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+              >
+                <HelpCircle className="mr-3 h-5 w-5" />
+                Manage Quizzes
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Assigned Weeks */}
       {assignedWeeks.length > 0 && (
-        <Card className="bg-gray-900/50 border-orange-500/20 rounded-2xl">
+        <Card className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg mb-10">
           <CardHeader>
-            <CardTitle className="text-orange-400">Assigned Weekly Resources</CardTitle>
+            <CardTitle className="text-2xl font-bold text-orange-400">Assigned Weekly Resources</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-6">
               {assignedWeeks.map((weekData) => (
-                <div key={weekData?.week} className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-lg font-semibold text-orange-300">Week {weekData?.week}</h4>
-                    <div className="flex gap-2">
-                      <button
+                <div key={weekData?.week} className="bg-gray-800 border border-gray-700 rounded-lg p-5 shadow-md">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-xl font-semibold text-orange-300">Week {weekData?.week}</h4>
+                    <div className="flex gap-3">
+                      <Button
                         onClick={() => handleEditWeek(weekData?.week)}
-                        className="p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10 rounded-xl transition-colors"
+                        className="p-2 text-gray-400 hover:text-orange-400 hover:bg-gray-700 rounded-md transition-colors duration-200"
                         title="Edit Week"
                         disabled={loading}
                       >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
+                        <Edit className="w-5 h-5" />
+                      </Button>
+                      <Button
                         onClick={() => handleDeleteWeek(weekData?.week)}
-                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-xl transition-colors"
+                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-gray-700 rounded-md transition-colors duration-200"
                         title="Delete Week"
                         disabled={loading}
                       >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                        <Trash2 className="w-5 h-5" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {weekData?.resources?.map((resource) => (
-                      <div key={resource.id} className="flex items-center justify-between p-3 bg-gray-700/30 rounded-xl border border-gray-600/30">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-3 h-3 rounded-full ${
+                      <div key={resource.id} className="flex items-center justify-between p-4 bg-gray-700/50 rounded-md border border-gray-600/50">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-4 h-4 rounded-full ${
                             resource.type === 'VIDEO' ? 'bg-red-500' :
                             resource.type === 'ARTICLE' ? 'bg-blue-500' : 'bg-green-500'
                           }`} />
                           <div>
-                            <p className="text-orange-300 font-medium">{resource.title}</p>
+                            <p className="text-orange-300 font-medium text-lg">{resource.title}</p>
                             <p className="text-sm text-gray-400">{resource.type} • {resource.url}</p>
                           </div>
                         </div>

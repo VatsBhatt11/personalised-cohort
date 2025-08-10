@@ -138,6 +138,7 @@ async def login(user: UserLogin, prisma: Prisma = Depends(get_db)):
             "user": {
                 "id": db_user.id,
                 "email": db_user.email,
+                "name": db_user.name,
                 "role": db_user.role
             }
         },

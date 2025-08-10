@@ -148,22 +148,22 @@ export const QuizAttemptComponent = ({ quizId, onAttemptComplete, onClose }: Qui
   const selectedAnswer = answers.find(ans => ans.questionId === currentQuestion.id)?.selectedOptionId;
 
   return (
-    <div className="p-4">
+    <div className="p-4 bg-gray-800 rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold mb-4">Quiz for Week {quizData.weekNumber}</h2>
 
-      <div className="bg-card p-6 rounded-lg shadow-md mb-6">
+      <div className="bg-gray-900 p-6 rounded-lg shadow-md mb-6">
         <h3 className="text-xl font-semibold mb-4">Question {currentQuestionIndex + 1} of {quizData.questions.length}</h3>
-        <p className="text-lg mb-4">{currentQuestion.text}</p>
-        <div className="space-y-3">
+        <p className="text-lg mb-4 text-orange-400">{currentQuestion.text}</p>
+          <div className="space-y-3 text-white">
           {currentQuestion.options.map(option => (
             <Button
-              key={option.id}
-              variant={selectedAnswer === option.id ? "default" : "outline"}
-              className="w-full justify-start"
-              onClick={() => handleOptionSelect(currentQuestion.id, option.id)}
-            >
-              {option.text}
-            </Button>
+                key={option.id}
+                variant="outline"
+                className={`w-full justify-start ${selectedAnswer === option.id ? 'bg-orange-600 hover:bg-orange-700' : 'bg-gray-700 hover:bg-gray-600'} text-white border-gray-600 focus:ring-orange-500`}
+                onClick={() => handleOptionSelect(currentQuestion.id, option.id)}
+              >
+                {option.text}
+              </Button>
           ))}
         </div>
       </div>

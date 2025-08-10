@@ -305,28 +305,28 @@ const AdminResourceModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="glass border-orange-500/20 max-w-4xl w-[95%] max-h-[80vh] overflow-y-auto rounded-2xl">
+      <DialogContent className="glass border-orange-500/20 max-w-4xl w-[95%] max-h-[80vh] overflow-y-auto rounded-2xl bg-gray-800">
         <DialogHeader>
-          <DialogTitle className="text-2xl text-orange-500">
+          <DialogTitle className="text-3xl font-bold text-orange-500">
             {editingWeek ? `Edit Week ${editingWeek} Resources` : 'Assign Resources'}
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Week Selection */}
           <div className="space-y-2">
-            <label className="text-orange-400 font-medium">Select Week:</label>
+            <label className="text-orange-300 font-semibold text-lg">Select Week:</label>
             <Select
               value={selectedWeek.toString()}
               onValueChange={(value) => setSelectedWeek(parseInt(value))}
               disabled={!!editingWeek || loading}
             >
-              <SelectTrigger className="w-full p-2 border border-gray-700 rounded-md bg-gray-800 text-white focus:ring-orange-500 focus:border-orange-500">
+              <SelectTrigger className="w-full p-3 border border-orange-500/30 rounded-xl bg-gray-900 text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 ease-in-out shadow-lg hover:border-orange-400">
                 <SelectValue placeholder="Select a week" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 text-white border border-gray-700">
+              <SelectContent className="bg-gray-900 text-white border border-orange-500/30 rounded-xl shadow-xl max-h-60 overflow-y-auto">
                 {Array.from({ length: totalWeeks }, (_, i) => i + 1).map(weekNum => (
-                  <SelectItem key={weekNum} value={weekNum.toString()}>
+                  <SelectItem key={weekNum} value={weekNum.toString()} className="hover:bg-orange-500/20 focus:bg-orange-500/20 cursor-pointer py-2 px-4 transition-colors duration-200 ease-in-out">
                     Week {weekNum}
                   </SelectItem>
                 ))}
@@ -335,28 +335,28 @@ const AdminResourceModal = ({
           </div>
 
           {/* Session Details */}
-          <Card className="bg-gray-900/50 border-orange-500/20 rounded-2xl">
-            <CardContent className="p-4 space-y-4">
-              <h3 className="text-orange-400 font-medium">Session Details</h3>
+          <Card className="bg-gray-900/70 border-orange-500/30 rounded-2xl shadow-xl">
+            <CardContent className="p-6 space-y-6">
+              <h3 className="text-orange-400 font-semibold text-xl">Session Details</h3>
               
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <label className="text-orange-300 text-sm">Session Title</label>
+                  <label className="text-orange-300 text-sm font-medium">Session Title</label>
                   <input
                     type="text"
                     value={sessionDetails.sessionTitle}
                     onChange={(e) => setSessionDetails({ ...sessionDetails, sessionTitle: e.target.value })}
-                    className="w-full bg-gray-800 border border-gray-600 text-orange-300 px-3 py-2 rounded-xl focus:border-orange-500 focus:outline-none"
+                    className="w-full bg-gray-800 border border-orange-600/50 text-orange-300 px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out placeholder:text-gray-500"
                     placeholder="Session title (optional)"
                   />
                 </div>
                 
                 <div>
-                  <label className="text-orange-300 text-sm">Session Description</label>
+                  <label className="text-orange-300 text-sm font-medium">Session Description</label>
                   <textarea
                     value={sessionDetails.sessionDescription}
                     onChange={(e) => setSessionDetails({ ...sessionDetails, sessionDescription: e.target.value })}
-                    className="w-full bg-gray-800 border border-gray-600 text-orange-300 px-3 py-2 rounded-xl focus:border-orange-500 focus:outline-none"
+                    className="w-full bg-gray-800 border border-orange-600/50 text-orange-300 px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out placeholder:text-gray-500"
                     placeholder="Session description (optional)"
                     rows={3}
                   />
@@ -366,40 +366,39 @@ const AdminResourceModal = ({
           </Card>
 
           {/* Add/Edit Resource Form */}
-          <Card className="bg-gray-900/50 border-orange-500/20 rounded-2xl">
-            <CardContent className="p-4 space-y-4">
-              <h3 className="text-orange-400 font-medium">
+          <Card className="bg-gray-900/70 border-orange-500/30 rounded-2xl shadow-xl">
+            <CardContent className="p-6 space-y-6">
+              <h3 className="text-orange-400 font-semibold text-xl">
                 {editingResourceIndex !== null ? 'Edit Resource' : 'Add New Resource'}
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="text-orange-300 text-sm">Title</label>
+                  <label className="text-orange-300 text-sm font-medium">Title</label>
                   <input
                     type="text"
                     value={newResource.title}
                     onChange={(e) => setNewResource({ ...newResource, title: e.target.value })}
-                    className="w-full bg-gray-800 border border-gray-600 text-orange-300 px-3 py-2 rounded-xl focus:border-orange-500 focus:outline-none"
+                    className="w-full bg-gray-800 border border-orange-600/50 text-orange-300 px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out placeholder:text-gray-500"
                     placeholder="Resource title"
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label htmlFor="duration" className="text-sm font-medium text-gray-300">Duration (minutes)</label>
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium text-orange-300">Duration (minutes)</label>
                     <input
                       id="duration"
                       type="number"
-                      className="flex h-10 w-full rounded-md border border-orange-500/30 bg-black/20 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white"
+                      className="flex h-10 w-full rounded-xl border border-orange-500/30 bg-gray-800 px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white transition-all duration-200 ease-in-out"
                       value={newResource.duration}
                       onChange={(e) => setNewResource({ ...newResource, duration: parseInt(e.target.value) || 0 })}
                       placeholder="e.g., 60"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="tags" className="text-sm font-medium text-gray-300">Tags (comma-separated)</label>
+                    <label htmlFor="tags" className="text-sm font-medium text-orange-300">Tags (comma-separated)</label>
                     <input
-                      id="tags"
-                      className="flex h-10 w-full rounded-md border border-orange-500/30 bg-black/20 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white"
+                      className="flex h-10 w-full rounded-xl border border-orange-500/30 bg-gray-800 px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white transition-all duration-200 ease-in-out"
                       value={newResource.tags.join(', ')}
                       onChange={(e) => setNewResource({ ...newResource, tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag !== '') })}
                       placeholder="e.g., Python, AI, Beginner"
@@ -408,11 +407,11 @@ const AdminResourceModal = ({
                 </div>
                 
                 <div>
-                  <label className="text-orange-300 text-sm">Content Type</label>
+                  <label className="text-orange-300 text-sm font-medium">Content Type</label>
                   <select
                     value={newResource.type}
                     onChange={(e) => setNewResource({ ...newResource, type: e.target.value as 'VIDEO' | 'ARTICLE' | 'DOCUMENT' })}
-                    className="w-full bg-gray-800 border border-gray-600 text-orange-300 px-3 py-2 rounded-xl focus:border-orange-500 focus:outline-none"
+                    className="w-full bg-gray-800 border border-orange-600/50 text-orange-300 px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out"
                   >
                     <option value="VIDEO">Video</option>
                     <option value="ARTICLE">Article</option>
@@ -421,12 +420,12 @@ const AdminResourceModal = ({
                 </div>
                 
                 <div>
-                  <label className="text-orange-300 text-sm">Resource URL</label>
+                  <label className="text-orange-300 text-sm font-medium">Resource URL</label>
                   <input
                     type="url"
                     value={newResource.url}
                     onChange={(e) => setNewResource({ ...newResource, url: e.target.value })}
-                    className="w-full bg-gray-800 border border-gray-600 text-orange-300 px-3 py-2 rounded-xl focus:border-orange-500 focus:outline-none"
+                    className="w-full bg-gray-800 border border-orange-600/50 text-orange-300 px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out placeholder:text-gray-500"
                     placeholder="https://..."
                   />
                 </div>
@@ -440,7 +439,7 @@ const AdminResourceModal = ({
                     checked={newResource.isOptional}
                     onChange={(e) => setNewResource({ ...newResource, isOptional: e.target.checked })}
                   />
-                  <label htmlFor="isOptional" className="text-orange-300 text-sm cursor-pointer">Optional Resource</label>
+                  <label htmlFor="isOptional" className="text-orange-300 text-sm cursor-pointer font-medium">Optional Resource</label>
               </div>
               
               <div className="flex gap-2">
@@ -448,7 +447,7 @@ const AdminResourceModal = ({
                   <>
                     <Button
                       onClick={updateResource}
-                      className="bg-orange-500/20 text-orange-400 border border-orange-400/30 hover:bg-orange-500/30 rounded-xl"
+                      className="bg-orange-600 text-white border border-orange-600 hover:bg-orange-700 rounded-xl shadow-md transition-all duration-200 ease-in-out"
                       disabled={loading}
                     >
                       Update Resource
@@ -456,7 +455,7 @@ const AdminResourceModal = ({
                     <Button
                       onClick={cancelEditing}
                       variant="outline"
-                      className="border-gray-600 text-gray-400 hover:bg-gray-800 rounded-xl"
+                      className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white rounded-xl shadow-md transition-all duration-200 ease-in-out"
                       disabled={loading}
                     >
                       Cancel
@@ -465,7 +464,7 @@ const AdminResourceModal = ({
                 ) : (
                   <Button
                     onClick={addResource}
-                    className="bg-orange-500/20 text-orange-400 border border-orange-400/30 hover:bg-orange-500/30 rounded-xl"
+                    className="bg-orange-600 text-white border border-orange-600 hover:bg-orange-700 rounded-xl shadow-md transition-all duration-200 ease-in-out"
                     disabled={loading}
                   >
                     <Plus className="w-4 h-4 mr-2" />
@@ -479,31 +478,31 @@ const AdminResourceModal = ({
           {/* Resources List */}
           {resources.length > 0 && (
             <div className="space-y-2">
-              <h3 className="text-orange-400 font-medium">Resources for Week {selectedWeek}:</h3>
+              <h3 className="text-orange-400 font-semibold text-xl">Resources for Week {selectedWeek}:</h3>
               {resources.map((resource, index) => (
-                <Card key={resource.id || index} className="bg-gray-900/30 border-orange-500/10 rounded-2xl">
-                  <CardContent className="p-3 flex items-center justify-between">
+                <Card key={resource.id || index} className="bg-gray-900/50 border-orange-500/20 rounded-2xl shadow-lg">
+                  <CardContent className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className={`w-3 h-3 rounded-full ${
                         resource.type === 'VIDEO' ? 'bg-red-500' :
                         resource.type === 'ARTICLE' ? 'bg-blue-500' : 'bg-green-500'
                       }`} />
                       <div>
-                        <p className="text-orange-300 font-medium">{resource.title}</p>
-                        <p className="text-sm text-gray-400">{resource.type} • {resource.url}</p>
+                        <p className="text-orange-300 font-semibold text-base">{resource.title}</p>
+                        <p className="text-sm text-gray-400 mt-1">{resource.type} • {resource.url}</p>
                       </div>
                     </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => startEditingResource(resource, index)}
-                        className="text-cyan-400 hover:text-cyan-300 p-1 rounded-lg hover:bg-cyan-400/10"
+                        className="text-cyan-400 hover:text-cyan-300 p-2 rounded-lg hover:bg-cyan-400/20 transition-colors duration-200 ease-in-out"
                         disabled={loading}
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => removeResource(index)}
-                        className="text-red-400 hover:text-red-300 p-1 rounded-lg hover:bg-red-400/10"
+                        className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-400/20 transition-colors duration-200 ease-in-out"
                         disabled={loading}
                       >
                         <X className="w-4 h-4" />
@@ -520,7 +519,7 @@ const AdminResourceModal = ({
             <Button
               variant="outline"
               onClick={handleClose}
-              className="border-gray-600 text-gray-400 hover:bg-gray-800 rounded-xl"
+              className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white rounded-xl shadow-md transition-all duration-200 ease-in-out"
               disabled={loading}
             >
               Cancel
@@ -528,7 +527,7 @@ const AdminResourceModal = ({
             <Button
               onClick={handleAssignResources}
               disabled={resources.length === 0 || loading}
-              className="bg-orange-500 hover:bg-orange-600 text-black font-medium rounded-xl"
+              className="bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl shadow-md transition-all duration-200 ease-in-out"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} {editingWeek ? 'Update Resources' : 'Assign Resources'}
             </Button>

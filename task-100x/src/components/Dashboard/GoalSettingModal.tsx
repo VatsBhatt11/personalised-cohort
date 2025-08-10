@@ -161,7 +161,7 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="glass border-orange-500/20 max-w-3xl w-[95%] sm:max-w-3xl rounded-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="bg-gray-800 border border-orange-500/20 max-w-3xl w-[95%] sm:max-w-3xl rounded-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl text-orange-500">
             Level {selectedWeek} - Weekly Plan
@@ -172,7 +172,7 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
             {weeklyPlan?.tasks && weeklyPlan.tasks.length > 0 ? (
               <div className="space-y-4">
                 {weeklyPlan.tasks.map((task) => (
-                  <Card key={task.id} className="bg-gray-900/50 border-orange-500/10 rounded-xl">
+                  <Card key={task.id} className="bg-gray-900 border border-orange-500/10 rounded-xl shadow-lg">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -187,7 +187,7 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
                             <Badge variant="secondary" className="bg-green-500 text-white">Completed</Badge>
                           )}
                           <Button
-                            className="w-full"
+                            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200"
                             onClick={() => {
                               setSelectedTask(task);
                               setResourceModalOpen(true);
@@ -204,7 +204,7 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
                 ))}
 
                 {quizResource && (
-                  <Card className="bg-gray-900/50 border-orange-500/10 rounded-xl">
+                  <Card className="bg-gray-900 border border-orange-500/10 rounded-xl shadow-lg">
                     <CardHeader>
                       <CardTitle className="text-orange-300">Weekly Quiz</CardTitle>
                     </CardHeader>
@@ -214,7 +214,7 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
                           <p className="text-orange-300 font-medium">{quizResource.title}</p>
                           <p className="text-sm text-gray-400">Test your knowledge for this week.</p>
                         </div>
-                        <Button onClick={handleQuizButtonClick}>
+                        <Button onClick={handleQuizButtonClick} className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
                           {lastAttemptId ? 'View Feedback' : 'Take Quiz'}
                         </Button>
                       </div>
@@ -229,7 +229,7 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
                     isOpen={resourceModalOpen}
                     onClose={handleResourceModalClose}
                   >
-                    <div className="relative h-[70vh] w-full">
+                    <div className="relative bg-gray-800 h-[70vh] w-full">
                       <iframe
                         src={selectedTask.resource.url}
                         title={selectedTask.resource.title}
@@ -238,14 +238,14 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
                       ></iframe>
                     </div>
                     <DialogFooter className="mt-4">
-                      <Button onClick={handleResourceModalClose}>Close</Button>
+                      <Button onClick={handleResourceModalClose} className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">Close</Button>
                     </DialogFooter>
                   </Modal>
                 )}
 
                 {quizResource && isQuizAttemptOpen && (
                   <Dialog open={isQuizAttemptOpen} onOpenChange={setIsQuizAttemptOpen}>
-                    <DialogContent className="glass border-orange-500/20 max-w-3xl w-[95%] sm:max-w-3xl rounded-2xl max-h-[80vh] overflow-y-auto">
+                    <DialogContent className="bg-gray-800 border border-orange-500/20 max-w-3xl w-[95%] sm:max-w-3xl rounded-2xl max-h-[80vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle className="text-2xl text-orange-500">
                           Weekly Quiz Attempt
@@ -262,7 +262,7 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
 
                 {quizResource && isQuizFeedbackOpen && lastAttemptId && (
                   <Dialog open={isQuizFeedbackOpen} onOpenChange={setIsQuizFeedbackOpen}>
-                    <DialogContent className="glass border-orange-500/20 max-w-3xl w-[95%] sm:max-w-3xl rounded-2xl max-h-[80vh] overflow-y-auto">
+                    <DialogContent className="bg-gray-800 border border-orange-500/20 max-w-3xl w-[95%] sm:max-w-3xl rounded-2xl max-h-[80vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle className="text-2xl text-orange-500">
                           Weekly Quiz Feedback

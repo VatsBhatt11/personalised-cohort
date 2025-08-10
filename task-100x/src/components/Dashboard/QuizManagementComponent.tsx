@@ -24,7 +24,7 @@ const GenerateQuizAIModal: React.FC<GenerateQuizAIModalProps> = ({
   cohortId,
   totalWeeks,
   onQuizGenerated,
-  onClose,
+  onClose
 }) => {
   const [weekNumber, setWeekNumber] = useState<number>(1);
   const [transcription, setTranscription] = useState<string>('');
@@ -50,40 +50,40 @@ const GenerateQuizAIModal: React.FC<GenerateQuizAIModalProps> = ({
   };
 
   return (
-    <div className="grid gap-4 py-4">
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="ai-week-select" className="text-right">Week Number</Label>
+    <div className="grid gap-6 py-6">
+      <div className="space-y-2">
+        <Label htmlFor="ai-week-select" className="text-orange-300 font-medium">Week Number</Label>
         <Select
           onValueChange={(value) => setWeekNumber(Number(value))}
           value={String(weekNumber)}
         >
-          <SelectTrigger id="ai-week-select" className="col-span-3">
+          <SelectTrigger id="ai-week-select" className="w-full p-3 border border-orange-500/30 rounded-xl bg-gray-900 text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 ease-in-out shadow-lg hover:border-orange-400">
             <SelectValue placeholder="Select a week" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-gray-900 text-white border border-orange-500/30 rounded-xl shadow-xl max-h-60 overflow-y-auto">
             {Array.from({ length: totalWeeks }, (_, i) => i + 1).map((week) => (
-              <SelectItem key={week} value={String(week)}>
+              <SelectItem key={week} value={String(week)} className="hover:bg-orange-500/20 focus:bg-orange-500/20 cursor-pointer py-2 px-4 transition-colors duration-200 ease-in-out">
                 Week {week}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="transcription" className="text-right">Session Transcription</Label>
+      <div className="space-y-2">
+        <Label htmlFor="transcription" className="text-orange-300 font-medium">Session Transcription</Label>
         <Textarea
           id="transcription"
           value={transcription}
           onChange={(e) => setTranscription(e.target.value)}
           placeholder="Paste session transcription here..."
-          className="col-span-3 h-32"
+          className="w-full bg-gray-800 border border-orange-600/50 text-orange-300 px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out placeholder:text-gray-500 h-32"
         />
       </div>
-      <div className="flex justify-end gap-2">
-        <DialogClose asChild>
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-        </DialogClose>
-        <Button type="submit" onClick={handleSubmit} disabled={isLoading}>
+      <div className="flex justify-end gap-3 mt-6">
+        <Button type="button" variant="outline" onClick={onClose} className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white rounded-xl shadow-md transition-all duration-200 ease-in-out">
+          Cancel
+        </Button>
+        <Button type="submit" onClick={handleSubmit} disabled={isLoading} className="bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl shadow-md transition-all duration-200 ease-in-out">
           {isLoading ? 'Generating...' : 'Generate Quiz'}
         </Button>
       </div>
@@ -124,20 +124,22 @@ const QuizManagementComponent: React.FC<QuizManagementComponentProps> = ({
   totalWeeks,
   handleGenerateQuizFromAI,
   isGenerateAIModalOpen,
-  setIsGenerateAIModalOpen,
+  setIsGenerateAIModalOpen
 }) => {
-
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex gap-2">
+    <div className="p-6 bg-gray-800 rounded-2xl shadow-xl border border-orange-500/30">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-orange-400">Quiz Management</h2>
+        <div className="flex gap-3">
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
-              <Button onClick={handleCreateQuiz}>Create New Quiz</Button>
+              <Button onClick={handleCreateQuiz} className="bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl shadow-md transition-all duration-200 ease-in-out">
+                Create New Quiz
+              </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[800px]" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+            <DialogContent className="sm:max-w-[800px] glass border-orange-500/20 rounded-2xl bg-gray-800" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
               <DialogHeader>
-                <DialogTitle>{currentQuiz ? 'Edit Quiz' : 'Create New Quiz'}</DialogTitle>
+                <DialogTitle className="text-2xl font-bold text-orange-500">{currentQuiz ? 'Edit Quiz' : 'Create New Quiz'}</DialogTitle>
               </DialogHeader>
               {cohortId && <QuizForm initialData={currentQuiz} onSave={handleSaveQuiz} cohortId={cohortId} totalWeeks={totalWeeks} />}
             </DialogContent>
@@ -145,11 +147,13 @@ const QuizManagementComponent: React.FC<QuizManagementComponentProps> = ({
 
           <Dialog open={isGenerateAIModalOpen} onOpenChange={setIsGenerateAIModalOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">Create Quiz using AI</Button>
+              <Button variant="outline" className="border-orange-500/50 text-orange-400 hover:bg-orange-500/20 rounded-xl shadow-md transition-all duration-200 ease-in-out">
+                Create Quiz using AI
+              </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+            <DialogContent className="sm:max-w-[600px] glass border-orange-500/20 rounded-2xl bg-gray-800" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
               <DialogHeader>
-                <DialogTitle>Generate Quiz with AI</DialogTitle>
+                <DialogTitle className="text-2xl font-bold text-orange-500">Generate Quiz with AI</DialogTitle>
               </DialogHeader>
               {cohortId && (
                 <GenerateQuizAIModal
@@ -163,7 +167,7 @@ const QuizManagementComponent: React.FC<QuizManagementComponentProps> = ({
           </Dialog>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[calc(100vh-280px)] overflow-y-auto pr-2">
         {quizzes?.filter(quiz => quiz.id).map((quiz) => (
           <QuizCard key={quiz.id} quiz={quiz} onEdit={handleEditQuiz} onDelete={handleDeleteQuiz} />
         ))}

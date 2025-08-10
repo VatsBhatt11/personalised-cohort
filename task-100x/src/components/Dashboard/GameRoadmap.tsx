@@ -83,12 +83,12 @@ const GameRoadmap = ({ onLevelClick, userName, weeklyProgress, allResources }: G
         {[...Array(20)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-3 h-3 bg-orange-400/30 rounded-full"
+            className="absolute w-2 h-2 bg-orange-400/20 rounded-full"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
-              animation: `float ${3 + Math.random() * 4}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 2}s`
+              animation: `float ${5 + Math.random() * 5}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 3}s`
             }}
           />
         ))}
@@ -220,7 +220,7 @@ const GameRoadmap = ({ onLevelClick, userName, weeklyProgress, allResources }: G
                         ? 'bg-cyan-500/20 border border-cyan-400/60 shadow-xl shadow-cyan-500/30'
                         : level.isActive
                           ? 'bg-orange-500/25 border-2 border-orange-400/80 shadow-2xl shadow-orange-500/40 ring-4 ring-orange-400/20'
-                          : 'bg-orange-500/15 border border-orange-400/40 hover:border-orange-400/70 hover:shadow-xl hover:shadow-orange-500/30'
+                          : 'bg-gray-800/60 border border-gray-700/40 hover:border-orange-400/70 hover:shadow-xl hover:shadow-orange-500/30'
                       : 'bg-gray-900/60 border border-gray-600/40 opacity-70 cursor-not-allowed'
                     }
                   `}
@@ -238,7 +238,7 @@ const GameRoadmap = ({ onLevelClick, userName, weeklyProgress, allResources }: G
                           ? 'bg-gradient-to-br from-cyan-400/30 to-cyan-600/30 border-cyan-400 text-cyan-300 shadow-2xl shadow-cyan-500/40'
                           : level.isActive
                             ? 'border-orange-400 text-orange-300 bg-gradient-to-br from-orange-500/20 to-yellow-500/20 shadow-2xl shadow-orange-500/50'
-                            : 'border-orange-400/70 text-orange-300 bg-gradient-to-br from-orange-500/10 to-yellow-500/10'
+                            : 'border-orange-400/70 text-orange-300 bg-gradient-to-br from-gray-800/30 to-gray-900/30'
                         : 'border-gray-500 text-gray-500 bg-gradient-to-br from-gray-800/30 to-gray-900/30'
                       }
                     `}>
@@ -270,6 +270,9 @@ const GameRoadmap = ({ onLevelClick, userName, weeklyProgress, allResources }: G
                           <span className="text-sm text-orange-300">{Math.round(level.progress || 0)}%</span>
                         </div>
                       )}
+                      {!level.isUnlocked && (
+                        <p className="text-sm text-gray-400 mt-1">Complete previous levels to unlock</p>
+                      )}
                     </div>
 
                     {/* Status Badge */}
@@ -279,7 +282,7 @@ const GameRoadmap = ({ onLevelClick, userName, weeklyProgress, allResources }: G
                         ? 'bg-cyan-500/30 text-cyan-300'
                         : level.isActive
                           ? 'bg-orange-500/30 text-orange-300'
-                          : 'bg-gray-700/30 text-gray-400'
+                          : 'bg-gray-800/30 text-gray-400'
                       }
                     `}>
                       {level.isCompleted ? 'Completed' : level.isActive ? 'In Progress' : 'Locked'}

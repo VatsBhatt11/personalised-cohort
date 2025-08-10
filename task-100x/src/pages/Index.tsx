@@ -7,9 +7,11 @@ import AdminDashboard from '@/components/Dashboard/AdminDashboard';
 const Index = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+  const [userName, setUserName] = useState('');
 
-  const handleAuthSuccess = (email: string) => {
+  const handleAuthSuccess = (email: string,name:string) => {
     setUserEmail(email);
+    setUserName(name)
     setIsAuthenticated(true);
   };
 
@@ -18,7 +20,7 @@ const Index = () => {
   }
 
   // Show learner dashboard for all other emails
-  return <Dashboard userEmail={userEmail} />;
+  return <Dashboard userEmail={userEmail} userName={userName}/>;
 };
 
 export default Index;

@@ -38,9 +38,9 @@ const Leaderboard = () => {
   }
 
   return (
-    <div className="p-6 bg-black text-white min-h-screen w-full">
+    <div className="p-6 bg-gray-800 text-white min-h-screen w-full rounded-lg shadow-lg">
       <h1 className="text-3xl font-bold mb-6 text-orange-500">Leaderboard</h1>
-      <Table>
+      <Table className="bg-gray-900/70 rounded-lg overflow-hidden">
         <TableCaption>Top learners based on completion rate, daily streak, and weekly streak.</TableCaption>
         <TableHeader>
           <TableRow>
@@ -49,7 +49,6 @@ const Leaderboard = () => {
             <TableHead className="text-orange-400">Completion Rate</TableHead>
             <TableHead className="text-orange-400">Daily Streak</TableHead>
             <TableHead className="text-orange-400">Weekly Streak</TableHead>
-            <TableHead className="text-orange-400">Shortest Completion Time (s)</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -60,7 +59,6 @@ const Leaderboard = () => {
               <TableCell>{entry.completionRate.toFixed(2)}%</TableCell>
               <TableCell>{entry.dailyStreak}</TableCell>
               <TableCell>{entry.weeklyStreak}</TableCell>
-              <TableCell>{entry.shortestCompletionTime === null ? 'N/A' : entry.shortestCompletionTime.toFixed(2)}</TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -20,6 +20,7 @@ import { AxiosError } from 'axios';
 
 interface DashboardProps {
   userEmail: string;
+  userName:string;
 }
 
 interface StreakData {
@@ -167,29 +168,37 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
 
 
   if (isLoading) {
-    return <div className="min-h-screen bg-black flex items-center justify-center">
+    return <div className="min-h-screen bg-gray-800 flex items-center justify-center">
       <div className="text-orange-500">Loading...</div>
     </div>;
   }
 
   if (!cohortId) {
-    return <div className="min-h-screen bg-black flex items-center justify-center">
+    return <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="text-orange-500">No active cohort found. Please contact support.</div>
     </div>;
   }
 
   return (
     <SidebarProvider>
-      <div className="h-screen w-full bg-black relative overflow-hidden flex">
-        <Sidebar>
-          <SidebarMenu>
-            <SidebarMenuButton onClick={() => setActiveTab('challenges')} isActive={activeTab === 'challenges'}>
-              <Home />
-              Challenges
+      <div className="h-screen w-full bg-gray-800 relative overflow-hidden flex">
+        <Sidebar className="bg-gray-900 border-r border-orange-500/30 w-64 p-4">
+          <SidebarMenu className="space-y-2">
+            <SidebarMenuButton 
+              onClick={() => setActiveTab('challenges')} 
+              isActive={activeTab === 'challenges'}
+              className={`flex items-center gap-3 px-4 py-2 rounded-lg text-left w-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 ${activeTab === 'challenges' ? 'bg-orange-500/20' : 'hover:bg-orange-500/10'}`}
+            >
+              <Home className="w-5 h-5 text-orange-400" />
+              <span className="text-orange-400 font-medium">Challenges</span>
             </SidebarMenuButton>
-            <SidebarMenuButton onClick={() => setActiveTab('leaderboard')} isActive={activeTab === 'leaderboard'}>
-              <Trophy />
-              Leaderboard
+            <SidebarMenuButton 
+              onClick={() => setActiveTab('leaderboard')} 
+              isActive={activeTab === 'leaderboard'}
+              className={`flex items-center gap-3 px-4 py-2 rounded-lg text-left w-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 ${activeTab === 'leaderboard' ? 'bg-orange-500/20' : 'hover:bg-orange-500/10'}`}
+            >
+              <Trophy className="w-5 h-5 text-orange-400" />
+              <span className="text-orange-400 font-medium">Leaderboard</span>
             </SidebarMenuButton>
 
             <Dialog open={isQuizAttemptOpen} onOpenChange={setIsQuizAttemptOpen}>
@@ -205,6 +214,7 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
                       setIsQuizAttemptOpen(false);
                       setIsQuizFeedbackOpen(true);
                     }}
+                    onClose={() => setIsQuizAttemptOpen(false)}
                   />
                 )}
               </DialogContent>
@@ -216,7 +226,7 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
                   <DialogTitle>Quiz Feedback</DialogTitle>
                 </DialogHeader>
                 {quizAttemptStatus?.lastAttemptId && (
-                  <QuizFeedbackComponent attemptId={quizAttemptStatus.lastAttemptId} />
+                  <QuizFeedbackComponent attemptId={quizAttemptStatus.lastAttemptId} onClose={() => setIsQuizFeedbackOpen(false)} />
                 )}
               </DialogContent>
             </Dialog>

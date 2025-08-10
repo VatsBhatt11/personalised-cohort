@@ -13,6 +13,7 @@ import axios from 'axios';
 interface User {
   id: string;
   email: string;
+  name: string;
   role: 'LEARNER' | 'INSTRUCTOR';
   cohortId?: string;
 }
@@ -114,27 +115,27 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center animated-gradient p-4">
-      <Card className="w-full max-w-md glass border-orange-500/20">
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 p-4">
+      <Card className="w-full max-w-md bg-gray-800 border border-gray-700 text-white shadow-lg rounded-lg">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl neon-glow text-orange-500">
+          <CardTitle className="text-3xl font-bold text-orange-400">
             {isLogin ? 'Welcome Back' : 'Create Account'}
           </CardTitle>
-          <CardDescription className="text-orange-400/70">
+          <CardDescription className="text-gray-400 mt-2">
             {isLogin ? 'Sign in to continue your learning journey' : 'Join our cohort learning platform'}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {!isLogin && (
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-orange-500">Name</Label>
+                <Label htmlFor="name" className="text-gray-300">Name</Label>
                 <Input
                   id="name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="input-neon"
+                  className="bg-gray-700 border-gray-600 text-white focus:border-orange-500 focus:ring-orange-500"
                   placeholder="Enter your full name"
                   required
                   disabled={isLoading}
@@ -143,7 +144,7 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
             )}
             {!isLogin && (
               <div className="space-y-2">
-                <Label htmlFor="phoneNumber" className="text-orange-500">Phone Number</Label>
+                <Label htmlFor="phoneNumber" className="text-gray-300">Phone Number</Label>
                 <div className="flex space-x-2">
                   <div className="w-1/4">
                     <Select
@@ -155,10 +156,10 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
                       defaultValue="91"
                       disabled={isLoading}
                     >
-                      <SelectTrigger className="input-neon">
+                      <SelectTrigger className="bg-gray-700 border-gray-600 text-white focus:border-orange-500 focus:ring-orange-500">
                         <SelectValue placeholder="+91" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 text-white border-orange-500/20">
+                      <SelectContent className="bg-gray-700 text-white border-gray-600">
                         <SelectItem value="91">+91 (IN)</SelectItem>
                         <SelectItem value="1">+1 (US)</SelectItem>
                         <SelectItem value="44">+44 (UK)</SelectItem>
@@ -180,7 +181,7 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
                            setMobileNumber(digitsOnly);
                          }
                        }}
-                      className="input-neon"
+                      className="bg-gray-700 border-gray-600 text-white focus:border-orange-500 focus:ring-orange-500"
                       placeholder="Enter your phone number"
                       required
                       disabled={isLoading}
@@ -193,7 +194,7 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
             )}
             {!isLogin && cohorts.length > 0 && (
               <div className="space-y-2">
-                <Label htmlFor="cohort" className="text-orange-500">Select Cohort</Label>
+                <Label htmlFor="cohort" className="text-gray-300">Select Cohort</Label>
                 <Select
                   onValueChange={setSelectedCohortId}
                   value={selectedCohortId}
@@ -212,53 +213,55 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
                 </Select>
               </div>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-orange-500">Email</Label>
+            <div className="space-y-4">
+              <Label htmlFor="email" className="text-gray-300">Email</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input-neon"
-                placeholder="Enter your email"
+                className="bg-gray-700 border-gray-600 text-white focus:border-orange-500 focus:ring-orange-500"
+                placeholder="you@example.com"
                 required
                 disabled={isLoading}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-orange-500">Password</Label>
+            <div className="space-y-4">
+              <Label htmlFor="password" className="text-gray-300">Password</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input-neon"
-                placeholder="Enter your password"
+                className="bg-gray-700 border-gray-600 text-white focus:border-orange-500 focus:ring-orange-500"
+                placeholder="••••••••"
                 required
                 disabled={isLoading}
               />
             </div>
-            <Button
-              type="submit"
-              className="w-full btn-neon text-lg font-medium"
-              disabled={isLoading}
-            >
-              {isLoading
-                ? 'Processing...'
-                : isLogin
-                ? 'Sign In'
-                : 'Create Account'}
+            <Button type="submit" className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out" disabled={isLoading}>
+              {isLoading ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin h-5 w-5 mr-3 text-white" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  {isLogin ? 'Logging In...' : 'Creating Account...'}
+                </span>
+              ) : (
+                isLogin ? 'Login' : 'Sign Up'
+              )}
             </Button>
           </form>
-          
           <div className="mt-6 text-center">
-            <button
+            <Button
+              variant="link"
               onClick={() => setIsLogin(!isLogin)}
-              className="text-cyan-400 hover:text-cyan-300 transition-colors underline"
+              className="text-orange-400 hover:text-orange-300 transition duration-300 ease-in-out"
               disabled={isLoading}
             >
-              {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-            </button>
+              {isLogin ? 'Need an account? Sign Up' : 'Already have an account? Login'}
+            </Button>
           </div>
         </CardContent>
       </Card>

@@ -50,16 +50,16 @@ export const QuizFeedbackComponent = ({ attemptId }: QuizFeedbackProps) => {
   }
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Feedback for {feedback.quiz_title}</h2>
-      <p className="text-xl mb-6">Your Score: {feedback.score}/{feedback.total_questions}</p>
+    <div className="p-4 bg-gray-800 rounded-lg shadow-lg text-white">
+      <h2 className="text-2xl font-bold mb-4 text-orange-400">Feedback for {feedback.quiz_title}</h2>
+      <p className="text-xl mb-6">Your Score: <span className="text-orange-300">{feedback.score}</span>/<span className="text-orange-300">{feedback.total_questions}</span></p>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Overall Feedback</CardTitle>
+      <Card className="bg-gray-900 border border-orange-500/30 shadow-lg">
+        <CardHeader className="border-b border-orange-500/30">
+          <CardTitle className="text-orange-400">Overall Feedback</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{feedback.feedback_report_content}</p>
+          <p className="text-sm text-gray-300 whitespace-pre-wrap">{feedback.feedback_report_content}</p>
         </CardContent>
       </Card>
     </div>
