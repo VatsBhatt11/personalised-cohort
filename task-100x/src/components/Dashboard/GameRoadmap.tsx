@@ -95,11 +95,11 @@ const GameRoadmap = ({ onLevelClick, userName, weeklyProgress, allResources }: G
       </div>
 
       {/* Scrollable Path Container */}
-      <div className="h-full overflow-y-auto overflow-x-hidden px-2 sm:px-4 pt-16 sm:pt-20 md:pt-24 pb-8 scrollbar-hide max-w-7xl mx-auto">
+      <div className="h-full overflow-y-auto z-20 overflow-x-hidden px-2 sm:px-4 pt-16 sm:pt-20 md:pt-24 pb-8 scrollbar-hide max-w-7xl mx-auto">
         <div className="mx-auto relative">
           {/* Enhanced SVG Paths - Snake-like curves */}
           <svg
-            className="absolute inset-0 w-full h-full pointer-events-none z-0"
+            className="absolute inset-0 w-full h-full pointer-events-none z-10"
             style={{ height: `${levels.length * 160}px`, width: '100%', maxWidth: '1200px', margin: '0 auto' }}
           >
             <defs>
@@ -194,7 +194,7 @@ const GameRoadmap = ({ onLevelClick, userName, weeklyProgress, allResources }: G
           </svg>
 
           {/* Level Nodes */}
-          <div className="relative z-10" style={{ height: `${levels.length * 160}px` }}>
+          <div className="relative z-20" style={{ height: `${levels.length * 160}px` }}>
             {levels.length > 0 ? (
               levels.map((level, index) => {
               const yPosition = index * 160;

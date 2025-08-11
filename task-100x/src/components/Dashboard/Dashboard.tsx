@@ -33,7 +33,7 @@ interface ApiError {
   detail: string;
 }
 
-const Dashboard = ({ userEmail }: DashboardProps) => {
+const Dashboard = ({ userEmail,userName }: DashboardProps) => {
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [isQuizAttemptOpen, setIsQuizAttemptOpen] = useState(false);
   const [isQuizFeedbackOpen, setIsQuizFeedbackOpen] = useState(false);
@@ -51,7 +51,7 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
   const { toast } = useToast();
 
   // Extract first name from email
-  const userName = userEmail.split('@')[0];
+  const name = userName || userEmail.split('@')[0];
 
   useEffect(() => {
     const fetchUserCohort = async () => {
@@ -235,7 +235,7 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
         <div className="flex-1 flex flex-col">
         {/* Top Bar for User Info and Streak */}
         <div className="flex justify-between items-center p-4 bg-black/50 backdrop-blur-md border-b border-orange-500/30">
-          <div className="text-lg font-semibold text-orange-400">Welcome, {userName}!</div>
+          <div className="text-lg font-semibold text-orange-400">Welcome, {name}!</div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 text-orange-500 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-500/30">
               <Flame className="w-5 h-5" />
@@ -256,7 +256,7 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
             <>
               <GameRoadmap
                 onLevelClick={handleLevelClick}
-                userName={userName}
+                userName={name}
                 weeklyProgress={weeklyProgress}
                 allResources={allResources}
               />
