@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { learner, TaskInPlan, Plan, WeekResource, Resource } from '@/lib/api';
+import { learner, TaskInPlan, Plan, WeekResource, Resource, WeeklyProgressResponse } from '@/lib/api';
 import { Modal } from '@/components/ui/modal';
 import { QuizAttemptComponent } from './QuizAttemptComponent';
 import { QuizFeedbackComponent } from './QuizFeedbackComponent';
@@ -21,6 +21,7 @@ interface GoalSettingModalProps {
   weeklyPlan: WeeklyPlanData | null;
   setWeeklyPlan: React.Dispatch<React.SetStateAction<WeeklyPlanData | null>>;
   allResources: WeekResource[];
+  setWeeklyProgress: React.Dispatch<React.SetStateAction<WeeklyProgressResponse | null>>;
 }
 
 interface QuizAttemptStatus {

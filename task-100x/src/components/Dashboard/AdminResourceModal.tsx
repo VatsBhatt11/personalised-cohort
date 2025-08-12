@@ -27,8 +27,6 @@ interface Resource {
   duration: number;
   tags: string[];
   isOptional?: boolean;
-  sessionTitle?: string;
-  sessionDescription?: string;
 }
 
 const AdminResourceModal = ({
@@ -42,10 +40,7 @@ const AdminResourceModal = ({
 }: AdminResourceModalProps) => {
   const [selectedWeek, setSelectedWeek] = useState<number>(editingWeek || 1);
   const [resources, setResources] = useState<Resource[]>([]);
-  const [sessionDetails, setSessionDetails] = useState({
-    sessionTitle: '',
-    sessionDescription: ''
-  });
+
   const [newResource, setNewResource] = useState({
     title: '',
     type: 'VIDEO' as 'VIDEO' | 'ARTICLE' | 'DOCUMENT', // Changed to 'type' and default to 'VIDEO'
@@ -90,15 +85,7 @@ const AdminResourceModal = ({
       });
       return false;
     }
-    // Check session details from sessionDetails state
-    if (sessionDetails.sessionTitle && !sessionDetails.sessionTitle.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Session Title",
-        description: "Session title cannot be empty if provided."
-      });
-      return false;
-    }
+
     return true;
   };
 
@@ -113,8 +100,6 @@ const AdminResourceModal = ({
       duration: newResource.duration || 0,
       tags: newResourceInputTags.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
       isOptional: newResource.isOptional || false,
-      sessionTitle: sessionDetails.sessionTitle.trim(),
-      sessionDescription: sessionDetails.sessionDescription.trim()
     };
     const updatedResources = [...resources, resource];
     setResources(updatedResources);
@@ -171,10 +156,7 @@ const AdminResourceModal = ({
       isOptional: resource.isOptional || false
     });
     setNewResourceInputTags(resource.tags.join(', '));
-    setSessionDetails({
-      sessionTitle: resource.sessionTitle || '',
-      sessionDescription: resource.sessionDescription || ''
-    });
+
   };
 
   const updateResource = async () => {
@@ -190,8 +172,6 @@ const AdminResourceModal = ({
             duration: newResource.duration || 0,
             tags: newResourceInputTags.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
             isOptional: newResource.isOptional || false,
-            sessionTitle: sessionDetails.sessionTitle.trim(),
-            sessionDescription: sessionDetails.sessionDescription.trim()
           }
         : r
     );
@@ -206,10 +186,7 @@ const AdminResourceModal = ({
       isOptional: false
     });
     setNewResourceInputTags('');
-    setSessionDetails({
-      sessionTitle: '',
-      sessionDescription: ''
-    });
+
     toast({
       title: "Resource updated",
       description: "The resource has been updated successfully."
@@ -343,35 +320,7 @@ const AdminResourceModal = ({
           </div>
 
           {/* Session Details */}
-          <Card className="bg-gray-900/70 border-orange-500/30 rounded-2xl shadow-xl">
-            <CardContent className="p-6 space-y-6">
-              <h3 className="text-orange-400 font-semibold text-xl">Session Details</h3>
-              
-              <div className="space-y-5">
-                <div>
-                  <label className="text-orange-300 text-sm font-medium">Session Title</label>
-                  <input
-                    type="text"
-                    value={sessionDetails.sessionTitle}
-                    onChange={(e) => setSessionDetails({ ...sessionDetails, sessionTitle: e.target.value })}
-                    className="w-full bg-gray-800 border border-orange-600/50 text-orange-300 px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out placeholder:text-gray-500"
-                    placeholder="Session title (optional)"
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-orange-300 text-sm font-medium">Session Description</label>
-                  <textarea
-                    value={sessionDetails.sessionDescription}
-                    onChange={(e) => setSessionDetails({ ...sessionDetails, sessionDescription: e.target.value })}
-                    className="w-full bg-gray-800 border border-orange-600/50 text-orange-300 px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out placeholder:text-gray-500"
-                    placeholder="Session description (optional)"
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+
 
           {/* Add/Edit Resource Form */}
           <Card className="bg-gray-900/70 border-orange-500/30 rounded-2xl shadow-xl">

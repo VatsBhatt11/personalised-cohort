@@ -83,6 +83,11 @@ export interface WeeklyProgress {
   progress: number;
 }
 
+export interface WeeklyProgressResponse {
+  weeklyProgress: WeeklyProgress[];
+  completionRate: number;
+}
+
 export interface QuizFeedbackData {
   quiz_id: string;
   quiz_title: string;

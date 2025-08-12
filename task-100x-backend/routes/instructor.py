@@ -27,12 +27,6 @@ class ResourceCreate(BaseModel):
     tags: List[str]
     weekNumber: int
     isOptional: Optional[bool] = False
-    sessionTitle: Optional[str] = None
-    sessionDescription: Optional[str] = None
-
-
-    sessionTitle: Optional[str] = None
-    sessionDescription: Optional[str] = None
 
 class OptionCreate(BaseModel):
     optionText: str
@@ -151,6 +145,10 @@ class CohortCreate(BaseModel):
     name: str
     totalWeeks: int
 
+class SessionDetailsPayload(BaseModel):
+    title: str
+    description: str
+
 class WeeklyResourcePayload(BaseModel):
     id: Optional[str] = None
     title: str
@@ -159,8 +157,6 @@ class WeeklyResourcePayload(BaseModel):
     duration: int
     tags: List[str]
     isOptional: Optional[bool] = False
-    sessionTitle: Optional[str] = None
-    sessionDescription: Optional[str] = None
     quizId: Optional[str] = None
 
 @router.post("/resources")
@@ -178,9 +174,7 @@ async def create_resource(resource: ResourceCreate, current_user = Depends(get_c
             "tags": resource.tags,
             "isOptional": resource.isOptional,
             "weekNumber": resource.weekNumber,
-            "isOptional": resource.isOptional,
-            "sessionTitle": resource.sessionTitle,
-            "sessionDescription": resource.sessionDescription
+            "isOptional": resource.isOptional
         }
     )
     
@@ -270,9 +264,7 @@ async def get_resources_by_week(
                 type=res.type,
                 duration=res.duration,
                 tags=res.tags,
-                isOptional=res.isOptional,
-                sessionTitle=res.sessionTitle,
-                sessionDescription=res.sessionDescription
+                isOptional=res.isOptional
             ) for res in resources
         ]
 
@@ -475,9 +467,7 @@ async def get_all_resources_for_cohort(cohort_id: str, current_user = Depends(ge
             "url": resource.url,
             "duration": resource.duration,
             "tags": resource.tags,
-            "isOptional": resource.isOptional,
-            "sessionTitle": resource.sessionTitle,
-            "sessionDescription": resource.sessionDescription
+            "isOptional": resource.isOptional
         })
 
     for quiz in quizzes:
@@ -491,8 +481,7 @@ async def get_all_resources_for_cohort(cohort_id: str, current_user = Depends(ge
             "duration": 0, # Quizzes don't have a duration
             "tags": [],
             "isOptional": False, # Quizzes are generally not optional
-            "sessionTitle": None,
-            "sessionDescription": None
+       
         })
     
     # Convert to list of WeekResource objects, sorted by week number
@@ -590,8 +579,6 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
                     "tags": item.tags or [],
                     "weekNumber": week_number,
                     "isOptional": item.isOptional,
-                    "sessionTitle": item.sessionTitle,
-                    "sessionDescription": item.sessionDescription,
                     "quizId": item.quizId # Link the quiz
                 }
             )
@@ -607,11 +594,57 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
                     "tags": item.tags,
                     "weekNumber": week_number,
                     "isOptional": item.isOptional,
-                    "sessionTitle": item.sessionTitle,
-                    "sessionDescription": item.sessionDescription
                 }
             )
             created_items.append(new_resource)
+
+    # Re-create tasks for existing plans
+    for plan in plans_to_update:
+        # Delete existing tasks for this week and plan
+        await prisma.task.delete_many(
+            where={
+                "planId": plan.id,
+                "resource": {
+                    "weekNumber": week_number
+                }
+            }
+        )
+        # Re-create tasks for the updated resources
+        for resource_item in created_items:
+            await prisma.task.create(
+                data={
+                    "planId": plan.id,
+                    "resourceId": resource_item.id,
+                    "status": "NOT_STARTED"
+                }
+            )
+
+    return {
+        "success": True,
+        "data": created_items,
+        "message": "Weekly resources created/updated successfully"
+    }
+
+@router.post("/sessions/{cohort_id}")
+async def create_session(
+    cohort_id: str,
+    session_details: SessionDetailsPayload,
+    current_user = Depends(get_current_user),
+    prisma: Prisma = Depends(get_prisma_client)
+):
+    if current_user.role != "INSTRUCTOR":
+        raise HTTPException(status_code=403, detail="Only instructors can create sessions")
+
+    cohort = await prisma.cohort.find_unique(where={"id": cohort_id})
+    if not cohort:
+        raise HTTPException(status_code=404, detail="Cohort not found")
+
+    # Here you would integrate with Aisensy for notification generation and sending
+    # For demonstration, we'll just print the details
+    print(f"Generating and sending notification for new session:\nTitle: {session_details.title}\nDescription: {session_details.description}\nFor Cohort ID: {cohort_id}")
+
+    # In a real application, you might save session details to a database
+    # or trigger an external service call here.
 
     # Fetch all users with their launchpad data
     users_with_launchpad = await prisma.user.find_many(
@@ -625,8 +658,8 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
         }
     )
 
-    async def _send_notifications_in_background(user, new_resource, prisma: Prisma):
-        if user.launchpad and new_resource.sessionTitle and new_resource.sessionDescription:
+    async def _send_notifications_in_background(user, session_details, prisma: Prisma):
+        if user.launchpad:
             context = {
                 "student_background": {
                     "education": user.launchpad.studyStream,
@@ -639,8 +672,8 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
                     "languages": user.launchpad.languages
                 },
                 "student_future_goals": user.launchpad.expectedOutcomes,
-                "upcoming_session_title": new_resource.sessionTitle,
-                "upcoming_session_description": new_resource.sessionDescription
+                "upcoming_session_title": session_details.title,
+                "upcoming_session_description": session_details.description
             }
 
             # Call Groq API to generate message
@@ -648,58 +681,35 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
 
             await prisma.notification.create(
                 data={
-                    "studentId": user.id,
-                    "sessionId": new_resource.id,
-                    "message": personalized_message
+                    "userId": user.id,
+                    "sessionId": session_details.id,
+                    "message": personalized_message,
+                    "status": "SENT"
                 }
             )
+            
+            print(f"Successfully sent WhatsApp message to {user.phoneNumber} for session {session_details.id}")
 
             if user.phoneNumber:
-                print(f"Attempting to send WhatsApp message to {user.phoneNumber} for session {new_resource.id}")
+                print(f"Attempting to send WhatsApp message to {user.phoneNumber} for session {session_details.id}")
                 try:
                     await send_whatsapp_message(
                         destination=user.phoneNumber,
                         user_name=user.name, 
                         message_body=personalized_message
                     )
-                    print(f"Successfully sent WhatsApp message to {user.phoneNumber} for session {new_resource.id}")
+                    print(f"Successfully sent WhatsApp message to {user.phoneNumber} for session {session_details.id}")
                 except Exception as e:
-                    print(f"Error sending WhatsApp message to {user.phoneNumber} for session {new_resource.id}: {e}")
+                    print(f"Error sending WhatsApp message to {user.phoneNumber} for session {session_details.id}: {e}")
             else:
                 print(f"User {user.id} does not have a phone number. Skipping WhatsApp notification.")
 
-    for new_item in created_items:
-        for user in users_with_launchpad:
-            asyncio.create_task(_send_notifications_in_background(user, new_item, prisma)) # Pass prisma client
-
-    # Re-create tasks for existing plans based on the new resources
-    for plan in plans_to_update:
-        tasks_to_create = []
-        for idx, created_item in enumerate(created_items):
-            task_data = {
-                "status": "PENDING",
-                "assignedDate": datetime.now(timezone.utc)
-            }
-            if created_item.type == "QUIZ":
-                task_data["quizId"] = created_item.quizId
-            else:
-                task_data["resourceId"] = created_item.id
-            tasks_to_create.append(task_data)
-        
-        if tasks_to_create:
-            await prisma.task.create_many(
-                data=[
-                    {
-                        "planId": plan.id,
-                        **task_data
-                    } for task_data in tasks_to_create
-                ]
-            )
+    for user in users_with_launchpad:
+        asyncio.create_task(_send_notifications_in_background(user, session_details, prisma)) # Pass prisma client
 
     return {
         "success": True,
-        "data": created_items,
-        "message": f"Successfully created {len(created_items)} items and updated tasks for week {week_number}"
+        "message": "Session details received and notification process initiated."
     }
 
 

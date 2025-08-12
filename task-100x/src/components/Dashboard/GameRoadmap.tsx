@@ -3,24 +3,14 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Check, Lock, Star } from 'lucide-react';
 
-import { WeekResource } from '@/lib/api';
+import { WeekResource, WeeklyProgressResponse } from '@/lib/api';
 
-interface WeeklyProgressData {
-  total: number;
-  completed: number;
-}
 
-interface WeeklyProgressObject {
-  weeklyProgress: {
-    [key: string]: WeeklyProgressData;
-  };
-  completionRate: number;
-}
 
 interface GameRoadmapProps {
   onLevelClick: (weekId: number) => void;
   userName: string;
-  weeklyProgress: WeeklyProgressObject;
+  weeklyProgress: WeeklyProgressResponse | null;
   allResources: WeekResource[];
 }
 
@@ -35,7 +25,7 @@ interface Level {
 
 const GameRoadmap = ({ onLevelClick, userName, weeklyProgress, allResources }: GameRoadmapProps) => {
   // Convert weeklyProgress object to an array for easier iteration
-  const weeklyProgressArray = Object.entries(weeklyProgress.weeklyProgress || {}).map(([week, data]: [string, WeeklyProgressData]) => ({
+  const weeklyProgressArray = Object.entries(weeklyProgress?.weeklyProgress || {}).map(([week, data]) => ({
     week: parseInt(week),
     completedTasks: data.completed,
     totalTasks: data.total,

@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Flame } from 'lucide-react';
 import GoalSettingModal from './GoalSettingModal';
 import GameRoadmap from './GameRoadmap';
-import { learner, WeeklyProgress, WeekResource, QuizAttemptStatus } from '@/lib/api';
+import { learner, WeeklyProgress, WeekResource, QuizAttemptStatus, WeeklyProgressResponse } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
 import { AxiosError } from 'axios';
 import useAuth from '@/hooks/useAuth';
@@ -47,7 +47,7 @@ const Dashboard = ({ userEmail,userName }: DashboardProps) => {
   const [weeklyPlan, setWeeklyPlan] = useState<Plan | null>(null);
   const [streakData, setStreakData] = useState<StreakData | null>(null);
   const [activeTab, setActiveTab] = useState<'challenges' | 'leaderboard'>('challenges');
-  const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress[]>([]);
+  const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgressResponse | null>(null);
   const [allResources, setAllResources] = useState<WeekResource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [cohortId, setCohortId] = useState<string | null>(null);

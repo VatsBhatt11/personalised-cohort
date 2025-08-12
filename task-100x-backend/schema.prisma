@@ -53,8 +53,7 @@ model Resource {
   tags               String[]
   weekNumber         Int
   isOptional         Boolean      @default(false)
-  sessionTitle       String?
-  sessionDescription String?
+
   tasks              Task[]
   cohort             Cohort       @relation(fields: [cohortId], references: [id])
 }
