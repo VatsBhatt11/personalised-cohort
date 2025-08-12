@@ -13,6 +13,8 @@ import CreateCohortModal from './CreateCohortModal';
 import QuizManagementComponent, { Quiz } from './QuizManagementComponent';
 import { CohortSelection } from './CohortSelection';
 import { useToast } from '@/components/ui/use-toast';
+import useAuth from '@/hooks/useAuth';
+import { LogOut } from 'lucide-react';
 import { instructor, learner, WeekResource } from '@/lib/api';
 import axios, { isAxiosError, type AxiosError } from 'axios';
 
@@ -68,6 +70,12 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
   const [currentQuiz, setCurrentQuiz] = useState<Quiz | null>(null);
   const [isGenerateAIModalOpen, setIsGenerateAIModalOpen] = useState(false);
   const { toast } = useToast();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/';
+  };
 
   const fetchQuizzes = useCallback(async (selectedCohortId: string | null) => {
     if (!selectedCohortId) return; // Don't fetch if no cohort is selected
@@ -467,9 +475,18 @@ const fetchResources = async () => {
             <h1 className="text-4xl font-extrabold text-orange-500 tracking-tight">Admin Dashboard</h1>
             <p className="text-gray-400 mt-2 text-lg">Welcome back, <span className="font-semibold text-orange-300">{userEmail}</span></p>
           </div>
-          <Badge className="bg-orange-600/20 text-orange-400 border-orange-500/30 px-5 py-2 rounded-full text-base font-medium shadow-lg">
-            Administrator
-          </Badge>
+          <div className="flex items-center space-x-4">
+            <Badge className="bg-orange-600/20 text-orange-400 border-orange-500/30 px-5 py-2 rounded-full text-base font-medium shadow-lg">
+              Administrator
+            </Badge>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-orange-400 hover:text-orange-300 transition-colors duration-200"
+            >
+              <LogOut className="w-5 h-5" />
+              Logout
+            </button>
+          </div>
         </div>
       </div>
 

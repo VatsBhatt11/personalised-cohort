@@ -17,6 +17,8 @@ import GameRoadmap from './GameRoadmap';
 import { learner, WeeklyProgress, WeekResource, QuizAttemptStatus } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
 import { AxiosError } from 'axios';
+import useAuth from '@/hooks/useAuth';
+import { LogOut } from 'lucide-react';
 
 interface DashboardProps {
   userEmail: string;
@@ -34,6 +36,7 @@ interface ApiError {
 }
 
 const Dashboard = ({ userEmail,userName }: DashboardProps) => {
+  const { logout } = useAuth();
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [isQuizAttemptOpen, setIsQuizAttemptOpen] = useState(false);
   const [isQuizFeedbackOpen, setIsQuizFeedbackOpen] = useState(false);
@@ -52,6 +55,11 @@ const Dashboard = ({ userEmail,userName }: DashboardProps) => {
 
   // Extract first name from email
   const name = userName || userEmail.split('@')[0];
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/';
+  };
 
   useEffect(() => {
     const fetchUserCohort = async () => {
@@ -249,6 +257,13 @@ const Dashboard = ({ userEmail,userName }: DashboardProps) => {
                 {`Weekly Streak: ${streakData.weeklyStreak}`}
               </Badge>
             )}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-orange-400 hover:text-orange-300 transition-colors duration-200"
+            >
+              <LogOut className="w-5 h-5" />
+              Logout
+            </button>
           </div>
         </div>
         <div className="flex-1 overflow-auto flex justify-center items-center">
