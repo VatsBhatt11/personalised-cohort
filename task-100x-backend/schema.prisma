@@ -63,6 +63,7 @@ enum ResourceType {
   VIDEO
   ARTICLE
   DOCUMENT
+  QUIZ
 }
 
 model Plan {
@@ -76,9 +77,10 @@ model Plan {
 }
 
 model Task {
-  id         String @id @default(uuid())
+  id         String  @id @default(uuid())
   planId     String
-  resourceId String
+  resourceId String?
+  quizId     String?
 
   status             TaskStatus
   timestamp          DateTime   @default(now())
@@ -86,7 +88,8 @@ model Task {
   completedAt        DateTime?
   time_spent_seconds Int        @default(0)
   plan               Plan       @relation(fields: [planId], references: [id])
-  resource           Resource   @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  resource           Resource?  @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  quiz               Quiz?      @relation(fields: [quizId], references: [id], onDelete: Cascade)
 }
 
 enum TaskStatus {
@@ -112,6 +115,7 @@ model Quiz {
   questions    Question[]
   cohort       Cohort        @relation(fields: [cohortId], references: [id])
   quizAttempts QuizAttempt[]
+  tasks        Task[]
 }
 
 model Question {

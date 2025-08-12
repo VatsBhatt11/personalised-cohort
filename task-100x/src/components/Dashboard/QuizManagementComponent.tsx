@@ -108,7 +108,7 @@ interface QuizManagementComponentProps {
   handleGenerateQuizFromAI: (quiz: Quiz) => void;
   isGenerateAIModalOpen: boolean;
   setIsGenerateAIModalOpen: (isOpen: boolean) => void;
-
+  isLoading: boolean;
 }
 
 const QuizManagementComponent: React.FC<QuizManagementComponentProps> = ({
@@ -124,7 +124,8 @@ const QuizManagementComponent: React.FC<QuizManagementComponentProps> = ({
   totalWeeks,
   handleGenerateQuizFromAI,
   isGenerateAIModalOpen,
-  setIsGenerateAIModalOpen
+  setIsGenerateAIModalOpen,
+  isLoading
 }) => {
   return (
     <div className="p-6 bg-gray-800 rounded-2xl shadow-xl border border-orange-500/30">
@@ -141,7 +142,7 @@ const QuizManagementComponent: React.FC<QuizManagementComponentProps> = ({
               <DialogHeader>
                 <DialogTitle className="text-2xl font-bold text-orange-500">{currentQuiz ? 'Edit Quiz' : 'Create New Quiz'}</DialogTitle>
               </DialogHeader>
-              {cohortId && <QuizForm initialData={currentQuiz} onSave={handleSaveQuiz} cohortId={cohortId} totalWeeks={totalWeeks} />}
+              {cohortId && <QuizForm initialData={currentQuiz} onSave={handleSaveQuiz} cohortId={cohortId} totalWeeks={totalWeeks} isLoading={isLoading} />}
             </DialogContent>
           </Dialog>
 

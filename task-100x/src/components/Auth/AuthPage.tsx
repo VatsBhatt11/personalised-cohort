@@ -41,6 +41,7 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
 
   useEffect(() => {
     const fetchCohorts = async () => {
+      setIsLoading(true);
       try {
         const response = await instructor.getCohorts();
         setCohorts(response);
@@ -54,6 +55,8 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
           description: 'Failed to load cohorts. Please try again later.',
           variant: 'destructive',
         });
+      } finally {
+        setIsLoading(false);
       }
     };
 

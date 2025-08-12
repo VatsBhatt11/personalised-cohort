@@ -19,7 +19,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 # Environment variables
 SECRET_KEY = os.getenv("SECRET_KEY")  # Fixed: matches render.yaml
 ALGORITHM = os.getenv("ALGORITHM", "HS256")  # Now reads from env with fallback
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "180"))
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "10080"))
 
 class UserCreate(BaseModel):
     email: str

@@ -41,13 +41,13 @@ const Leaderboard = () => {
     <div className="p-6 bg-gray-800 text-white min-h-screen w-full rounded-lg shadow-lg">
       <h1 className="text-3xl font-bold mb-6 text-orange-500">Leaderboard</h1>
       <Table className="bg-gray-900/70 rounded-lg overflow-hidden">
-        <TableCaption>Top learners based on completion rate, daily streak, and weekly streak.</TableCaption>
+        <TableCaption>Top learners based on completion rate, and weekly streak.</TableCaption>
         <TableHeader>
           <TableRow>
             <TableHead className="w-[150px] text-orange-400">Rank</TableHead>
             <TableHead className="text-orange-400">Email</TableHead>
             <TableHead className="text-orange-400">Completion Rate</TableHead>
-            <TableHead className="text-orange-400">Daily Streak</TableHead>
+            {/* <TableHead className="text-orange-400">Daily Streak</TableHead> */}
             <TableHead className="text-orange-400">Weekly Streak</TableHead>
           </TableRow>
         </TableHeader>
@@ -57,7 +57,7 @@ const Leaderboard = () => {
               <TableCell className="font-medium">{index + 1}</TableCell>
               <TableCell>{entry.email}</TableCell>
               <TableCell>{entry.completionRate.toFixed(2)}%</TableCell>
-              <TableCell>{entry.dailyStreak}</TableCell>
+              {/* <TableCell>{entry.dailyStreak}</TableCell> */}
               <TableCell>{entry.weeklyStreak}</TableCell>
             </TableRow>
           ))}

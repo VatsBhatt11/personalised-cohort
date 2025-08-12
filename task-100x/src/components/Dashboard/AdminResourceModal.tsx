@@ -54,6 +54,7 @@ const AdminResourceModal = ({
     tags: [] as string[],
     isOptional: false
   });
+  const [newResourceInputTags, setNewResourceInputTags] = useState('');
   // We no longer need editingResourceId as the backend doesn't uses it for updates.
   // Instead, we'll rely on the week number for resource assignment.
   const [editingResourceIndex, setEditingResourceIndex] = useState<number | null>(null);
@@ -110,7 +111,7 @@ const AdminResourceModal = ({
       type: newResource.type, // Changed to 'type'
       url: newResource.url.trim(), // Changed to 'url'
       duration: newResource.duration || 0,
-      tags: newResource.tags || [],
+      tags: newResourceInputTags.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
       isOptional: newResource.isOptional || false,
       sessionTitle: sessionDetails.sessionTitle.trim(),
       sessionDescription: sessionDetails.sessionDescription.trim()
@@ -125,6 +126,7 @@ const AdminResourceModal = ({
       tags: [], 
       isOptional: false
     });
+    setNewResourceInputTags('');
     toast({
       title: "Resource added",
       description: "The resource has been added to the list."
@@ -168,6 +170,7 @@ const AdminResourceModal = ({
       tags: resource.tags || [],
       isOptional: resource.isOptional || false
     });
+    setNewResourceInputTags(resource.tags.join(', '));
     setSessionDetails({
       sessionTitle: resource.sessionTitle || '',
       sessionDescription: resource.sessionDescription || ''
@@ -185,7 +188,7 @@ const AdminResourceModal = ({
             type: newResource.type, 
             url: newResource.url.trim(), 
             duration: newResource.duration || 0,
-            tags: newResource.tags || [],
+            tags: newResourceInputTags.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
             isOptional: newResource.isOptional || false,
             sessionTitle: sessionDetails.sessionTitle.trim(),
             sessionDescription: sessionDetails.sessionDescription.trim()
@@ -202,6 +205,7 @@ const AdminResourceModal = ({
       tags: [], 
       isOptional: false
     });
+    setNewResourceInputTags('');
     setSessionDetails({
       sessionTitle: '',
       sessionDescription: ''
@@ -216,6 +220,7 @@ const AdminResourceModal = ({
   const cancelEditing = () => {
     setEditingResourceIndex(null);
     setNewResource({ title: '', type: 'VIDEO', url: '', duration: 0, tags: [], isOptional: false });
+    setNewResourceInputTags('');
   };
 
   const handleAssignResources = async () => {
@@ -274,6 +279,7 @@ const AdminResourceModal = ({
     });
     setEditingResourceIndex(null);
     setSelectedWeek(1); // Reset selected week to default
+    setNewResourceInputTags('');
   };
 
 
@@ -284,6 +290,7 @@ const AdminResourceModal = ({
       if (editingWeek) {
         setSelectedWeek(editingWeek);
         setResources(existingResources || []);
+        setNewResourceInputTags(existingResources?.map(r => r.tags).flat().filter((value, index, self) => self.indexOf(value) === index).join(', ') || '');
         
         // If there are resources with session details, use the first one to set session details
         const resourceWithSessionDetails = existingResources?.find(r => r.sessionTitle || r.sessionDescription);
@@ -296,6 +303,7 @@ const AdminResourceModal = ({
       } else {
         setResources([]);
         setSelectedWeek(1);
+        setNewResourceInputTags('');
       }
     }
   }, [isOpen, editingWeek, existingResources]);
@@ -399,8 +407,8 @@ const AdminResourceModal = ({
                     <label htmlFor="tags" className="text-sm font-medium text-orange-300">Tags (comma-separated)</label>
                     <input
                       className="flex h-10 w-full rounded-xl border border-orange-500/30 bg-gray-800 px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white transition-all duration-200 ease-in-out"
-                      value={newResource.tags.join(', ')}
-                      onChange={(e) => setNewResource({ ...newResource, tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag !== '') })}
+                      value={newResourceInputTags}
+                      onChange={(e) => setNewResourceInputTags(e.target.value)}
                       placeholder="e.g., Python, AI, Beginner"
                     />
                   </div>

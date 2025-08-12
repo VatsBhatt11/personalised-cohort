@@ -19,10 +19,12 @@ interface QuizFeedbackData {
 
 export const QuizFeedbackComponent = ({ attemptId }: QuizFeedbackProps) => {
   const [feedback, setFeedback] = useState<QuizFeedbackData | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const { toast } = useToast();
 
   useEffect(() => {
     const fetchFeedback = async () => {
+      setIsLoading(true);
       try {
         const response = await learner.getQuizFeedback(attemptId);
         setFeedback(response);
@@ -40,13 +42,19 @@ export const QuizFeedbackComponent = ({ attemptId }: QuizFeedbackProps) => {
             description: "An unexpected error occurred. Please try again later.",
           });
         }
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchFeedback();
   }, [attemptId, toast]);
 
-  if (!feedback) {
+  if (isLoading) {
     return <div>Loading feedback...</div>;
+  }
+
+  if (!feedback) {
+    return <div>No feedback available.</div>;
   }
 
   return (

@@ -21,6 +21,7 @@ export const QuizAttemptComponent = ({ quizId, onAttemptComplete, onClose }: Qui
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [timeSpentSeconds, setTimeSpentSeconds] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -61,9 +62,9 @@ export const QuizAttemptComponent = ({ quizId, onAttemptComplete, onClose }: Qui
 
   useEffect(() => {
     const fetchQuiz = async () => {
+      setIsLoading(true);
       try {
         const response = await learner.getQuiz(quizId);
-
         setQuizData(response);
       } catch (error) {
         if (isAxiosError(error)) {
@@ -79,6 +80,8 @@ export const QuizAttemptComponent = ({ quizId, onAttemptComplete, onClose }: Qui
             description: "An unexpected error occurred. Please try again later.",
           });
         }
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchQuiz();
@@ -111,6 +114,7 @@ export const QuizAttemptComponent = ({ quizId, onAttemptComplete, onClose }: Qui
 
   const handleSubmit = async () => {
     if (!quizData) return;
+    setIsLoading(true);
     try {
       const formattedAnswers = answers.map(ans => ({
         questionId: ans.questionId,
@@ -137,11 +141,17 @@ export const QuizAttemptComponent = ({ quizId, onAttemptComplete, onClose }: Qui
           description: "An unexpected error occurred. Please try again later.",
         });
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  if (isLoading) {
+    return <div>Loading quiz...</div>;
+  }
+
   if (!quizData) {
-    return <div>No quiz</div>;
+    return <div>No quiz data available.</div>;
   }
 
   const currentQuestion = quizData.questions[currentQuestionIndex];
@@ -169,15 +179,15 @@ export const QuizAttemptComponent = ({ quizId, onAttemptComplete, onClose }: Qui
       </div>
 
       <div className="flex justify-between">
-        <Button onClick={handlePrevious} disabled={currentQuestionIndex === 0}>
+        <Button onClick={handlePrevious} disabled={currentQuestionIndex === 0 || isLoading}>
           Previous
         </Button>
         {currentQuestionIndex === quizData.questions.length - 1 ? (
-          <Button onClick={handleSubmit} disabled={answers.length !== quizData.questions.length}>
-            Submit Quiz
+          <Button onClick={handleSubmit} disabled={answers.length !== quizData.questions.length || isLoading}>
+            {isLoading ? 'Submitting...' : 'Submit Quiz'}
           </Button>
         ) : (
-          <Button onClick={handleNext} disabled={!selectedAnswer}>
+          <Button onClick={handleNext} disabled={!selectedAnswer || isLoading}>
             Next
           </Button>
         )}

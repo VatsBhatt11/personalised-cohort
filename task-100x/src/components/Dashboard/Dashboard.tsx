@@ -119,6 +119,7 @@ const Dashboard = ({ userEmail,userName }: DashboardProps) => {
     };
 
     const initializeDashboard = async () => {
+      setIsLoading(true);
       const cohortId = await fetchUserCohort();
       await fetchDashboardData(cohortId);
     };
@@ -137,6 +138,7 @@ const Dashboard = ({ userEmail,userName }: DashboardProps) => {
     setIsGoalModalOpen(true);
     if (cohortId) {
       try {
+        setIsLoading(true);
         const plan = await learner.getPlan(cohortId, weekId);
         setWeeklyPlan(plan);
 
@@ -159,13 +161,11 @@ const Dashboard = ({ userEmail,userName }: DashboardProps) => {
           description: "Please try again later."
         });
         setWeeklyPlan(null);
+      } finally {
+        setIsLoading(false);
       }
     }
   };
-
-
-
-
 
   if (isLoading) {
     return <div className="min-h-screen bg-gray-800 flex items-center justify-center">
@@ -237,10 +237,10 @@ const Dashboard = ({ userEmail,userName }: DashboardProps) => {
         <div className="flex justify-between items-center p-4 bg-black/50 backdrop-blur-md border-b border-orange-500/30">
           <div className="text-lg font-semibold text-orange-400">Welcome, {name}!</div>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 text-orange-500 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-500/30">
+            {/* <div className="flex items-center gap-1 text-orange-500 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-500/30">
               <Flame className="w-5 h-5" />
               <span className="font-semibold">{streakData?.currentStreak || 0} day streak</span>
-            </div>
+            </div> */}
             {streakData?.weeklyStreak !== undefined && (
               <Badge 
                 variant="outline" 

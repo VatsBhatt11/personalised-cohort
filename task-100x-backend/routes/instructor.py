@@ -161,6 +161,7 @@ class WeeklyResourcePayload(BaseModel):
     isOptional: Optional[bool] = False
     sessionTitle: Optional[str] = None
     sessionDescription: Optional[str] = None
+    quizId: Optional[str] = None
 
 @router.post("/resources")
 async def create_resource(resource: ResourceCreate, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)): 
@@ -286,7 +287,9 @@ async def get_resources_by_week(
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
 
 @router.get("/cohorts")
-async def get_cohorts(prisma: Prisma = Depends(get_prisma_client)):
+async def get_cohorts(current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
 
     
     cohorts = await prisma.cohort.find_many()
@@ -568,24 +571,51 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
         }
     )
 
-    # Create new resources
-    created_resources = []
-    for resource in resources:
-        new_resource = await prisma.resource.create(
-            data={
-                "cohortId": cohort_id,
-                "title": resource.title,
-                "url": resource.url,
-                "type": resource.type,
-                "duration": resource.duration,
-                "tags": resource.tags,
-                "weekNumber": week_number,
-                "isOptional": resource.isOptional,
-                "sessionTitle": resource.sessionTitle,
-                "sessionDescription": resource.sessionDescription
-            }
-        )
-        created_resources.append(new_resource)
+    # Create new resources and quizzes
+    created_items = []
+    for item in resources:
+        if item.type == "QUIZ":
+            if not item.quizId:
+                raise HTTPException(status_code=400, detail="quizId is required for QUIZ type resources")
+            
+            # Verify quiz exists
+            quiz = await prisma.quiz.find_unique(where={"id": item.quizId})
+            if not quiz:
+                raise HTTPException(status_code=404, detail=f"Quiz with ID {item.quizId} not found")
+            
+            # Create a dummy resource entry for the quiz to link it
+            new_quiz_resource = await prisma.resource.create(
+                data={
+                    "cohortId": cohort_id,
+                    "title": item.title or f"Quiz for Week {week_number}",
+                    "url": item.url or f"/quizzes/{item.quizId}",
+                    "type": "QUIZ",
+                    "duration": 0,
+                    "tags": item.tags or [],
+                    "weekNumber": week_number,
+                    "isOptional": item.isOptional,
+                    "sessionTitle": item.sessionTitle,
+                    "sessionDescription": item.sessionDescription,
+                    "quizId": item.quizId # Link the quiz
+                }
+            )
+            created_items.append(new_quiz_resource)
+        else:
+            new_resource = await prisma.resource.create(
+                data={
+                    "cohortId": cohort_id,
+                    "title": item.title,
+                    "url": item.url,
+                    "type": item.type,
+                    "duration": item.duration,
+                    "tags": item.tags,
+                    "weekNumber": week_number,
+                    "isOptional": item.isOptional,
+                    "sessionTitle": item.sessionTitle,
+                    "sessionDescription": item.sessionDescription
+                }
+            )
+            created_items.append(new_resource)
 
     # Fetch all users with their launchpad data
     users_with_launchpad = await prisma.user.find_many(
@@ -642,23 +672,23 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
             else:
                 print(f"User {user.id} does not have a phone number. Skipping WhatsApp notification.")
 
-    for new_res in created_resources:
+    for new_item in created_items:
         for user in users_with_launchpad:
-            asyncio.create_task(_send_notifications_in_background(user, new_res, prisma)) # Pass prisma client
+            asyncio.create_task(_send_notifications_in_background(user, new_item, prisma)) # Pass prisma client
 
     # Re-create tasks for existing plans based on the new resources
     for plan in plans_to_update:
         tasks_to_create = []
-        for idx, new_resource in enumerate(created_resources):
-            # Check if a task for this resource already existed in the plan and was completed
-            # This part is tricky because the old tasks are deleted.
-            # For simplicity, we will re-create all tasks as PENDING.
-            # If preserving completion status is critical, a more complex mapping is needed.
-            tasks_to_create.append({
-                "resourceId": new_resource.id,
+        for idx, created_item in enumerate(created_items):
+            task_data = {
                 "status": "PENDING",
                 "assignedDate": datetime.now(timezone.utc)
-            })
+            }
+            if created_item.type == "QUIZ":
+                task_data["quizId"] = created_item.quizId
+            else:
+                task_data["resourceId"] = created_item.id
+            tasks_to_create.append(task_data)
         
         if tasks_to_create:
             await prisma.task.create_many(
@@ -672,8 +702,8 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
 
     return {
         "success": True,
-        "data": created_resources,
-        "message": f"Successfully created {len(created_resources)} resources and updated tasks for week {week_number}"
+        "data": created_items,
+        "message": f"Successfully created {len(created_items)} items and updated tasks for week {week_number}"
     }
 
 

@@ -43,10 +43,12 @@ export interface PlanTaskCreate {
 
 export interface TaskInPlan {
   id: string;
-  resource_id: string;
+  resource_id?: string;
+  quiz_id?: string;
   is_completed: boolean;
   time_spent_seconds: number;
-  resource: Resource;
+  resource?: Resource;
+  quiz?: Quiz;
   status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
 }
 
@@ -98,6 +100,7 @@ export interface Resource {
   duration: number;
   tags: string[];
   isOptional?: boolean;
+  quizId?: string;
 }
 
 export interface WeekResource {

@@ -87,18 +87,18 @@ const CreateCohortModal: React.FC<CreateCohortModalProps> = ({ isOpen, onClose, 
       }
     } finally {
       setLoading(false);
-    }
+    };
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] bg-gray-800 text-white border-gray-700 rounded-lg shadow-lg">
+      <DialogContent className="w-full bg-gray-800 text-white border-gray-700 rounded-lg shadow-lg">
         <DialogHeader className="border-b border-gray-700 pb-4 mb-4">
           <DialogTitle className="text-2xl font-bold text-orange-400">Create New Cohort</DialogTitle>
         </DialogHeader>
         <div className="grid gap-6 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="cohortName" className="text-right text-gray-300">
+          <div className="grid grid-cols-4 justify-start items-center gap-4">
+            <Label htmlFor="cohortName" className="col-span-1 text-left text-gray-300">
               Cohort Name
             </Label>
             <Input
@@ -110,7 +110,7 @@ const CreateCohortModal: React.FC<CreateCohortModalProps> = ({ isOpen, onClose, 
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="totalWeeks" className="text-right text-gray-300">
+            <Label htmlFor="totalWeeks" className="col-span-1 text-left text-gray-300">
               Total Weeks
             </Label>
             <Input
@@ -123,9 +123,9 @@ const CreateCohortModal: React.FC<CreateCohortModalProps> = ({ isOpen, onClose, 
               disabled={loading}
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="csvFile" className="text-right text-gray-300">
-              Upload CSV
+          <div className="grid grid-cols-6 items-center gap-4">
+            <Label htmlFor="csvFile" className="col-span-3 text-left text-gray-300">
+              Upload Launchpad data (CSV)
             </Label>
             <Input
               id="csvFile"

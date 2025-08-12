@@ -178,6 +178,7 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
     if (!window.confirm("Are you sure you want to delete this quiz?")) {
       return;
     }
+    setLoading(true);
     try {
       await instructor.deleteQuiz(quizId);
       toast({
@@ -199,10 +200,13 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
           description: "An unexpected error occurred. Please try again later.",
         });
       }
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSaveQuiz = async (quizData: Quiz) => {
+    setLoading(true);
     try {
       console.log("Payload sent to backend:", quizData);
       if (quizData.id) {
@@ -234,10 +238,13 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
           description: "An unexpected error occurred. Please try again later.",
         });
       }
+    } finally {
+      setLoading(false);
     }
   };
 
 const fetchResources = async () => {
+      setLoading(true);
       try {
         const response = await instructor.getAllResources(cohortId);
         setAssignedWeeks(response);
@@ -256,6 +263,8 @@ const fetchResources = async () => {
             description: "An unexpected error occurred. Please try again later."
           });
         }
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -264,6 +273,7 @@ const fetchResources = async () => {
     if (!cohortId) return;
 
     const fetchDashboardData = async () => {
+      setLoading(true);
       try {
         const response = await instructor.getDashboard(cohortId);
         setDashboardStats({
@@ -289,6 +299,8 @@ const fetchResources = async () => {
           });
         }
 
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -310,6 +322,7 @@ const fetchResources = async () => {
 
   const handleDeleteWeek = async (weekNumber: number) => {
     if (!cohortId) return;
+    setLoading(true);
     try {
       await instructor.deleteWeekResources(cohortId, weekNumber);
       setAssignedWeeks(prev => prev.filter(week => week.week !== weekNumber));
@@ -333,6 +346,8 @@ const fetchResources = async () => {
         });
       }
 
+    } finally {
+      setLoading(false);
     }
   };
 
