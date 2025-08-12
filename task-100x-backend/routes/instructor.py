@@ -288,8 +288,8 @@ async def get_resources_by_week(
 
 @router.get("/cohorts")
 async def get_cohorts(current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+    # if not current_user:
+    #     raise HTTPException(status_code=401, detail="Not authenticated")
 
     
     cohorts = await prisma.cohort.find_many()
