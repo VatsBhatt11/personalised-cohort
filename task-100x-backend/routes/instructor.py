@@ -194,7 +194,6 @@ async def create_session(
     prisma: Prisma = Depends(get_prisma_client)
 ):
     if current_user.role != "INSTRUCTOR":
-        print(f"[create_session] - Unauthorized access attempt by user: {current_user.id}")
         raise HTTPException(status_code=403, detail="Only instructors can create sessions")
 
     cohort = await prisma.cohort.find_unique(
@@ -208,7 +207,6 @@ async def create_session(
         }
     )
     if not cohort:
-        print(f"[create_session] - Cohort not found: {cohort_id}")
         raise HTTPException(status_code=404, detail="Cohort not found")
 
     new_session = await prisma.session.create(
@@ -219,7 +217,6 @@ async def create_session(
             "cohortId": cohort_id,
         }
     )
-    print(f"[create_session] - Session created: {new_session.id}")
 
     # Asynchronously send notification
     users_with_launchpad = await prisma.user.find_many(
@@ -833,7 +830,6 @@ async def get_sessions(
     prisma: Prisma = Depends(get_prisma_client)
 ):
     if current_user.role not in ["INSTRUCTOR", "LEARNER"]:
-        print(f"[get_sessions] - Unauthorized access attempt by user: {current_user.id}")
         raise HTTPException(status_code=403, detail="Only instructors and learners can view sessions")
 
     sessions = await prisma.session.find_many(
@@ -841,7 +837,6 @@ async def get_sessions(
             "cohortId": cohort_id
         }
     )
-    print(f"[get_sessions] - Retrieved {len(sessions)} sessions for cohort_id: {cohort_id}")
     return {
         "success": True,
         "data": [SessionResponse.model_validate(session.model_dump()) for session in sessions],
