@@ -175,23 +175,49 @@ class WeeklyResourcePayload(BaseModel):
     isOptional: Optional[bool] = False
     quizId: Optional[str] = None
 
-@router.post("/sessions", response_model=SessionResponse)
-async def create_session(session_data: SessionCreate, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+@router.post("/cohorts/{cohort_id}/sessions", response_model=SessionResponse)
+async def create_session(
+    cohort_id: str,
+    session_data: SessionCreate,
+    current_user = Depends(get_current_user),
+    prisma: Prisma = Depends(get_prisma_client)
+):
     if current_user.role != "INSTRUCTOR":
         raise HTTPException(status_code=403, detail="Only instructors can create sessions")
+
+    cohort = await prisma.cohort.find_unique(
+        where={"id": cohort_id},
+        include={
+            "instructor": True
+        }
+    )
+    if not cohort:
+        raise HTTPException(status_code=404, detail="Cohort not found")
+
+    if not cohort.instructor or not cohort.instructor.phoneNumber:
+        print(f"Warning: Instructor or phone number not found for cohort {cohort_id}. Notification not sent.")
+        # Optionally, raise an HTTPException or handle this case as per business logic
+
 
     new_session = await prisma.session.create(
         data={
             "title": session_data.title,
             "description": session_data.description,
             "weekNumber": session_data.weekNumber,
-            "cohortId": session_data.cohortId,
+            "cohortId": cohort_id,
         }
     )
+
+    # Asynchronously send notification
+    asyncio.create_task(send_whatsapp_message(
+        to=cohort.instructor.phoneNumber, # Assuming instructor has a phone number
+        message=f"New session created: {session_data.title} for week {session_data.weekNumber}"
+    ))
+
     return {
         "success": True,
         "data": new_session,
-        "message": "Session created successfully"
+        "message": "Session created successfully and notification initiated"
     }
 
 @router.post("/resources")
@@ -660,23 +686,7 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
         "message": "Weekly resources created/updated successfully"
     }
 
-@router.post("/sessions/{cohort_id}")
-async def create_session(
-    cohort_id: str,
-    session_details: SessionCreate,
-    current_user = Depends(get_current_user),
-    prisma: Prisma = Depends(get_prisma_client)
-):
-    if current_user.role != "INSTRUCTOR":
-        raise HTTPException(status_code=403, detail="Only instructors can create sessions")
 
-    cohort = await prisma.cohort.find_unique(where={"id": cohort_id})
-    if not cohort:
-        raise HTTPException(status_code=404, detail="Cohort not found")
-
-    # Here you would integrate with Aisensy for notification generation and sending
-    # For demonstration, we'll just print the details
-    print(f"Generating and sending notification for new session:\nTitle: {session_details.title}\nDescription: {session_details.description}\nFor Cohort ID: {cohort_id}")
 
     # In a real application, you might save session details to a database
     # or trigger an external service call here.

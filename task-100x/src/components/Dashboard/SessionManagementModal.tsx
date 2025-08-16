@@ -200,7 +200,7 @@ const SessionManagementModal = ({
             <p>No sessions created yet for this cohort.</p>
           ) : (
             <div className="space-y-3 max-h-60 overflow-y-auto">
-              {sessions.map((session) => (
+              {sessions?.map((session) => (
                 <div key={session.id} className="flex justify-between items-center p-3 border rounded-md">
                   <div>
                     <p className="font-medium">{session.title} (Week {session.weekNumber})</p>
