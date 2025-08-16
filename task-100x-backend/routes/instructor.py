@@ -221,7 +221,6 @@ async def create_session(
     # Asynchronously send notification
     users_with_launchpad = await prisma.user.find_many(
         where={
-            "cohortId": cohort_id,
             "launchpad": {
                 "isNot": None  # Only users who have filled out the launchpad
             }
@@ -232,6 +231,7 @@ async def create_session(
     )
 
     async def _send_notifications_in_background(user, session_details, prisma: Prisma):
+        print('Entered')
         if user.launchpad:
             context = {
                 "student_background": {
@@ -260,8 +260,6 @@ async def create_session(
                     "status": "SENT"
                 }
             )
-            
-            print(f"Successfully sent WhatsApp message to {user.phoneNumber} for session {session_details.id}")
 
             if user.phoneNumber:
                 print(f"Attempting to send WhatsApp message to {user.phoneNumber} for session {session_details.id}")
