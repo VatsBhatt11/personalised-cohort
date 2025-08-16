@@ -833,7 +833,7 @@ async def update_session(
 
     return {
         "success": True,
-        "data": SessionResponse.model_validate(updated_session),
+        "data": SessionResponse.model_validate(updated_session.model_dump()),
         "message": "Session updated successfully and notification initiated"
     }
 
