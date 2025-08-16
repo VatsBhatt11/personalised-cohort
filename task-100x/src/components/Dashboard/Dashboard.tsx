@@ -222,7 +222,7 @@ const Dashboard = ({ userEmail,userName }: DashboardProps) => {
                       setIsQuizAttemptOpen(false);
                       setIsQuizFeedbackOpen(true);
                     }}
-                    onClose={() => setIsQuizAttemptOpen(false)}
+
                   />
                 )}
               </DialogContent>

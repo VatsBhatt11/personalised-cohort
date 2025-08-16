@@ -95,6 +95,35 @@ export interface QuizFeedbackData {
   total_questions: number;
   attempt_id?: string;
   feedback_text: string;
+  reportContent: string;
+  createdAt: string;
+}
+
+export interface OptionWithCorrectness {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+}
+
+export interface QuestionWithAttemptAndCorrectAnswer {
+  id: string;
+  text: string;
+  options: OptionWithCorrectness[];
+  type: string;
+  selectedOptionId?: string | null;
+  attemptedAnswerText?: string | null;
+  correctAnswerId?: string | null;
+  correctAnswerText?: string | null;
+}
+
+export interface DetailedQuizAttemptResponse {
+  id: string;
+  quizId: string;
+  learnerId: string;
+  score: number | null;
+  submittedAt: string;
+  feedbackReport: QuizFeedbackData | null;
+  questions: QuestionWithAttemptAndCorrectAnswer[];
 }
 
 export interface Resource {
@@ -314,11 +343,12 @@ export const learner = {
   },
   submitQuizAttempt: async (
     quizId: string,
-    answers: { questionId: string; selectedOptionId: string }[]
+    answers: { questionId: string; selectedOptionId: string }[],
+    resourceId: string
   ): Promise<{ attempt_id: string }> => {
     const response = await api.post<{ attempt_id: string }>(
       `/api/quiz-attempts`,
-      { quizId, answers }
+      { quizId, answers, resourceId }
     );
     return response.data;
   },
@@ -448,11 +478,20 @@ export const instructor = {
   },
   createSession: async (
     cohortId: string,
-    sessionData: { title: string; description: string; weekNumber: number; cohortId?: string }
+    sessionData: {
+      title: string;
+      description: string;
+      weekNumber: number;
+      cohortId?: string;
+    }
   ): Promise<Session> => {
     const response = await api.post<Session>(
       `/api/cohorts/${cohortId}/sessions`,
-      { title: sessionData.title, description: sessionData.description, weekNumber: sessionData.weekNumber }
+      {
+        title: sessionData.title,
+        description: sessionData.description,
+        weekNumber: sessionData.weekNumber,
+      }
     );
     return response.data;
   },

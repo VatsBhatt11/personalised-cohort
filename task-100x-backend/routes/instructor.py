@@ -72,6 +72,12 @@ async def create_quiz(quiz_data: QuizCreate, current_user = Depends(get_current_
                         }
                     } for q in quiz_data.questions
                 ]
+            },
+            "tasks": {
+                "create": {
+                    "status": "PENDING",
+                    "assignedDate": datetime.now(timezone.utc)
+                }
             }
         },
         include={
@@ -79,7 +85,8 @@ async def create_quiz(quiz_data: QuizCreate, current_user = Depends(get_current_
                 "include": {
                     "options": True
                 }
-            }
+            },
+            "tasks": True
         }
     )
 
@@ -103,7 +110,6 @@ async def generate_quiz_ai(quiz_ai_data: GenerateQuizAI, current_user = Depends(
             raise HTTPException(status_code=500, detail=f"Failed to parse Groq API response as JSON: {e}. Raw response: {generated_quiz_content_str}")
 
         # Assuming generated_quiz_content is a dictionary with a 'questions' key
-        # and the structure matches QuizCreate's questions field
         # We need to convert the generated questions into the QuestionCreate format
         questions_for_db = []
         for q_data in generated_quiz_content.get('questions', []):
@@ -112,17 +118,47 @@ async def generate_quiz_ai(quiz_ai_data: GenerateQuizAI, current_user = Depends(
                 options_for_db.append(OptionCreate(optionText=o_data['optionText'], isCorrect=o_data['isCorrect']))
             questions_for_db.append(QuestionCreate(questionText=q_data['questionText'], questionType=q_data['questionType'], options=options_for_db))
 
-        # Return the generated quiz data in a format that can be used by the frontend
-        # The frontend expects a Quiz object, so we'll construct one with a placeholder ID
-        # and the cohortId and weekNumber from the request.
-        return {
-            "success": True,
-            "data": {
-                "id": "", # Placeholder ID, as it's not yet saved to DB
+        # Create the quiz in the database
+        new_quiz = await prisma.quiz.create(
+            data={
                 "cohortId": quiz_ai_data.cohortId,
                 "weekNumber": quiz_ai_data.weekNumber,
-                "questions": questions_for_db
+                "questions": {
+                    "create": [
+                        {
+                            "questionText": q.questionText,
+                            "questionType": q.questionType,
+                            "options": {
+                                "create": [
+                                    {
+                                        "optionText": opt.optionText,
+                                        "isCorrect": opt.isCorrect
+                                    } for opt in q.options
+                                ]
+                            }
+                        } for q in questions_for_db
+                    ]
+                },
+                "tasks": {
+                    "create": {
+                        "status": "PENDING",
+                        "assignedDate": datetime.now(timezone.utc)
+                    }
+                }
             },
+            include={
+                "questions": {
+                    "include": {
+                        "options": True
+                    }
+                },
+                "tasks": True
+            }
+        )
+
+        return {
+            "success": True,
+            "data": new_quiz,
             "message": "Quiz generated successfully using AI"
         }
     except Exception as e:

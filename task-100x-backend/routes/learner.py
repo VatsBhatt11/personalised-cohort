@@ -13,7 +13,8 @@ groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 router = APIRouter()
 
 class TaskCreate(BaseModel):
-    resourceId: str
+    resourceId: Optional[str] = None
+    quizId: Optional[str] = None
 
 class PlanCreate(BaseModel):
     cohortId: str
@@ -41,6 +42,30 @@ class QuizAttemptResponse(BaseModel):
     score: Optional[float] = None
     submittedAt: datetime
     feedbackReport: Optional[FeedbackReportResponse] = None
+
+class OptionWithCorrectness(BaseModel):
+    id: str
+    text: str
+    isCorrect: bool
+
+class QuestionWithAttemptAndCorrectAnswer(BaseModel):
+    id: str
+    text: str
+    options: List[OptionWithCorrectness]
+    type: str
+    selectedOptionId: Optional[str] = None
+    attemptedAnswerText: Optional[str] = None
+    correctAnswerId: Optional[str] = None # For multiple choice
+    correctAnswerText: Optional[str] = None # For text answers
+
+class DetailedQuizAttemptResponse(BaseModel):
+    id: str
+    quizId: str
+    learnerId: str
+    score: Optional[float] = None
+    submittedAt: datetime
+    feedbackReport: Optional[FeedbackReportResponse] = None
+    questions: List[QuestionWithAttemptAndCorrectAnswer]
 
 class QuestionResponse(BaseModel):
     id: str
@@ -101,8 +126,8 @@ async def create_plan(plan: PlanCreate, current_user = Depends(get_current_user)
             "tasks": {
                 "create": [
                     {
-                        "resourceId": task.resourceId,
-
+                        "resourceId": task.resourceId if task.resourceId else None,
+                        "quizId": task.quizId if task.quizId else None,
                         "status": "PENDING",
                         "assignedDate": datetime.now(timezone.utc)
                     } for task in plan.tasks
@@ -398,6 +423,95 @@ async def submit_quiz_attempt(attempt_data: QuizAttemptCreate, current_user = De
                 reportContent=feedback_report.reportContent,
                 createdAt=feedback_report.createdAt
             ) if feedback_report else None
+    )
+
+@router.get("/quiz-attempts/{attempt_id}/detailed-report", response_model=DetailedQuizAttemptResponse)
+async def get_detailed_quiz_report(
+    attempt_id: str,
+    current_user = Depends(get_current_user),
+    prisma: Prisma = Depends(get_prisma_client)
+):
+    quiz_attempt = await prisma.quizattempt.find_unique(
+        where={
+            "id": attempt_id,
+            "learnerId": current_user.id # Ensure the attempt belongs to the current user
+        },
+        include={
+            "quiz": {
+                "include": {
+                    "questions": {
+                        "include": {
+                            "options": True
+                        }
+                    }
+                }
+            },
+            "quizAnswers": True,
+            "feedbackReport": True
+        }
+    )
+
+    if not quiz_attempt:
+        raise HTTPException(status_code=404, detail="Quiz attempt not found or does not belong to user")
+
+    questions_with_details = []
+    for question in quiz_attempt.quiz.questions:
+        selected_answer = next(
+            (ans for ans in quiz_attempt.quizAnswers if ans.questionId == question.id),
+            None
+        )
+
+        selected_option_id = None
+        attempted_answer_text = None
+        correct_answer_id = None
+        correct_answer_text = None
+
+        if selected_answer:
+            selected_option_id = selected_answer.selectedOptionId
+            attempted_answer_text = selected_answer.answerText
+
+        # Determine correct answer based on question type
+        if question.questionType == "MCQ":
+            correct_option = next((opt for opt in question.options if opt.isCorrect), None)
+            if correct_option:
+                correct_answer_id = correct_option.id
+                correct_answer_text = correct_option.optionText
+        elif question.questionType == "TEXT":
+            # For text answers, the correct answer might be stored differently or not directly in options
+            # Assuming for now it's not directly available in options for TEXT type
+            # You might need to fetch this from another source or a dedicated field in the Question model
+            pass # Placeholder, implement actual logic if correct text answer is stored
+
+        questions_with_details.append(QuestionWithAttemptAndCorrectAnswer(
+            id=question.id,
+            text=question.questionText,
+            options=[
+                OptionWithCorrectness(
+                    id=opt.id,
+                    text=opt.optionText,
+                    isCorrect=opt.isCorrect
+                ) for opt in question.options
+            ],
+            type=question.questionType,
+            selectedOptionId=selected_option_id,
+            attemptedAnswerText=attempted_answer_text,
+            correctAnswerId=correct_answer_id,
+            correctAnswerText=correct_answer_text
+        ))
+
+    return DetailedQuizAttemptResponse(
+        id=quiz_attempt.id,
+        quizId=quiz_attempt.quizId,
+        learnerId=quiz_attempt.learnerId,
+        score=quiz_attempt.score,
+        submittedAt=quiz_attempt.submittedAt,
+        feedbackReport=FeedbackReportResponse(
+            id=quiz_attempt.feedbackReport.id,
+            quizAttemptId=quiz_attempt.feedbackReport.quizAttemptId,
+            reportContent=quiz_attempt.feedbackReport.reportContent,
+            createdAt=quiz_attempt.feedbackReport.createdAt
+        ) if quiz_attempt.feedbackReport else None,
+        questions=questions_with_details
     )
 
 @router.patch("/tasks/{task_id}/complete")

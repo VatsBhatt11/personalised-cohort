@@ -3,25 +3,30 @@ import { Quiz, Question, Option, QuizAttemptStatus, QuizFeedbackData, learner } 
 import { useToast } from '@/components/ui/use-toast';
 import { isAxiosError } from 'axios';
 import { Button } from '@/components/ui/button';
+import { QuizReportModal } from './QuizReportModal';
 
 interface Answer {
   questionId: string;
   selectedOptionId: string;
 }
 
-interface QuizAttemptProps {
+interface QuizAttemptComponentProps {
   quizId: string;
+  resourceId: string; // Add resourceId here
   onAttemptComplete: (attemptId: string) => void;
-  onClose: () => void;
+  onClose: () => void; // Add onClose prop
 }
 
-export const QuizAttemptComponent = ({ quizId, onAttemptComplete, onClose }: QuizAttemptProps) => {
+export const QuizAttemptComponent = ({ quizId, resourceId, onAttemptComplete, onClose }: QuizAttemptComponentProps) => {
   const [quizData, setQuizData] = useState<Quiz | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [timeSpentSeconds, setTimeSpentSeconds] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [showReportButton, setShowReportButton] = useState<boolean>(false); // New state
+  const [submittedAttemptId, setSubmittedAttemptId] = useState<string | null>(null); // New state
+  const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false); // New state for report modal
   const { toast } = useToast();
 
   useEffect(() => {
@@ -120,12 +125,13 @@ export const QuizAttemptComponent = ({ quizId, onAttemptComplete, onClose }: Qui
         questionId: ans.questionId,
         selectedOptionId: ans.selectedOptionId,
       }));
-      const response = await learner.submitQuizAttempt(quizId, formattedAnswers);
+      const response = await learner.submitQuizAttempt(quizId, formattedAnswers, resourceId);
       toast({
         title: "Quiz Submitted",
         description: "Your quiz attempt has been submitted successfully.",
       });
-      onAttemptComplete(response?.feedbackReport?.quizAttemptId);
+      setSubmittedAttemptId(response?.feedbackReport?.quizAttemptId || null);
+      setShowReportButton(true); // Show the report button
     } catch (error) {
       console.error(error)
       if (isAxiosError(error)) {
@@ -156,6 +162,23 @@ export const QuizAttemptComponent = ({ quizId, onAttemptComplete, onClose }: Qui
 
   const currentQuestion = quizData.questions[currentQuestionIndex];
   const selectedAnswer = answers.find(ans => ans.questionId === currentQuestion.id)?.selectedOptionId;
+
+  if (showReportButton && submittedAttemptId) {
+    return (
+      <div className="p-4 bg-gray-800 rounded-lg shadow-lg text-center">
+        <h2 className="text-2xl font-bold mb-4 text-white">Quiz Submitted!</h2>
+        <p className="text-lg mb-6 text-gray-300">You can now view your detailed report or close this window.</p>
+        <div className="flex justify-center space-x-4">
+          <Button onClick={() => setIsReportModalOpen(true)} className="bg-orange-500 hover:bg-orange-600 text-white">
+            View Report
+          </Button>
+          <Button onClick={() => onAttemptComplete(submittedAttemptId || '')} variant="outline" className="text-white border-gray-600 hover:bg-gray-700">
+            Close
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 bg-gray-800 rounded-lg shadow-lg">
@@ -192,6 +215,17 @@ export const QuizAttemptComponent = ({ quizId, onAttemptComplete, onClose }: Qui
           </Button>
         )}
       </div>
+
+      {isReportModalOpen && submittedAttemptId && (
+      <QuizReportModal
+        attemptId={submittedAttemptId}
+        isOpen={isReportModalOpen}
+        onClose={() => {
+          setIsReportModalOpen(false);
+        }}
+      />
+    )}
     </div>
-  );
-};
+
+    
+)}

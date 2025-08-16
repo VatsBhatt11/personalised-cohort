@@ -138,15 +138,39 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
     setTimeSpentOnResource(0);
   }, [resourceStartTime, selectedTask, setWeeklyPlan, toast, timeSpentOnResource]);
 
-  const handleAttemptComplete = useCallback((attemptId: string) => {
+  const handleAttemptComplete = useCallback(async (attemptId: string) => {
     setLastAttemptId(attemptId);
     setIsQuizAttemptOpen(false);
     setIsQuizFeedbackOpen(true);
-  }, []);
+
+    if (selectedTask && selectedTask.quizId) {
+      try {
+        await learner.completeTask(selectedTask.id);
+        toast({
+          title: 'Quiz Task Completed',
+          description: 'Quiz task marked as complete successfully.',
+        });
+        setWeeklyPlan((prevPlan) => {
+          if (!prevPlan) return null;
+          const updatedTasks = prevPlan.tasks.map((task) =>
+            task.id === selectedTask.id ? { ...task, is_completed: true, status: "COMPLETED" as "COMPLETED" } : task
+          );
+          return { ...prevPlan, tasks: updatedTasks };
+        });
+      } catch (error) {
+        console.error('Failed to mark quiz task as complete:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to mark quiz task as complete.',
+          variant: 'destructive',
+        });
+      }
+    }
+  }, [selectedTask, setWeeklyPlan, toast]);
 
   const handleQuizButtonClick = useCallback(() => {
-    if (lastAttemptId) {
-      setLastAttemptId(lastAttemptId);
+    if (quizAttemptStatus?.lastAttemptId) {
+      setLastAttemptId(quizAttemptStatus.lastAttemptId);
       setIsQuizFeedbackOpen(true);
     } else {
       setIsQuizAttemptOpen(true);
@@ -168,6 +192,25 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
             Level {selectedWeek} - Weekly Plan
           </DialogTitle>
         </DialogHeader>
+
+        {isQuizAttemptOpen && quizResource && selectedTask && (
+          <QuizAttemptComponent
+            quizId={quizResource.id}
+            resourceId={selectedTask.resource_id || ''}
+            onAttemptComplete={handleAttemptComplete}
+            onClose={() => setIsQuizAttemptOpen(false)}
+          />
+        )}
+
+        {isQuizFeedbackOpen && quizResource && lastAttemptId && (
+          <QuizFeedbackComponent
+            attemptId={lastAttemptId}
+            onClose={() => {
+              setIsQuizFeedbackOpen(false);
+              setLastAttemptId(null);
+            }}
+          />
+        )}
         
         <div className="space-y-4">
             {weeklyPlan?.tasks && weeklyPlan.tasks.length > 0 ? (
@@ -187,16 +230,30 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
                           {task.status==="COMPLETED" && (
                             <Badge variant="secondary" className="bg-green-500 text-white">Completed</Badge>
                           )}
-                          <Button
-                            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200"
-                            onClick={() => {
-                              setSelectedTask(task);
-                              setResourceModalOpen(true);
-                            }}
-                            disabled={task.is_completed} // Disable button if task is completed
-                          >
-                            {task.is_completed ? 'View Resource' : 'Open Resource'}
-                          </Button>
+                          {task.quiz_id ? (
+                            <Button
+                              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200"
+                              onClick={() => {
+                                setSelectedTask(task);
+                                setQuizResource(task.resource);
+                                handleQuizButtonClick();
+                              }}
+                              disabled={task.is_completed} // Disable button if task is completed
+                            >
+                              {task.is_completed ? 'View Quiz' : 'Start Quiz'}
+                            </Button>
+                          ) : (
+                            <Button
+                              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200"
+                              onClick={() => {
+                                setSelectedTask(task);
+                                setResourceModalOpen(true);
+                              }}
+                              disabled={task.is_completed} // Disable button if task is completed
+                            >
+                              {task.is_completed ? 'View Resource' : 'Open Resource'}
+                            </Button>
+                          )}
 
                         </div>
                       </div>
@@ -255,7 +312,6 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
                       <QuizAttemptComponent
                         quizId={quizResource.id}
                         onAttemptComplete={handleAttemptComplete}
-                        onClose={() => setIsQuizAttemptOpen(false)}
                       />
                     </DialogContent>
                   </Dialog>
