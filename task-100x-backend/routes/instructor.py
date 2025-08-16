@@ -663,7 +663,7 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
 @router.post("/sessions/{cohort_id}")
 async def create_session(
     cohort_id: str,
-    session_details: SessionDetailsPayload,
+    session_details: SessionCreate,
     current_user = Depends(get_current_user),
     prisma: Prisma = Depends(get_prisma_client)
 ):
