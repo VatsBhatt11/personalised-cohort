@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { instructor } from '@/lib/api';
@@ -17,13 +18,17 @@ interface Session {
 interface SessionManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  cohortId: string | null;
+  cohortId: string;
+  onSessionCreated: () => void;
+  totalWeeks: number;
 }
 
 const SessionManagementModal = ({
   isOpen,
   onClose,
   cohortId,
+  onSessionCreated,
+  totalWeeks,
 }: SessionManagementModalProps) => {
   const [sessionTitle, setSessionTitle] = useState('');
   const [sessionDescription, setSessionDescription] = useState('');
@@ -170,14 +175,21 @@ const SessionManagementModal = ({
           </div>
           <div className="space-y-2">
             <Label htmlFor="sessionWeekNumber">Week Number</Label>
-            <Input
-              id="sessionWeekNumber"
-              type="number"
-              value={sessionWeekNumber}
-              onChange={(e) => setSessionWeekNumber(parseInt(e.target.value))}
-              placeholder="e.g., 1"
-              min="1"
-            />
+            <Select
+              value={String(sessionWeekNumber)}
+              onValueChange={(value) => setSessionWeekNumber(parseInt(value))}
+            >
+              <SelectTrigger id="sessionWeekNumber" className="w-full p-3 border border-orange-500/30 rounded-xl bg-gray-900 text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 ease-in-out shadow-lg hover:border-400">
+                <SelectValue placeholder="Select a week" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-900 text-white border border-orange-500/30 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                {Array.from({ length: totalWeeks }, (_, i) => i + 1).map((week) => (
+                  <SelectItem key={week} value={String(week)} className="hover:bg-orange-500/20 focus:bg-orange-500/20 cursor-pointer py-2 px-4 transition-colors duration-200 ease-in-out">
+                    Week {week}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <Button onClick={handleSubmit} disabled={loading}>
             {loading ? (editingSession ? 'Updating...' : 'Submitting...') : (editingSession ? 'Update Session' : 'Create Session')}

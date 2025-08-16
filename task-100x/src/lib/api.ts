@@ -132,6 +132,7 @@ export interface Session {
   title: string;
   description: string;
   weekNumber: number;
+  cohortId: string;
 }
 
 interface DashboardMetrics {

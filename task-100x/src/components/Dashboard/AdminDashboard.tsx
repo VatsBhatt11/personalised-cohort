@@ -605,7 +605,9 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
        <SessionManagementModal
          isOpen={isSessionModalOpen}
          onClose={() => setIsSessionModalOpen(false)}
-         cohortId={cohortId}
+         cohortId={cohortId || ''}
+         onSessionCreated={() => fetchSessions(cohortId)}
+         totalWeeks={cohorts.find(c => c.id === cohortId)?.totalWeeks || 12}
        />
 
 
