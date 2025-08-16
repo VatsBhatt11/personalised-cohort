@@ -132,7 +132,6 @@ export interface Session {
   title: string;
   description: string;
   weekNumber: number;
-  cohortId: string;
 }
 
 interface DashboardMetrics {
@@ -448,11 +447,11 @@ export const instructor = {
   },
   createSession: async (
     cohortId: string,
-    sessionData: { title: string; description: string; weekNumber: number }
+    sessionData: { title: string; description: string; weekNumber: number; cohortId?: string }
   ): Promise<Session> => {
     const response = await api.post<Session>(
       `/api/cohorts/${cohortId}/sessions`,
-      sessionData
+      { title: sessionData.title, description: sessionData.description, weekNumber: sessionData.weekNumber }
     );
     return response.data;
   },

@@ -149,7 +149,6 @@ class SessionCreate(BaseModel):
     title: str
     description: str
     weekNumber: int
-    cohortId: str
 
 class SessionUpdate(BaseModel):
     title: Optional[str] = None
