@@ -865,10 +865,26 @@ async def update_session(
         where={"id": session_id},
         data=session_details.model_dump(exclude_unset=True)
     )
+
+    # Asynchronously send notification for updated session
+    users_with_launchpad = await prisma.user.find_many(
+        where={
+            "launchpad": {
+                "isNot": None  # Only users who have filled out the launchpad
+            }
+        },
+        include={
+            "launchpad": True
+        }
+    )
+
+    for user in users_with_launchpad:
+        asyncio.create_task(_send_notifications_in_background(user, updated_session, prisma))
+
     return {
         "success": True,
         "data": SessionResponse.model_validate(updated_session),
-        "message": "Session updated successfully"
+        "message": "Session updated successfully and notification initiated"
     }
 
 @router.delete("/sessions/{session_id}")
@@ -884,10 +900,17 @@ async def delete_session(
     if not existing_session:
         raise HTTPException(status_code=404, detail="Session not found")
 
+    # Delete associated notifications first
+    await prisma.notification.delete_many(
+        where={
+            "sessionId": session_id
+        }
+    )
+
     await prisma.session.delete(where={"id": session_id})
     return {
         "success": True,
-        "message": "Session deleted successfully"
+        "message": "Session and associated notifications deleted successfully"
     }
 
 
