@@ -254,7 +254,7 @@ async def create_session(
 
             await prisma.notification.create(
                 data={
-                    "userId": user.id,
+                    "studentId": user.id,
                     "sessionId": session_details.id,
                     "message": personalized_message,
                     "status": "SENT"
