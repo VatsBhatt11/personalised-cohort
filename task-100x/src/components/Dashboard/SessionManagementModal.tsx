@@ -1,10 +1,18 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { instructor } from '@/lib/api';
+
+interface Session {
+  id: string;
+  title: string;
+  description: string;
+  weekNumber: number;
+  cohortId: string;
+}
 
 interface SessionManagementModalProps {
   isOpen: boolean;
@@ -19,7 +27,10 @@ const SessionManagementModal = ({
 }: SessionManagementModalProps) => {
   const [sessionTitle, setSessionTitle] = useState('');
   const [sessionDescription, setSessionDescription] = useState('');
+  const [sessionWeekNumber, setSessionWeekNumber] = useState<number>(1);
   const [loading, setLoading] = useState(false);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [editingSession, setEditingSession] = useState<Session | null>(null);
   const { toast } = useToast();
 
   const handleSubmit = async () => {
@@ -32,31 +43,99 @@ const SessionManagementModal = ({
       return;
     }
 
-    if (!sessionTitle.trim() || !sessionDescription.trim()) {
+    if (!sessionTitle.trim() || !sessionDescription.trim() || !sessionWeekNumber) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Session title and description are required.',
+        description: 'Session title, description, and week number are required.',
       });
       return;
     }
 
     setLoading(true);
     try {
-      await instructor.createSession(cohortId, { title: sessionTitle, description: sessionDescription });
-      toast({
-        title: 'Success',
-        description: 'Session details submitted and notification process initiated.',
-      });
+      if (editingSession) {
+        // Update existing session
+        await instructor.updateSession(editingSession.id, { title: sessionTitle, description: sessionDescription, weekNumber: sessionWeekNumber });
+        toast({
+          title: 'Success',
+          description: 'Session updated successfully.',
+        });
+      } else {
+        // Create new session
+        await instructor.createSession(cohortId, { title: sessionTitle, description: sessionDescription, weekNumber: sessionWeekNumber });
+        toast({
+          title: 'Success',
+          description: 'Session details submitted and notification process initiated.',
+        });
+      }
+      fetchSessions(); // Refresh the list of sessions
       onClose();
       setSessionTitle('');
       setSessionDescription('');
+      setSessionWeekNumber(1);
+      setEditingSession(null);
     } catch (error) {
-      console.error('Failed to create session:', error);
+      console.error('Failed to save session:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to submit session details. Please try again.',
+        description: `Failed to ${editingSession ? 'update' : 'submit'} session details. Please try again.`, 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSessions = async () => {
+    if (!cohortId) return;
+    setLoading(true);
+    try {
+      const fetchedSessions = await instructor.getSessions(cohortId);
+      setSessions(fetchedSessions);
+    } catch (error) {
+      console.error('Failed to fetch sessions:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch sessions. Please try again.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && cohortId) {
+      fetchSessions();
+    }
+  }, [isOpen, cohortId]);
+
+  const handleEdit = (session: Session) => {
+    setEditingSession(session);
+    setSessionTitle(session.title);
+    setSessionDescription(session.description);
+    setSessionWeekNumber(session.weekNumber);
+  };
+
+  const handleDelete = async (sessionId: string) => {
+    if (!window.confirm('Are you sure you want to delete this session?')) {
+      return;
+    }
+    setLoading(true);
+    try {
+      await instructor.deleteSession(sessionId);
+      toast({
+        title: 'Success',
+        description: 'Session deleted successfully.',
+      });
+      fetchSessions();
+    } catch (error) {
+      console.error('Failed to delete session:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to delete session. Please try again.',
       });
     } finally {
       setLoading(false);
@@ -67,9 +146,10 @@ const SessionManagementModal = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Manage Session Details</DialogTitle>
+          <DialogTitle>Manage Sessions</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
+          <h3 className="text-lg font-semibold">{editingSession ? 'Edit Session' : 'Create New Session'}</h3>
           <div className="space-y-2">
             <Label htmlFor="sessionTitle">Session Title</Label>
             <Input
@@ -88,10 +168,57 @@ const SessionManagementModal = ({
               placeholder="e.g., A deep dive into React hooks"
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="sessionWeekNumber">Week Number</Label>
+            <Input
+              id="sessionWeekNumber"
+              type="number"
+              value={sessionWeekNumber}
+              onChange={(e) => setSessionWeekNumber(parseInt(e.target.value))}
+              placeholder="e.g., 1"
+              min="1"
+            />
+          </div>
+          <Button onClick={handleSubmit} disabled={loading}>
+            {loading ? (editingSession ? 'Updating...' : 'Submitting...') : (editingSession ? 'Update Session' : 'Create Session')}
+          </Button>
+          {editingSession && (
+            <Button variant="outline" onClick={() => {
+              setEditingSession(null);
+              setSessionTitle('');
+              setSessionDescription('');
+              setSessionWeekNumber(1);
+            }}>
+              Cancel Edit
+            </Button>
+          )}
+
+          <h3 className="text-lg font-semibold mt-6">Existing Sessions</h3>
+          {loading && sessions.length === 0 ? (
+            <p>Loading sessions...</p>
+          ) : sessions.length === 0 ? (
+            <p>No sessions created yet for this cohort.</p>
+          ) : (
+            <div className="space-y-3 max-h-60 overflow-y-auto">
+              {sessions.map((session) => (
+                <div key={session.id} className="flex justify-between items-center p-3 border rounded-md">
+                  <div>
+                    <p className="font-medium">{session.title} (Week {session.weekNumber})</p>
+                    <p className="text-sm text-gray-500">{session.description}</p>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(session)}>
+                      Edit
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(session.id)}>
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-        <Button onClick={handleSubmit} disabled={loading}>
-          {loading ? 'Submitting...' : 'Submit Session Details'}
-        </Button>
       </DialogContent>
     </Dialog>
   );

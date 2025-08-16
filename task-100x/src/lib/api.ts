@@ -127,6 +127,14 @@ export interface Cohort {
   totalWeeks: number;
 }
 
+export interface Session {
+  id: string;
+  title: string;
+  description: string;
+  weekNumber: number;
+  cohortId: string;
+}
+
 interface DashboardMetrics {
   total_learners: number;
   total_resources: number;
@@ -437,5 +445,20 @@ export const instructor = {
   },
   deleteQuiz: async (id: string): Promise<void> => {
     await api.delete(`/api/quizzes/${id}`);
+  },
+  createSession: async (cohortId: string, sessionData: { title: string; description: string; weekNumber: number }): Promise<Session> => {
+    const response = await api.post<Session>(`/api/cohorts/${cohortId}/sessions`, sessionData);
+    return response.data;
+  },
+  getSessions: async (cohortId: string): Promise<Session[]> => {
+    const response = await api.get<Session[]>(`/api/cohorts/${cohortId}/sessions`);
+    return response.data;
+  },
+  updateSession: async (sessionId: string, sessionData: { title?: string; description?: string; weekNumber?: number }): Promise<Session> => {
+    const response = await api.put<Session>(`/api/sessions/${sessionId}`, sessionData);
+    return response.data;
+  },
+  deleteSession: async (sessionId: string) => {
+    await api.delete(`/api/sessions/${sessionId}`);
   },
 };

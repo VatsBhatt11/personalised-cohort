@@ -145,9 +145,25 @@ class CohortCreate(BaseModel):
     name: str
     totalWeeks: int
 
-class SessionDetailsPayload(BaseModel):
+class SessionCreate(BaseModel):
     title: str
     description: str
+    weekNumber: int
+    cohortId: str
+
+class SessionUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    weekNumber: Optional[int] = None
+
+class SessionResponse(BaseModel):
+    id: str
+    title: str
+    description: str
+    weekNumber: int
+    cohortId: str
+    createdAt: datetime
+    updatedAt: datetime
 
 class WeeklyResourcePayload(BaseModel):
     id: Optional[str] = None
@@ -158,6 +174,25 @@ class WeeklyResourcePayload(BaseModel):
     tags: List[str]
     isOptional: Optional[bool] = False
     quizId: Optional[str] = None
+
+@router.post("/sessions", response_model=SessionResponse)
+async def create_session(session_data: SessionCreate, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+    if current_user.role != "INSTRUCTOR":
+        raise HTTPException(status_code=403, detail="Only instructors can create sessions")
+
+    new_session = await prisma.session.create(
+        data={
+            "title": session_data.title,
+            "description": session_data.description,
+            "weekNumber": session_data.weekNumber,
+            "cohortId": session_data.cohortId,
+        }
+    )
+    return {
+        "success": True,
+        "data": new_session,
+        "message": "Session created successfully"
+    }
 
 @router.post("/resources")
 async def create_resource(resource: ResourceCreate, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)): 
@@ -710,6 +745,69 @@ async def create_session(
     return {
         "success": True,
         "message": "Session details received and notification process initiated."
+    }
+
+@router.get("/cohorts/{cohort_id}/sessions")
+async def get_sessions(
+    cohort_id: str,
+    current_user = Depends(get_current_user),
+    prisma: Prisma = Depends(get_prisma_client)
+):
+    if current_user.role not in ["INSTRUCTOR", "LEARNER"]:
+        raise HTTPException(status_code=403, detail="Only instructors and learners can view sessions")
+
+    sessions = await prisma.session.find_many(
+        where={
+            "cohortId": cohort_id
+        }
+    )
+    return {
+        "success": True,
+        "data": [SessionResponse.model_validate(session) for session in sessions],
+        "message": "Sessions retrieved successfully"
+    }
+
+@router.put("/sessions/{session_id}")
+async def update_session(
+    session_id: str,
+    session_details: SessionUpdate,
+    current_user = Depends(get_current_user),
+    prisma: Prisma = Depends(get_prisma_client)
+):
+    if current_user.role != "INSTRUCTOR":
+        raise HTTPException(status_code=403, detail="Only instructors can update sessions")
+
+    existing_session = await prisma.session.find_unique(where={"id": session_id})
+    if not existing_session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    updated_session = await prisma.session.update(
+        where={"id": session_id},
+        data=session_details.model_dump(exclude_unset=True)
+    )
+    return {
+        "success": True,
+        "data": SessionResponse.model_validate(updated_session),
+        "message": "Session updated successfully"
+    }
+
+@router.delete("/sessions/{session_id}")
+async def delete_session(
+    session_id: str,
+    current_user = Depends(get_current_user),
+    prisma: Prisma = Depends(get_prisma_client)
+):
+    if current_user.role != "INSTRUCTOR":
+        raise HTTPException(status_code=403, detail="Only instructors can delete sessions")
+
+    existing_session = await prisma.session.find_unique(where={"id": session_id})
+    if not existing_session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    await prisma.session.delete(where={"id": session_id})
+    return {
+        "success": True,
+        "message": "Session deleted successfully"
     }
 
 

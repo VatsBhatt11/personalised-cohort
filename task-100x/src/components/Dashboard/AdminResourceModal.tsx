@@ -49,6 +49,11 @@ const AdminResourceModal = ({
     tags: [] as string[],
     isOptional: false
   });
+
+  const [sessionDetails, setSessionDetails] = useState({
+    sessionTitle: '',
+    sessionDescription: ''
+  });
   const [newResourceInputTags, setNewResourceInputTags] = useState('');
   // We no longer need editingResourceId as the backend doesn't uses it for updates.
   // Instead, we'll rely on the week number for resource assignment.

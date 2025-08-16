@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 
 import AdminResourceModal from './AdminResourceModal';
+import SessionManagementModal from './SessionManagementModal';
 import CreateCohortModal from './CreateCohortModal';
 import QuizManagementComponent, { Quiz } from './QuizManagementComponent';
 import { CohortSelection } from './CohortSelection';
@@ -26,6 +27,14 @@ interface Resource {
   duration: number;
   tags: string[];
   isOptional?: boolean;
+}
+
+interface Session {
+  id: string;
+  title: string;
+  description: string;
+  weekNumber: number;
+  cohortId: string;
 }
 
  interface AdminDashboardProps {
@@ -54,6 +63,8 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
   const [isQuizManagementOpen, setIsQuizManagementOpen] = useState(false);
   const [selectedWeekForEdit, setSelectedWeekForEdit] = useState<number | null>(null);
   const [assignedWeeks, setAssignedWeeks] = useState<WeekResource[]>([]);
+  const [sessions, setSessions] = useState<Session[]>([]);
+
   const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
     total_learners: 0,
     total_resources: 0,
@@ -65,6 +76,7 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [hasSelectedCohort, setHasSelectedCohort] = useState<boolean>(false);
   const [isCreateCohortModalOpen, setIsCreateCohortModalOpen] = useState(false);
+  const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentQuiz, setCurrentQuiz] = useState<Quiz | null>(null);
@@ -99,11 +111,34 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
     }
   }, [toast]);
 
+  const fetchSessions = useCallback(async (selectedCohortId: string | null) => {
+    if (!selectedCohortId) return;
+    try {
+      const response = await instructor.getSessions(selectedCohortId);
+      setSessions(response);
+    } catch (error) {
+      if (isAxiosError(error)) {
+        toast({
+          variant: "destructive",
+          title: "Error fetching sessions",
+          description: error.response?.data?.detail || "Please try again later.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error fetching sessions",
+          description: "An unexpected error occurred. Please try again later.",
+        });
+      }
+    }
+  }, [toast]);
+
   useEffect(() => {
     if (cohortId) {
       fetchQuizzes(cohortId);
+      fetchSessions(cohortId);
     }
-  }, [fetchQuizzes, cohortId]);
+  }, [fetchQuizzes, fetchSessions, cohortId]);
 
   const fetchCohorts = useCallback(async () => {
     setLoading(true);
@@ -251,82 +286,133 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
     }
   };
 
-const fetchResources = async () => {
-      setLoading(true);
-      try {
-        const response = await instructor.getAllResources(cohortId);
-        setAssignedWeeks(response);
-      } catch (error) {
-        if (isAxiosError(error)) {
-          const axiosError = error.response?.data as ApiError;
-          toast({
-            variant: "destructive",
-            title: "Error fetching resources",
-            description: axiosError?.detail || "Please try again later."
-          });
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Error fetching resources",
-            description: "An unexpected error occurred. Please try again later."
-          });
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-  // Existing useEffect for fetching dashboard data and resources
-  useEffect(() => {
-    if (!cohortId) return;
-
-    const fetchDashboardData = async () => {
-      setLoading(true);
-      try {
-        const response = await instructor.getDashboard(cohortId);
-        setDashboardStats({
-          total_learners: response.total_learners ?? 0,
-           total_resources: response.total_resources ?? 0,
-           completion_percentage: response.completion_percentage ?? 0,
-           average_streak: response.average_streak ?? 0
-        });
-      } catch (error) {
-        console.error(error)
-        if (isAxiosError(error)) {
-          const axiosError = error.response?.data as ApiError;
-          toast({
-            variant: "destructive",
-            title: "Error fetching dashboard data",
-            description: axiosError?.detail || "Please try again later."
-          });
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Error fetching dashboard data",
-            description: "An unexpected error occurred. Please try again later."
-          });
-        }
-
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-    fetchResources();
-  }, [cohortId]);
-
-  const stats = [
-    { title: 'Total Learners', value: dashboardStats.total_learners.toString(), icon: Users, change: '+12%' },
-    { title: 'Total Resources', value: dashboardStats.total_resources.toString(), icon: BookOpen, change: '+5%' },
-    { title: 'Task Completion Rate', value: `${dashboardStats.completion_percentage}%`, icon: Award, change: '+23%' },
-    { title: 'Average Streak', value: `${dashboardStats.average_streak}%`, icon: TrendingUp, change: '+8%' }
-  ];
-
-  const handleCohortCreated = (newCohortId: string) => {
-    setCohortId(newCohortId);
-    fetchCohorts(); // Refresh the list of cohorts
+  const handleCreateSession = () => {
+    if (!cohortId) {
+      toast({
+        variant: "destructive",
+        title: "No Cohort Selected",
+        description: "Please select a cohort before creating a session.",
+      });
+      return;
+    }
+    setIsSessionModalOpen(true);
   };
+
+  const handleEditSession = (session: Session) => {
+    // This will be handled by the modal itself now
+    setIsSessionModalOpen(true);
+  };
+
+  const handleDeleteSession = async (sessionId: string) => {
+    if (!window.confirm("Are you sure you want to delete this session?")) {
+      return;
+    }
+    setLoading(true);
+    try {
+      await instructor.deleteSession(sessionId);
+      toast({
+        title: "Session deleted",
+        description: "The session has been successfully deleted.",
+      });
+      fetchSessions(cohortId);
+    } catch (error) {
+      if (isAxiosError(error)) {
+        toast({
+          variant: "destructive",
+          title: "Error deleting session",
+          description: error.response?.data?.detail || "Please try again later.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error deleting session",
+          description: "An unexpected error occurred. Please try again later.",
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+
+
+ const fetchResources = async () => {
+       setLoading(true);
+       try {
+         const response = await instructor.getAllResources(cohortId);
+         setAssignedWeeks(response);
+       } catch (error) {
+         if (isAxiosError(error)) {
+           const axiosError = error.response?.data as ApiError;
+           toast({
+             variant: "destructive",
+             title: "Error fetching resources",
+             description: axiosError?.detail || "Please try again later."
+           });
+         } else {
+           toast({
+             variant: "destructive",
+             title: "Error fetching resources",
+             description: "An unexpected error occurred. Please try again later."
+           });
+         }
+       } finally {
+         setLoading(false);
+       }
+     };
+
+   // Existing useEffect for fetching dashboard data and resources
+   useEffect(() => {
+     if (!cohortId) return;
+
+     const fetchDashboardData = async () => {
+       setLoading(true);
+       try {
+         const response = await instructor.getDashboard(cohortId);
+         setDashboardStats({
+           total_learners: response.total_learners ?? 0,
+            total_resources: response.total_resources ?? 0,
+            completion_percentage: response.completion_percentage ?? 0,
+            average_streak: response.average_streak ?? 0
+         });
+       } catch (error) {
+         console.error(error)
+         if (isAxiosError(error)) {
+           const axiosError = error.response?.data as ApiError;
+           toast({
+             variant: "destructive",
+             title: "Error fetching dashboard data",
+             description: axiosError?.detail || "Please try again later."
+           });
+         } else {
+           toast({
+             variant: "destructive",
+             title: "Error fetching dashboard data",
+             description: "An unexpected error occurred. Please try again later."
+           });
+         }
+
+       } finally {
+         setLoading(false);
+       }
+     };
+
+     fetchDashboardData();
+     fetchResources();
+   }, [cohortId]);
+
+   const stats = [
+     { title: 'Total Learners', value: dashboardStats.total_learners.toString(), icon: Users, change: '+12%' },
+     { title: 'Total Resources', value: dashboardStats.total_resources.toString(), icon: BookOpen, change: '+5%' },
+     { title: 'Task Completion Rate', value: `${dashboardStats.completion_percentage}%`, icon: Award, change: '+23%' },
+     { title: 'Average Streak', value: `${dashboardStats.average_streak}%`, icon: TrendingUp, change: '+8%' }
+   ];
+
+   const handleCohortCreated = (newCohortId: string) => {
+     setCohortId(newCohortId);
+     fetchCohorts(); // Refresh the list of cohorts
+   };
 
   const handleDeleteWeek = async (weekNumber: number) => {
     if (!cohortId) return;
@@ -458,13 +544,70 @@ const fetchResources = async () => {
         </DialogContent>
       </Dialog>
 
-      <CohortSelection
-        cohorts={cohorts}
-        loading={loading}
-        setCohortId={setCohortId}
-        setIsCreateCohortModalOpen={setIsCreateCohortModalOpen}
-        hasSelectedCohort={hasSelectedCohort}
-      />
+       <CohortSelection
+         cohorts={cohorts}
+         loading={loading}
+         setCohortId={setCohortId}
+         setIsCreateCohortModalOpen={setIsCreateCohortModalOpen}
+         hasSelectedCohort={hasSelectedCohort}
+       />
+       {/* Session Management Section */}
+       {cohortId && ( // Only render if a cohort is selected
+         <Card className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg mb-10">
+           <CardHeader>
+             <CardTitle className="text-2xl font-bold text-orange-400">Session Management</CardTitle>
+           </CardHeader>
+           <CardContent>
+             <div className="space-y-6">
+               <Button
+                 onClick={handleCreateSession}
+                 className="px-8 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+               >
+                 Create New Session
+               </Button>
+               {sessions.length > 0 ? (
+                 <div className="space-y-4">
+                   {sessions.map((session) => (
+                     <div key={session.id} className="bg-gray-800 border border-gray-700 rounded-lg p-5 shadow-md">
+                       <div className="flex items-center justify-between mb-2">
+                         <h4 className="text-xl font-semibold text-orange-300">{session.title} (Week {session.weekNumber})</h4>
+                         <div className="flex gap-3">
+                           <Button
+                             onClick={() => handleEditSession(session)}
+                             className="p-2 text-gray-400 hover:text-orange-400 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                             title="Edit Session"
+                             disabled={loading}
+                           >
+                             <Edit className="w-5 h-5" />
+                           </Button>
+                           <Button
+                             onClick={() => handleDeleteSession(session.id)}
+                             className="p-2 text-gray-400 hover:text-red-500 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                             title="Delete Session"
+                             disabled={loading}
+                           >
+                             <Trash2 className="w-5 h-5" />
+                           </Button>
+                         </div>
+                       </div>
+                       <p className="text-gray-400">{session.description}</p>
+                     </div>
+                   ))}
+                 </div>
+               ) : (
+                 <p className="text-gray-400">No sessions created yet.</p>
+               )}
+             </div>
+           </CardContent>
+         </Card>
+       )}
+
+       <SessionManagementModal
+         isOpen={isSessionModalOpen}
+         onClose={() => setIsSessionModalOpen(false)}
+         cohortId={cohortId}
+       />
+
 
       {hasSelectedCohort && (
         <div className="min-h-screen bg-gray-800 p-6 font-sans">
