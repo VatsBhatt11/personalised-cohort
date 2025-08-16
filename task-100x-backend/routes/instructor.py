@@ -230,50 +230,9 @@ async def create_session(
         }
     )
 
-    async def _send_notifications_in_background(user, session_details, prisma: Prisma):
-        print('Entered')
-        if user.launchpad:
-            context = {
-                "student_background": {
-                    "education": user.launchpad.studyStream,
-                    "experience": user.launchpad.workExperience,
-                    "current_role": user.launchpad.yearsOfExperience
-                },
-                "student_interests": {
-                    "coding_familiarity": user.launchpad.codingFamiliarity,
-                    "python_familiarity": user.launchpad.pythonFamiliarity,
-                    "languages": user.launchpad.languages
-                },
-                "student_future_goals": user.launchpad.expectedOutcomes,
-                "upcoming_session_title": session_details.title,
-                "upcoming_session_description": session_details.description
-            }
 
-            # Call Groq API to generate message
-            personalized_message = await generate_personalized_message(context)
 
-            await prisma.notification.create(
-                data={
-                    "studentId": user.id,
-                    "sessionId": session_details.id,
-                    "message": personalized_message,
-                    "status": "SENT"
-                }
-            )
 
-            if user.phoneNumber:
-                print(f"Attempting to send WhatsApp message to {user.phoneNumber} for session {session_details.id}")
-                try:
-                    await send_whatsapp_message(
-                        destination=user.phoneNumber,
-                        user_name=user.name,
-                        message_body=personalized_message
-                    )
-                    print(f"Successfully sent WhatsApp message to {user.phoneNumber} for session {session_details.id}")
-                except Exception as e:
-                    print(f"Error sending WhatsApp message to {user.phoneNumber} for session {session_details.id}: {e}")
-            else:
-                print(f"User {user.id} does not have a phone number. Skipping WhatsApp notification.")
 
     for user in users_with_launchpad:
         asyncio.create_task(_send_notifications_in_background(user, new_session, prisma)) # Pass prisma client
@@ -773,59 +732,50 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
         }
     )
 
-    async def _send_notifications_in_background(user, session_details, prisma: Prisma):
-        if user.launchpad:
-            context = {
-                "student_background": {
-                    "education": user.launchpad.studyStream,
-                    "experience": user.launchpad.workExperience,
-                    "current_role": user.launchpad.yearsOfExperience
-                },
-                "student_interests": {
-                    "coding_familiarity": user.launchpad.codingFamiliarity,
-                    "python_familiarity": user.launchpad.pythonFamiliarity,
-                    "languages": user.launchpad.languages
-                },
-                "student_future_goals": user.launchpad.expectedOutcomes,
-                "upcoming_session_title": session_details.title,
-                "upcoming_session_description": session_details.description
+async def _send_notifications_in_background(user, session_details, prisma: Prisma):
+    print('Entered')
+    if user.launchpad:
+        context = {
+            "student_background": {
+                "education": user.launchpad.studyStream,
+                "experience": user.launchpad.workExperience,
+                "current_role": user.launchpad.yearsOfExperience
+            },
+            "student_interests": {
+                "coding_familiarity": user.launchpad.codingFamiliarity,
+                "python_familiarity": user.launchpad.pythonFamiliarity,
+                "languages": user.launchpad.languages
+            },
+            "student_future_goals": user.launchpad.expectedOutcomes,
+            "upcoming_session_title": session_details.title,
+            "upcoming_session_description": session_details.description
+        }
+
+        # Call Groq API to generate message
+        personalized_message = await generate_personalized_message(context)
+
+        await prisma.notification.create(
+            data={
+                "studentId": user.id,
+                "sessionId": session_details.id,
+                "message": personalized_message,
+                "status": "SENT"
             }
+        )
 
-            # Call Groq API to generate message
-            personalized_message = await generate_personalized_message(context)
-
-            await prisma.notification.create(
-                data={
-                    "userId": user.id,
-                    "sessionId": session_details.id,
-                    "message": personalized_message,
-                    "status": "SENT"
-                }
-            )
-            
-            print(f"Successfully sent WhatsApp message to {user.phoneNumber} for session {session_details.id}")
-
-            if user.phoneNumber:
-                print(f"Attempting to send WhatsApp message to {user.phoneNumber} for session {session_details.id}")
-                try:
-                    await send_whatsapp_message(
-                        destination=user.phoneNumber,
-                        user_name=user.name, 
-                        message_body=personalized_message
-                    )
-                    print(f"Successfully sent WhatsApp message to {user.phoneNumber} for session {session_details.id}")
-                except Exception as e:
-                    print(f"Error sending WhatsApp message to {user.phoneNumber} for session {session_details.id}: {e}")
-            else:
-                print(f"User {user.id} does not have a phone number. Skipping WhatsApp notification.")
-
-    for user in users_with_launchpad:
-        asyncio.create_task(_send_notifications_in_background(user, session_details, prisma)) # Pass prisma client
-
-    return {
-        "success": True,
-        "message": "Session details received and notification process initiated."
-    }
+        if user.phoneNumber:
+            print(f"Attempting to send WhatsApp message to {user.phoneNumber} for session {session_details.id}")
+            try:
+                await send_whatsapp_message(
+                    destination=user.phoneNumber,
+                    user_name=user.name,
+                    message_body=personalized_message
+                )
+                print(f"Successfully sent WhatsApp message to {user.phoneNumber} for session {session_details.id}")
+            except Exception as e:
+                print(f"Error sending WhatsApp message to {user.phoneNumber} for session {session_details.id}: {e}")
+        else:
+            print(f"User {user.id} does not have a phone number. Skipping WhatsApp notification.")
 
 @router.get("/cohorts/{cohort_id}/sessions")
 async def get_sessions(
