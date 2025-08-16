@@ -21,6 +21,7 @@ interface SessionManagementModalProps {
   cohortId: string;
   onSessionCreated: () => void;
   totalWeeks: number;
+  editingSession: Session | null;
 }
 
 const SessionManagementModal = ({
@@ -29,14 +30,25 @@ const SessionManagementModal = ({
   cohortId,
   onSessionCreated,
   totalWeeks,
+  editingSession,
 }: SessionManagementModalProps) => {
   const [sessionTitle, setSessionTitle] = useState('');
   const [sessionDescription, setSessionDescription] = useState('');
   const [sessionWeekNumber, setSessionWeekNumber] = useState<number>(1);
   const [loading, setLoading] = useState(false);
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [editingSession, setEditingSession] = useState<Session | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (editingSession) {
+      setSessionTitle(editingSession.title);
+      setSessionDescription(editingSession.description);
+      setSessionWeekNumber(editingSession.weekNumber);
+    } else {
+      setSessionTitle('');
+      setSessionDescription('');
+      setSessionWeekNumber(1);
+    }
+  }, [editingSession]);
 
   const handleSubmit = async () => {
     if (!cohortId) {
@@ -74,73 +86,14 @@ const SessionManagementModal = ({
           description: 'Session details submitted and notification process initiated.',
         });
       }
-      fetchSessions(); // Refresh the list of sessions
       onClose();
-      setSessionTitle('');
-      setSessionDescription('');
-      setSessionWeekNumber(1);
-      setEditingSession(null);
+      // The useEffect hook will handle resetting the form when editingSession becomes null
     } catch (error) {
       console.error('Failed to save session:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: `Failed to ${editingSession ? 'update' : 'submit'} session details. Please try again.`, 
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchSessions = async () => {
-    if (!cohortId) return;
-    setLoading(true);
-    try {
-      const fetchedSessions = await instructor.getSessions(cohortId);
-      setSessions(fetchedSessions);
-    } catch (error) {
-      console.error('Failed to fetch sessions:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to fetch sessions. Please try again.',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isOpen && cohortId) {
-      fetchSessions();
-    }
-  }, [isOpen, cohortId]);
-
-  const handleEdit = (session: Session) => {
-    setEditingSession(session);
-    setSessionTitle(session.title);
-    setSessionDescription(session.description);
-    setSessionWeekNumber(session.weekNumber);
-  };
-
-  const handleDelete = async (sessionId: string) => {
-    if (!window.confirm('Are you sure you want to delete this session?')) {
-      return;
-    }
-    setLoading(true);
-    try {
-      await instructor.deleteSession(sessionId);
-      toast({
-        title: 'Success',
-        description: 'Session deleted successfully.',
-      });
-      fetchSessions();
-    } catch (error) {
-      console.error('Failed to delete session:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to delete session. Please try again.',
+        description: `Failed to ${editingSession ? 'update' : 'submit'} session details. Please try again.` 
       });
     } finally {
       setLoading(false);
@@ -196,39 +149,10 @@ const SessionManagementModal = ({
           </Button>
           {editingSession && (
             <Button variant="outline" onClick={() => {
-              setEditingSession(null);
-              setSessionTitle('');
-              setSessionDescription('');
-              setSessionWeekNumber(1);
+              onClose(); // This will trigger the useEffect to reset the form
             }}>
               Cancel Edit
             </Button>
-          )}
-
-          <h3 className="text-lg font-semibold mt-6">Existing Sessions</h3>
-          {loading && sessions.length === 0 ? (
-            <p>Loading sessions...</p>
-          ) : sessions.length === 0 ? (
-            <p>No sessions created yet for this cohort.</p>
-          ) : (
-            <div className="space-y-3 max-h-60 overflow-y-auto">
-              {sessions?.map((session) => (
-                <div key={session.id} className="flex justify-between items-center p-3 border rounded-md">
-                  <div>
-                    <p className="font-medium">{session.title} (Week {session.weekNumber})</p>
-                    <p className="text-sm text-gray-500">{session.description}</p>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(session)}>
-                      Edit
-                    </Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleDelete(session.id)}>
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
           )}
         </div>
       </DialogContent>

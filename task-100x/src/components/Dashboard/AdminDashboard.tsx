@@ -64,6 +64,7 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
   const [selectedWeekForEdit, setSelectedWeekForEdit] = useState<number | null>(null);
   const [assignedWeeks, setAssignedWeeks] = useState<WeekResource[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [editingSession, setEditingSession] = useState<Session | null>(null);
 
   const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
     total_learners: 0,
@@ -298,10 +299,7 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
     setIsSessionModalOpen(true);
   };
 
-  const handleEditSession = (session: Session) => {
-    // This will be handled by the modal itself now
-    setIsSessionModalOpen(true);
-  };
+
 
   const handleDeleteSession = async (sessionId: string) => {
     if (!window.confirm("Are you sure you want to delete this session?")) {
@@ -551,63 +549,17 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
          setIsCreateCohortModalOpen={setIsCreateCohortModalOpen}
          hasSelectedCohort={hasSelectedCohort}
        />
-       {/* Session Management Section */}
-       {cohortId && ( // Only render if a cohort is selected
-         <Card className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg mb-10">
-           <CardHeader>
-             <CardTitle className="text-2xl font-bold text-orange-400">Session Management</CardTitle>
-           </CardHeader>
-           <CardContent>
-             <div className="space-y-6">
-               <Button
-                 onClick={handleCreateSession}
-                 className="px-8 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
-               >
-                 Create New Session
-               </Button>
-               {sessions.length > 0 ? (
-                 <div className="space-y-4">
-                   {sessions.map((session) => (
-                     <div key={session.id} className="bg-gray-800 border border-gray-700 rounded-lg p-5 shadow-md">
-                       <div className="flex items-center justify-between mb-2">
-                         <h4 className="text-xl font-semibold text-orange-300">{session.title} (Week {session.weekNumber})</h4>
-                         <div className="flex gap-3">
-                           <Button
-                             onClick={() => handleEditSession(session)}
-                             className="p-2 text-gray-400 hover:text-orange-400 hover:bg-gray-700 rounded-md transition-colors duration-200"
-                             title="Edit Session"
-                             disabled={loading}
-                           >
-                             <Edit className="w-5 h-5" />
-                           </Button>
-                           <Button
-                             onClick={() => handleDeleteSession(session.id)}
-                             className="p-2 text-gray-400 hover:text-red-500 hover:bg-gray-700 rounded-md transition-colors duration-200"
-                             title="Delete Session"
-                             disabled={loading}
-                           >
-                             <Trash2 className="w-5 h-5" />
-                           </Button>
-                         </div>
-                       </div>
-                       <p className="text-gray-400">{session.description}</p>
-                     </div>
-                   ))}
-                 </div>
-               ) : (
-                 <p className="text-gray-400">No sessions created yet.</p>
-               )}
-             </div>
-           </CardContent>
-         </Card>
-       )}
 
        <SessionManagementModal
          isOpen={isSessionModalOpen}
-         onClose={() => setIsSessionModalOpen(false)}
+         onClose={() => {
+           setIsSessionModalOpen(false);
+           setEditingSession(null); // Clear editing session when modal closes
+         }}
          cohortId={cohortId || ''}
          onSessionCreated={() => fetchSessions(cohortId)}
          totalWeeks={cohorts.find(c => c.id === cohortId)?.totalWeeks || 12}
+         editingSession={editingSession}
        />
 
 
@@ -690,6 +642,59 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg mb-10">
+           <div className='flex justify-between items-center'>
+           <CardHeader>
+             <CardTitle className="text-2xl font-bold text-orange-400">Session Management</CardTitle>
+           </CardHeader>
+           <Button
+                 onClick={handleCreateSession}
+                 className="mx-5 px-8 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+               >
+                 Create New Session
+               </Button>
+          </div>
+           <CardContent>
+             <div className="space-y-6">
+               {sessions.length > 0 ? (
+                 <div className="space-y-4">
+                   {sessions.map((session) => (
+                     <div key={session.id} className="bg-gray-800 border border-gray-700 rounded-lg p-5 shadow-md">
+                       <div className="flex items-center justify-between mb-2">
+                         <h4 className="text-xl font-semibold text-orange-300">{session.title} (Week {session.weekNumber})</h4>
+                         <div className="flex gap-3">
+                           <Button
+                             onClick={() => {
+                               setEditingSession(session);
+                               setIsSessionModalOpen(true);
+                             }}
+                             className="p-2 text-gray-400 hover:text-orange-400 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                             title="Edit Session"
+                             disabled={loading}
+                           >
+                             <Edit className="w-5 h-5" />
+                           </Button>
+                           <Button
+                             onClick={() => handleDeleteSession(session.id)}
+                             className="p-2 text-gray-400 hover:text-red-500 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                             title="Delete Session"
+                             disabled={loading}
+                           >
+                             <Trash2 className="w-5 h-5" />
+                           </Button>
+                         </div>
+                       </div>
+                       <p className="text-gray-400">{session.description}</p>
+                     </div>
+                   ))}
+                 </div>
+               ) : (
+                 <p className="text-gray-400">No sessions created yet.</p>
+               )}
+             </div>
+           </CardContent>
+         </Card>
       </div>
 
       {/* Assigned Weeks */}
@@ -755,7 +760,7 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
         }}
         editingWeek={selectedWeekForEdit}
         existingResources={memoizedExistingResources}
-          onResourcesAssigned={(week, resources) => handleResourcesAssigned(week, resources as Resource[])}
+        onResourcesAssigned={(week, resources) => handleResourcesAssigned(week, resources as Resource[])}
         cohortId={cohortId}
         totalWeeks={cohorts.find(c => c.id === cohortId)?.totalWeeks || 12} // Pass totalWeeks of selected cohort
       />

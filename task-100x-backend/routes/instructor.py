@@ -279,7 +279,13 @@ async def create_session(
         asyncio.create_task(_send_notifications_in_background(user, new_session, prisma)) # Pass prisma client
 
     return CreateSessionResponse(
-          **new_session.model_dump(),
+          id=new_session.id,
+          title=new_session.title,
+          description=new_session.description,
+          weekNumber=new_session.weekNumber,
+          cohortId=new_session.cohortId,
+          createdAt=new_session.createdAt,
+          updatedAt=new_session.updatedAt,
           success=True,
           message="Session created successfully and notification initiated"
      )
