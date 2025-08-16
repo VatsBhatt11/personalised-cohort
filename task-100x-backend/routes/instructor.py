@@ -193,10 +193,6 @@ async def create_session(
     current_user = Depends(get_current_user),
     prisma: Prisma = Depends(get_prisma_client)
 ):
-    start_time = time.time()
-    print(f"[get_sessions] - Start processing request for cohort_id: {cohort_id}")
-    start_time = time.time()
-    print(f"[create_session] - Start processing request for cohort_id: {cohort_id}")
     if current_user.role != "INSTRUCTOR":
         print(f"[create_session] - Unauthorized access attempt by user: {current_user.id}")
         raise HTTPException(status_code=403, detail="Only instructors can create sessions")
@@ -287,8 +283,6 @@ async def create_session(
     for user in users_with_launchpad:
         asyncio.create_task(_send_notifications_in_background(user, new_session, prisma)) # Pass prisma client
 
-    end_time = time.time()
-    print(f"[create_session] - Finished processing request in {end_time - start_time:.4f} seconds.")
     return CreateSessionResponse(
           **new_session.model_dump(),
           success=True,
@@ -848,8 +842,6 @@ async def get_sessions(
         }
     )
     print(f"[get_sessions] - Retrieved {len(sessions)} sessions for cohort_id: {cohort_id}")
-    end_time = time.time()
-    print(f"[get_sessions] - Finished processing request in {end_time - start_time:.4f} seconds.")
     return {
         "success": True,
         "data": [SessionResponse.model_validate(session.model_dump()) for session in sessions],
