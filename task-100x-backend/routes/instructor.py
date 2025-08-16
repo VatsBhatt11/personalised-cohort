@@ -269,10 +269,19 @@ async def create_session(
         asyncio.create_task(_send_notifications_in_background(user, new_session, prisma)) # Pass prisma client
 
     return {
-        "success": True,
-        "data": new_session,
-        "message": "Session created successfully and notification initiated"
-    }
+         "id": new_session.id,
+         "success": True,
+         "data": {
+             "id": new_session.id,
+             "title": new_session.title,
+             "description": new_session.description,
+             "weekNumber": new_session.weekNumber,
+             "cohortId": new_session.cohortId,
+             "createdAt": new_session.createdAt,
+             "updatedAt": new_session.updatedAt,
+         },
+         "message": "Session created successfully and notification initiated"
+     }
 
 @router.post("/resources")
 async def create_resource(resource: ResourceCreate, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)): 
