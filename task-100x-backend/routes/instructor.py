@@ -6,6 +6,7 @@ from typing import List, Optional
 from datetime import datetime, timezone, timedelta
 import os
 import asyncio
+import time
 from typing import List
 from fastapi import APIRouter, Body, Depends, HTTPException, Form, UploadFile, File
 import csv
@@ -155,6 +156,17 @@ class SessionUpdate(BaseModel):
     description: Optional[str] = None
     weekNumber: Optional[int] = None
 
+class CreateSessionResponse(BaseModel):
+    id: str
+    title: str
+    description: str
+    weekNumber: int
+    cohortId: str
+    createdAt: datetime
+    updatedAt: datetime
+    success: bool
+    message: str
+
 class SessionResponse(BaseModel):
     id: str
     title: str
@@ -174,14 +186,19 @@ class WeeklyResourcePayload(BaseModel):
     isOptional: Optional[bool] = False
     quizId: Optional[str] = None
 
-@router.post("/cohorts/{cohort_id}/sessions", response_model=SessionResponse)
+@router.post("/cohorts/{cohort_id}/sessions", response_model=CreateSessionResponse)
 async def create_session(
     cohort_id: str,
     session_data: SessionCreate,
     current_user = Depends(get_current_user),
     prisma: Prisma = Depends(get_prisma_client)
 ):
+    start_time = time.time()
+    print(f"[get_sessions] - Start processing request for cohort_id: {cohort_id}")
+    start_time = time.time()
+    print(f"[create_session] - Start processing request for cohort_id: {cohort_id}")
     if current_user.role != "INSTRUCTOR":
+        print(f"[create_session] - Unauthorized access attempt by user: {current_user.id}")
         raise HTTPException(status_code=403, detail="Only instructors can create sessions")
 
     cohort = await prisma.cohort.find_unique(
@@ -195,6 +212,7 @@ async def create_session(
         }
     )
     if not cohort:
+        print(f"[create_session] - Cohort not found: {cohort_id}")
         raise HTTPException(status_code=404, detail="Cohort not found")
 
     new_session = await prisma.session.create(
@@ -205,6 +223,7 @@ async def create_session(
             "cohortId": cohort_id,
         }
     )
+    print(f"[create_session] - Session created: {new_session.id}")
 
     # Asynchronously send notification
     users_with_launchpad = await prisma.user.find_many(
@@ -268,20 +287,13 @@ async def create_session(
     for user in users_with_launchpad:
         asyncio.create_task(_send_notifications_in_background(user, new_session, prisma)) # Pass prisma client
 
-    return {
-         "id": new_session.id,
-         "success": True,
-         "data": {
-             "id": new_session.id,
-             "title": new_session.title,
-             "description": new_session.description,
-             "weekNumber": new_session.weekNumber,
-             "cohortId": new_session.cohortId,
-             "createdAt": new_session.createdAt,
-             "updatedAt": new_session.updatedAt,
-         },
-         "message": "Session created successfully and notification initiated"
-     }
+    end_time = time.time()
+    print(f"[create_session] - Finished processing request in {end_time - start_time:.4f} seconds.")
+    return CreateSessionResponse(
+          **new_session.model_dump(),
+          success=True,
+          message="Session created successfully and notification initiated"
+     )
 
 @router.post("/resources")
 async def create_resource(resource: ResourceCreate, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)): 
@@ -827,6 +839,7 @@ async def get_sessions(
     prisma: Prisma = Depends(get_prisma_client)
 ):
     if current_user.role not in ["INSTRUCTOR", "LEARNER"]:
+        print(f"[get_sessions] - Unauthorized access attempt by user: {current_user.id}")
         raise HTTPException(status_code=403, detail="Only instructors and learners can view sessions")
 
     sessions = await prisma.session.find_many(
@@ -834,9 +847,12 @@ async def get_sessions(
             "cohortId": cohort_id
         }
     )
+    print(f"[get_sessions] - Retrieved {len(sessions)} sessions for cohort_id: {cohort_id}")
+    end_time = time.time()
+    print(f"[get_sessions] - Finished processing request in {end_time - start_time:.4f} seconds.")
     return {
         "success": True,
-        "data": [SessionResponse.model_validate(session) for session in sessions],
+        "data": [SessionResponse.model_validate(session.model_dump()) for session in sessions],
         "message": "Sessions retrieved successfully"
     }
 
