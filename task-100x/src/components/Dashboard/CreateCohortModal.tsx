@@ -92,25 +92,25 @@ const CreateCohortModal: React.FC<CreateCohortModalProps> = ({ isOpen, onClose, 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full bg-gray-800 text-white border-gray-700 rounded-lg shadow-lg">
-        <DialogHeader className="border-b border-gray-700 pb-4 mb-4">
-          <DialogTitle className="text-2xl font-bold text-orange-400">Create New Cohort</DialogTitle>
+      <DialogContent className="w-full bg-orange-100 text-black border-orange-200 rounded-lg shadow-lg">
+        <DialogHeader className="border-b border-orange-200 pb-4 mb-4">
+          <DialogTitle className="text-2xl font-bold text-orange-600">Create New Cohort</DialogTitle>
         </DialogHeader>
         <div className="grid gap-6 py-4">
           <div className="grid grid-cols-4 justify-start items-center gap-4">
-            <Label htmlFor="cohortName" className="col-span-1 text-left text-gray-300">
+            <Label htmlFor="cohortName" className="col-span-1 text-left text-gray-700">
               Cohort Name
             </Label>
             <Input
               id="cohortName"
               value={cohortName}
               onChange={(e) => setCohortName(e.target.value)}
-              className="col-span-3 bg-gray-700 border-gray-600 text-white focus:border-orange-500 focus:ring-orange-500"
+              className="col-span-3 bg-orange-50 border-orange-200 text-black focus:border-orange-500 focus:ring-orange-500"
               disabled={loading}
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="totalWeeks" className="col-span-1 text-left text-gray-300">
+            <Label htmlFor="totalWeeks" className="col-span-1 text-left text-gray-700">
               Total Weeks
             </Label>
             <Input
@@ -118,13 +118,13 @@ const CreateCohortModal: React.FC<CreateCohortModalProps> = ({ isOpen, onClose, 
               type="number"
               value={totalWeeks}
               onChange={(e) => setTotalWeeks(parseInt(e.target.value) || 0)}
-              className="col-span-3 bg-gray-700 border-gray-600 text-white focus:border-orange-500 focus:ring-orange-500"
+              className="col-span-3 bg-orange-50 border-orange-200 text-black focus:border-orange-500 focus:ring-orange-500"
               min="1"
               disabled={loading}
             />
           </div>
           <div className="grid grid-cols-6 items-center gap-4">
-            <Label htmlFor="csvFile" className="col-span-3 text-left text-gray-300">
+            <Label htmlFor="csvFile" className="col-span-3 text-left text-gray-700">
               Upload Launchpad data (CSV)
             </Label>
             <Input
@@ -132,13 +132,13 @@ const CreateCohortModal: React.FC<CreateCohortModalProps> = ({ isOpen, onClose, 
               type="file"
               accept=".csv"
               onChange={handleFileChange}
-              className="col-span-3 bg-gray-700 border-gray-600 text-white focus:border-orange-500 focus:ring-orange-500 file:text-orange-400 file:bg-gray-700 file:border-0 file:rounded-md file:font-medium hover:file:bg-gray-600"
+              className="col-span-3 bg-orange-50 border-orange-200 text-black focus:border-orange-500 focus:ring-orange-500 file:text-orange-600 file:bg-orange-50 file:border-0 file:rounded-md file:font-medium hover:file:bg-orange-100"
               disabled={loading}
             />
           </div>
         </div>
-        <DialogFooter className="border-t border-gray-700 pt-4 mt-4 flex justify-end space-x-2">
-          <Button variant="outline" onClick={onClose} disabled={loading} className="bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600 hover:text-white transition duration-300 ease-in-out">
+        <DialogFooter className="border-t border-orange-200 pt-4 mt-4 flex justify-end space-x-2">
+          <Button variant="outline" onClick={onClose} disabled={loading} className="bg-orange-50 text-gray-700 border-orange-200 hover:bg-orange-100 hover:text-black transition duration-300 ease-in-out">
             Cancel
           </Button>
           <Button onClick={handleCreateCohort} disabled={loading} className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out">

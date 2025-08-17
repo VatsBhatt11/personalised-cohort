@@ -139,7 +139,7 @@ const SidebarProvider = React.forwardRef<
               } as React.CSSProperties
             }
             className={cn(
-              "group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar",
+              "group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-orange-100",
               className
             )}
             ref={ref}
@@ -178,10 +178,10 @@ const Sidebar = React.forwardRef<
     if (collapsible === "none") {
       return (
         <div
-          className={cn(
-            "flex h-full w-[--sidebar-width] flex-col bg-gray-900 text-sidebar-foreground rounded-r-lg shadow-lg",
-            className
-          )}
+            className={cn(
+              "flex h-full w-[--sidebar-width] flex-col bg-orange-100 text-black rounded-r-lg shadow-lg",
+              className
+            )}
           ref={ref}
           {...props}
         >
@@ -196,7 +196,7 @@ const Sidebar = React.forwardRef<
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"
-            className="w-[--sidebar-width] bg-gray-900 p-0 text-sidebar-foreground [&>button]:hidden rounded-r-lg shadow-lg"
+            className="w-[--sidebar-width] bg-orange-100 p-0 text-black [&>button]:hidden rounded-r-lg shadow-lg"
             style={
               {
                 "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -238,7 +238,7 @@ const Sidebar = React.forwardRef<
               : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
             // Adjust the padding for floating and inset variants.
             variant === "floating" || variant === "inset"
-              ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
+              ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
               : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l",
             className
           )}
@@ -246,7 +246,7 @@ const Sidebar = React.forwardRef<
         >
           <div
             data-sidebar="sidebar"
-            className="flex h-full w-full flex-col bg-gray-900 group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-gray-700 group-data-[variant=floating]:shadow"
+            className="flex h-full w-full flex-col bg-orange-100 group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-orange-500/20 group-data-[variant=floating]:shadow"
           >
             {children}
           </div>
@@ -356,7 +356,7 @@ const SidebarHeader = React.forwardRef<
     <div
       ref={ref}
       data-sidebar="header"
-      className={cn("flex flex-col gap-2 p-2", className)}
+      className={cn("flex flex-col gap-2", className)}
       {...props}
     />
   )

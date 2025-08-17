@@ -97,6 +97,7 @@ export interface QuizFeedbackData {
   feedback_text: string;
   reportContent: string;
   createdAt: string;
+  feedback_report_content: string;
 }
 
 export interface OptionWithCorrectness {

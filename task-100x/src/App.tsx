@@ -9,6 +9,7 @@ import AuthPage from "./components/Auth/AuthPage";
 import useAuth from "./hooks/useAuth";
 import AdminDashboard from "./components/Dashboard/AdminDashboard";
 import Dashboard from "./components/Dashboard/Dashboard";
+import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
 
@@ -16,7 +17,11 @@ const App = () => {
   const { isAuthenticated, user, isLoading, login } = useAuth();
 
   if (isLoading) {
-    return <div>Loading...</div>; // Or a spinner
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-10 z-50">
+        <Loader2 className="h-10 w-10 animate-spin text-orange-500" />
+      </div>
+    );
   }
 
   if (!isAuthenticated) {

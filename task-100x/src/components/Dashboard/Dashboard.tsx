@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import logo from '../../../public/100x.svg';
 import { Link } from 'react-router-dom';
 import { Plan } from '@/lib/api';
 import { Sidebar, SidebarProvider, SidebarMenu, SidebarMenuButton } from '@/components/ui/sidebar';
@@ -18,7 +19,7 @@ import { learner, WeeklyProgress, WeekResource, QuizAttemptStatus, WeeklyProgres
 import { useToast } from '@/components/ui/use-toast';
 import { AxiosError } from 'axios';
 import useAuth from '@/hooks/useAuth';
-import { LogOut } from 'lucide-react';
+import { LogOut, Loader2 } from 'lucide-react';
 
 interface DashboardProps {
   userEmail: string;
@@ -36,6 +37,9 @@ interface ApiError {
 }
 
 const Dashboard = ({ userEmail,userName }: DashboardProps) => {
+  // Define font families
+  const gilroyFont = 'Gilroy, sans-serif';
+  const jetbrainsMonoFont = 'Jetbrains Mono, monospace';
   const { logout } = useAuth();
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [isQuizAttemptOpen, setIsQuizAttemptOpen] = useState(false);
@@ -176,62 +180,68 @@ const Dashboard = ({ userEmail,userName }: DashboardProps) => {
   };
 
   if (isLoading) {
-    return <div className="min-h-screen bg-gray-800 flex items-center justify-center">
-      <div className="text-orange-500">Loading...</div>
-    </div>;
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
+        <Loader2 className="h-10 w-10 animate-spin text-orange-500" />
+      </div>
+    );
   }
 
   if (!cohortId) {
-    return <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-orange-500">No active cohort found. Please contact support.</div>
+    return <div className="min-h-screen bg-white flex items-center justify-center" style={{ fontFamily: gilroyFont }}>
+      <div className="text-black">No active cohort found. Please contact support.</div>
     </div>;
   }
 
   return (
     <SidebarProvider>
-      <div className="h-screen w-full bg-gray-800 relative overflow-hidden flex">
-        <Sidebar className="bg-gray-900 border-r border-orange-500/30 w-64 p-4">
+      <div className="h-screen w-full bg-white relative overflow-hidden flex" style={{ fontFamily: gilroyFont }}>
+        <Sidebar className="bg-white border-r border-orange-500/30 w-64 p-4">
+          <div className="mb-6 flex justify-center">
+            <img src={logo} alt="100xEngineers Logo" className="h-12" />
+          </div>
           <SidebarMenu className="space-y-2">
             <SidebarMenuButton 
               onClick={() => setActiveTab('challenges')} 
               isActive={activeTab === 'challenges'}
-              className={`flex items-center gap-3 px-4 py-2 rounded-lg text-left w-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 ${activeTab === 'challenges' ? 'bg-orange-500/20' : 'hover:bg-orange-500/10'}`}
+              className={`flex items-center gap-3 px-4 py-2 rounded-lg text-left w-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 ${activeTab === 'challenges' ? 'bg-orange-500/20' : 'hover:bg-orange-500/10'} text-black`}
             >
-              <Home className="w-5 h-5 text-orange-400" />
-              <span className="text-orange-400 font-medium">Challenges</span>
+              <Home className="w-5 h-5 text-orange-500" />
+              <span className="text-black font-medium">Challenges</span>
             </SidebarMenuButton>
             <SidebarMenuButton 
               onClick={() => setActiveTab('leaderboard')} 
               isActive={activeTab === 'leaderboard'}
-              className={`flex items-center gap-3 px-4 py-2 rounded-lg text-left w-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 ${activeTab === 'leaderboard' ? 'bg-orange-500/20' : 'hover:bg-orange-500/10'}`}
+              className={`flex items-center gap-3 px-4 py-2 rounded-lg text-left w-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 ${activeTab === 'leaderboard' ? 'bg-orange-500/20' : 'hover:bg-orange-500/10'} text-black`}
             >
-              <Trophy className="w-5 h-5 text-orange-400" />
-              <span className="text-orange-400 font-medium">Leaderboard</span>
+              <Trophy className="w-5 h-5 text-orange-500" />
+              <span className="text-black font-medium">Leaderboard</span>
             </SidebarMenuButton>
 
             <Dialog open={isQuizAttemptOpen} onOpenChange={setIsQuizAttemptOpen}>
-              <DialogContent className="sm:max-w-[800px]">
+              <DialogContent className="sm:max-w-[800px] bg-orange-100 text-black" style={{ fontFamily: jetbrainsMonoFont }}>
                 <DialogHeader>
-                  <DialogTitle>Quiz Attempt</DialogTitle>
+                  <DialogTitle className="text-black">Quiz Attempt</DialogTitle>
                 </DialogHeader>
                 {quizResource && (
                   <QuizAttemptComponent
                     quizId={quizResource.id}
+                    resourceId={quizResource.id.split('-')[0]} // Assuming resourceId is the part before the first hyphen
                     onAttemptComplete={(attemptId) => {
                       setQuizAttemptStatus({ hasAttempted: true, lastAttemptId: attemptId });
                       setIsQuizAttemptOpen(false);
                       setIsQuizFeedbackOpen(true);
                     }}
-
+                    onClose={() => setIsQuizAttemptOpen(false)}
                   />
                 )}
               </DialogContent>
             </Dialog>
 
             <Dialog open={isQuizFeedbackOpen} onOpenChange={setIsQuizFeedbackOpen}>
-              <DialogContent className="sm:max-w-[800px]">
+              <DialogContent className="sm:max-w-[800px] bg-orange-100 text-black" style={{ fontFamily: jetbrainsMonoFont }}>
                 <DialogHeader>
-                  <DialogTitle>Quiz Feedback</DialogTitle>
+                  <DialogTitle className="text-black">Quiz Feedback</DialogTitle>
                 </DialogHeader>
                 {quizAttemptStatus?.lastAttemptId && (
                   <QuizFeedbackComponent attemptId={quizAttemptStatus.lastAttemptId} onClose={() => setIsQuizFeedbackOpen(false)} />
@@ -242,8 +252,8 @@ const Dashboard = ({ userEmail,userName }: DashboardProps) => {
         </Sidebar>
         <div className="flex-1 flex flex-col">
         {/* Top Bar for User Info and Streak */}
-        <div className="flex justify-between items-center p-4 bg-black/50 backdrop-blur-md border-b border-orange-500/30">
-          <div className="text-lg font-semibold text-orange-400">Welcome, {name}!</div>
+        <div className="flex justify-between items-center p-4 bg-orange-500 text-black border-b border-orange-700">
+          <div className="text-lg font-semibold text-black">Welcome, {name}!</div>
           <div className="flex items-center gap-2">
             {/* <div className="flex items-center gap-1 text-orange-500 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-500/30">
               <Flame className="w-5 h-5" />
@@ -252,21 +262,21 @@ const Dashboard = ({ userEmail,userName }: DashboardProps) => {
             {streakData?.weeklyStreak !== undefined && (
               <Badge 
                 variant="outline" 
-                className="text-md border-cyan-500/50 text-cyan-400 bg-black/50 backdrop-blur-sm rounded-full px-4 py-2"
+                className="text-md border-cyan-500/50 text-black bg-orange-100 rounded-full px-4 py-2"
               >
                 {`Weekly Streak: ${streakData.weeklyStreak}`}
               </Badge>
             )}
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 text-orange-400 hover:text-orange-300 transition-colors duration-200"
+              className="flex items-center gap-2 text-black hover:text-gray-800 transition-colors duration-200"
             >
               <LogOut className="w-5 h-5" />
               Logout
             </button>
           </div>
         </div>
-        <div className="flex-1 overflow-auto flex justify-center items-center">
+        <div className="flex-1 overflow-auto flex justify-center items-center bg-white text-black">
           {activeTab === 'challenges' && (
             <>
               <GameRoadmap
@@ -284,6 +294,7 @@ const Dashboard = ({ userEmail,userName }: DashboardProps) => {
                 setWeeklyPlan={setWeeklyPlan}
                 allResources={allResources}
                 setWeeklyProgress={setWeeklyProgress}
+                fontFamily={jetbrainsMonoFont}
               />
             </>
           )}

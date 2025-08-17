@@ -118,13 +118,13 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 p-4">
-      <Card className="w-full max-w-md bg-gray-800 border border-gray-700 text-white shadow-lg rounded-lg">
+    <div className="min-h-screen flex items-center justify-center bg-white p-4">
+      <Card className="w-full max-w-md glass border-orange-600/20 rounded-2xl bg-orange-100 text-black shadow-lg">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold text-orange-400">
             {isLogin ? 'Welcome Back' : 'Create Account'}
           </CardTitle>
-          <CardDescription className="text-gray-400 mt-2">
+          <CardDescription className="text-black mt-2">
             {isLogin ? 'Sign in to continue your learning journey' : 'Join our cohort learning platform'}
           </CardDescription>
         </CardHeader>
@@ -132,13 +132,13 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {!isLogin && (
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-gray-300">Name</Label>
+                <Label htmlFor="name" className="text-orange-400">Name</Label>
                 <Input
                   id="name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="bg-gray-700 border-gray-600 text-white focus:border-orange-500 focus:ring-orange-500"
+                  className="bg-orange-50 border border-orange-600/50 text-black px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out placeholder:text-gray-500"
                   placeholder="Enter your full name"
                   required
                   disabled={isLoading}
@@ -147,7 +147,7 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
             )}
             {!isLogin && (
               <div className="space-y-2">
-                <Label htmlFor="phoneNumber" className="text-gray-300">Phone Number</Label>
+                <Label htmlFor="phoneNumber" className="text-orange-400">Phone Number</Label>
                 <div className="flex space-x-2">
                   <div className="w-1/4">
                     <Select
@@ -159,16 +159,16 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
                       defaultValue="91"
                       disabled={isLoading}
                     >
-                      <SelectTrigger className="bg-gray-700 border-gray-600 text-white focus:border-orange-500 focus:ring-orange-500">
+                      <SelectTrigger className="w-full p-3 border border-orange-600/30 rounded-xl bg-orange-50 text-black focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 ease-in-out shadow-lg hover:border-orange-400">
                         <SelectValue placeholder="+91" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-700 text-white border-gray-600">
-                        <SelectItem value="91">+91 (IN)</SelectItem>
-                        <SelectItem value="1">+1 (US)</SelectItem>
-                        <SelectItem value="44">+44 (UK)</SelectItem>
-                        <SelectItem value="61">+61 (AU)</SelectItem>
-                        <SelectItem value="65">+65 (SG)</SelectItem>
-                        <SelectItem value="971">+971 (UAE)</SelectItem>
+                      <SelectContent className="bg-orange-50 text-black border border-orange-600/30 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                        <SelectItem value="91" className="hover:bg-orange-600/20 focus:bg-orange-600/20 cursor-pointer py-2 px-4 transition-colors duration-200 ease-in-out text-black">+91 (IN)</SelectItem>
+                        <SelectItem value="1" className="hover:bg-orange-600/20 focus:bg-orange-600/20 cursor-pointer py-2 px-4 transition-colors duration-200 ease-in-out text-black">+1 (US)</SelectItem>
+                        <SelectItem value="44" className="hover:bg-orange-600/20 focus:bg-orange-600/20 cursor-pointer py-2 px-4 transition-colors duration-200 ease-in-out text-black">+44 (UK)</SelectItem>
+                        <SelectItem value="61" className="hover:bg-orange-600/20 focus:bg-orange-600/20 cursor-pointer py-2 px-4 transition-colors duration-200 ease-in-out text-black">+61 (AU)</SelectItem>
+                        <SelectItem value="65" className="hover:bg-orange-600/20 focus:bg-orange-600/20 cursor-pointer py-2 px-4 transition-colors duration-200 ease-in-out text-black">+65 (SG)</SelectItem>
+                        <SelectItem value="971" className="hover:bg-orange-600/20 focus:bg-orange-600/20 cursor-pointer py-2 px-4 transition-colors duration-200 ease-in-out text-black">+971 (UAE)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -184,7 +184,7 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
                            setMobileNumber(digitsOnly);
                          }
                        }}
-                      className="bg-gray-700 border-gray-600 text-white focus:border-orange-500 focus:ring-orange-500"
+                      className="bg-orange-50 border border-orange-600/50 text-black px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out placeholder:text-gray-500"
                       placeholder="Enter your phone number"
                       required
                       disabled={isLoading}
@@ -197,18 +197,18 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
             )}
             {!isLogin && cohorts.length > 0 && (
               <div className="space-y-2">
-                <Label htmlFor="cohort" className="text-gray-300">Select Cohort</Label>
+                <Label htmlFor="cohort" className="text-orange-400">Select Cohort</Label>
                 <Select
                   onValueChange={setSelectedCohortId}
                   value={selectedCohortId}
                   disabled={isLoading}
                 >
-                  <SelectTrigger className="input-neon">
+                  <SelectTrigger className="w-full p-3 border border-orange-600/30 rounded-xl bg-orange-50 text-black focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 ease-in-out shadow-lg hover:border-orange-400">
                     <SelectValue placeholder="Select a cohort" />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-800 text-white border-orange-500/20">
+                  <SelectContent className="bg-orange-50 text-black border border-orange-600/30 rounded-xl shadow-xl max-h-60 overflow-y-auto">
                     {cohorts.map((cohort) => (
-                      <SelectItem key={cohort.id} value={cohort.id}>
+                      <SelectItem key={cohort.id} value={cohort.id} className="hover:bg-orange-600/20 focus:bg-orange-600/20 cursor-pointer py-2 px-4 transition-colors duration-200 ease-in-out text-black">
                         {cohort.name}
                       </SelectItem>
                     ))}
@@ -216,36 +216,36 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
                 </Select>
               </div>
             )}
-            <div className="space-y-4">
-              <Label htmlFor="email" className="text-gray-300">Email</Label>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-orange-400">Email</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-gray-700 border-gray-600 text-white focus:border-orange-500 focus:ring-orange-500"
+                className="bg-orange-50 border border-orange-600/50 text-black px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out placeholder:text-gray-500"
                 placeholder="you@example.com"
                 required
                 disabled={isLoading}
               />
             </div>
-            <div className="space-y-4">
-              <Label htmlFor="password" className="text-gray-300">Password</Label>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-orange-400">Password</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-gray-700 border-gray-600 text-white focus:border-orange-500 focus:ring-orange-500"
+                className="bg-orange-50 border border-orange-600/50 text-black px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out placeholder:text-gray-500"
                 placeholder="••••••••"
                 required
                 disabled={isLoading}
               />
             </div>
-            <Button type="submit" className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out" disabled={isLoading}>
+            <Button type="submit" className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl shadow-md transition-all duration-200 ease-in-out" disabled={isLoading}>
               {isLoading ? (
                 <span className="flex items-center">
-                  <svg className="animate-spin h-5 w-5 mr-3 text-white" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-5 w-5 mr-3 text-white" viewBox="0 0 24 24" fill="currentColor">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -260,7 +260,7 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
             <Button
               variant="link"
               onClick={() => setIsLogin(!isLogin)}
-              className="text-orange-400 hover:text-orange-300 transition duration-300 ease-in-out"
+              className="text-orange-500 hover:text-orange-600 transition duration-300 ease-in-out"
               disabled={isLoading}
             >
               {isLogin ? 'Need an account? Sign Up' : 'Already have an account? Login'}

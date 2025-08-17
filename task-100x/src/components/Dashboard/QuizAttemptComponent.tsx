@@ -165,14 +165,14 @@ export const QuizAttemptComponent = ({ quizId, resourceId, onAttemptComplete, on
 
   if (showReportButton && submittedAttemptId) {
     return (
-      <div className="p-4 bg-gray-800 rounded-lg shadow-lg text-center">
-        <h2 className="text-2xl font-bold mb-4 text-white">Quiz Submitted!</h2>
+      <div className="p-4 bg-gray-900 rounded-lg shadow-lg text-center">
+        <h2 className="text-2xl font-bold mb-4 text-orange-400">Quiz Submitted!</h2>
         <p className="text-lg mb-6 text-gray-300">You can now view your detailed report or close this window.</p>
         <div className="flex justify-center space-x-4">
-          <Button onClick={() => setIsReportModalOpen(true)} className="bg-orange-500 hover:bg-orange-600 text-white">
+          <Button onClick={() => setIsReportModalOpen(true)} className="bg-orange-600 hover:bg-orange-700 text-white">
             View Report
           </Button>
-          <Button onClick={() => onAttemptComplete(submittedAttemptId || '')} variant="outline" className="text-white border-gray-600 hover:bg-gray-700">
+          <Button onClick={() => onAttemptComplete(submittedAttemptId || '')} variant="outline" className="text-white border-gray-700 hover:bg-gray-800">
             Close
           </Button>
         </div>
@@ -181,18 +181,18 @@ export const QuizAttemptComponent = ({ quizId, resourceId, onAttemptComplete, on
   }
 
   return (
-    <div className="p-4 bg-gray-800 rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-4">Quiz for Week {quizData.weekNumber}</h2>
+    <div className="p-4 bg-gray-900 rounded-lg shadow-lg">
+      <h2 className="text-2xl font-bold mb-4 text-orange-400">Quiz for Week {quizData.weekNumber}</h2>
 
-      <div className="bg-gray-900 p-6 rounded-lg shadow-md mb-6">
-        <h3 className="text-xl font-semibold mb-4">Question {currentQuestionIndex + 1} of {quizData.questions.length}</h3>
-        <p className="text-lg mb-4 text-orange-400">{currentQuestion.text}</p>
+      <div className="bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+        <h3 className="text-xl font-semibold mb-4 text-orange-300">Question {currentQuestionIndex + 1} of {quizData.questions.length}</h3>
+        <p className="text-lg mb-4 text-gray-200">{currentQuestion.text}</p>
           <div className="space-y-3 text-white">
           {currentQuestion.options.map(option => (
             <Button
                 key={option.id}
                 variant="outline"
-                className={`w-full justify-start ${selectedAnswer === option.id ? 'bg-orange-600 hover:bg-orange-700' : 'bg-gray-700 hover:bg-gray-600'} text-white border-gray-600 focus:ring-orange-500`}
+                className={`w-full justify-start ${selectedAnswer === option.id ? 'bg-orange-600 hover:bg-orange-700' : 'bg-gray-700 hover:bg-gray-600'} text-white border-gray-700 focus:ring-orange-500`}
                 onClick={() => handleOptionSelect(currentQuestion.id, option.id)}
               >
                 {option.text}

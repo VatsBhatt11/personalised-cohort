@@ -22,6 +22,7 @@ interface GoalSettingModalProps {
   setWeeklyPlan: React.Dispatch<React.SetStateAction<WeeklyPlanData | null>>;
   allResources: WeekResource[];
   setWeeklyProgress: React.Dispatch<React.SetStateAction<WeeklyProgressResponse | null>>;
+  fontFamily: string;
 }
 
 interface QuizAttemptStatus {
@@ -153,7 +154,7 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
         setWeeklyPlan((prevPlan) => {
           if (!prevPlan) return null;
           const updatedTasks = prevPlan.tasks.map((task) =>
-            task.id === selectedTask.id ? { ...task, is_completed: true, status: "COMPLETED" as "COMPLETED" } : task
+            task.id === selectedTask.id ? { ...task, is_completed: true, status: "COMPLETED" } : task
           );
           return { ...prevPlan, tasks: updatedTasks };
         });
@@ -186,7 +187,7 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="bg-gray-800 border border-orange-500/20 max-w-3xl w-[95%] sm:max-w-3xl rounded-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="bg-orange-100 border border-orange-500/20 max-w-3xl w-[95%] sm:max-w-3xl rounded-2xl max-h-[80vh] overflow-y-auto text-black">
         <DialogHeader>
           <DialogTitle className="text-2xl text-orange-500">
             Level {selectedWeek} - Weekly Plan
@@ -216,14 +217,14 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
             {weeklyPlan?.tasks && weeklyPlan.tasks.length > 0 ? (
               <div className="space-y-4">
                 {weeklyPlan.tasks.map((task) => (
-                  <Card key={task.id} className="bg-gray-900 border border-orange-500/10 rounded-xl shadow-lg">
+                  <Card key={task.id} className="bg-orange-50 border border-orange-500/10 rounded-xl shadow-lg">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className={`w-3 h-3 rounded-full ${{ 'Video': 'bg-red-500', 'Reading': 'bg-blue-500', 'Exercise': 'bg-green-500' }[task.resource.type] || 'bg-gray-500'}`} />
                           <div>
                             <p className="text-orange-300 font-medium">{task.resource.title}</p>
-                            <p className="text-sm text-gray-400">{task.resource.type} • {task.resource.duration} min</p>
+                            <p className="text-sm text-orange-400">{task.resource.type} • {task.resource.duration} min</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -262,9 +263,9 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
                 ))}
 
                 {quizResource && (
-                  <Card className="bg-gray-900 border border-orange-500/10 rounded-xl shadow-lg">
-                    <CardHeader>
-                      <CardTitle className="text-orange-300">Weekly Quiz</CardTitle>
+                  <Card className="bg-orange-50 border border-orange-500/10 rounded-xl shadow-lg">
+                    <CardHeader className="border-b border-orange-600/30">
+                      <CardTitle className="text-black">Weekly Quiz</CardTitle>
                     </CardHeader>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
@@ -287,7 +288,7 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
                     isOpen={resourceModalOpen}
                     onClose={handleResourceModalClose}
                   >
-                    <div className="relative bg-gray-800 h-[70vh] w-full">
+                    <div className="relative bg-orange-100 h-[70vh] w-full">
                       <iframe
                         src={selectedTask.resource.url}
                         title={selectedTask.resource.title}
@@ -303,7 +304,7 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
 
                 {quizResource && isQuizAttemptOpen && (
                   <Dialog open={isQuizAttemptOpen} onOpenChange={setIsQuizAttemptOpen}>
-                    <DialogContent className="bg-gray-800 border border-orange-500/20 max-w-3xl w-[95%] sm:max-w-3xl rounded-2xl max-h-[80vh] overflow-y-auto">
+                    <DialogContent className="bg-orange-100 border border-orange-500/20 max-w-3xl w-[95%] sm:max-w-3xl rounded-2xl max-h-[80vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle className="text-2xl text-orange-500">
                           Weekly Quiz Attempt
@@ -311,7 +312,9 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
                       </DialogHeader>
                       <QuizAttemptComponent
                         quizId={quizResource.id}
+                        resourceId={quizResource.id}
                         onAttemptComplete={handleAttemptComplete}
+                        onClose={() => setIsQuizAttemptOpen(false)}
                       />
                     </DialogContent>
                   </Dialog>
@@ -319,7 +322,7 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
 
                 {quizResource && isQuizFeedbackOpen && lastAttemptId && (
                   <Dialog open={isQuizFeedbackOpen} onOpenChange={setIsQuizFeedbackOpen}>
-                    <DialogContent className="bg-gray-800 border border-orange-500/20 max-w-3xl w-[95%] sm:max-w-3xl rounded-2xl max-h-[80vh] overflow-y-auto">
+                    <DialogContent className="bg-orange-100 border border-orange-500/20 max-w-3xl w-[95%] sm:max-w-3xl rounded-2xl max-h-[80vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle className="text-2xl text-orange-500">
                           Weekly Quiz Feedback
@@ -337,7 +340,7 @@ const GoalSettingModal: React.FC<GoalSettingModalProps> = ({
                 )}
               </div>
             ) : (
-               <div className="text-center text-gray-400">
+               <div className="text-center text-black">
                  No plan set for this week.
                </div>
              )}

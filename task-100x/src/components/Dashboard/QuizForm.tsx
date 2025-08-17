@@ -165,19 +165,19 @@ const QuizForm: React.FC<QuizFormProps> = ({
   const currentQuestion = formState.questions[currentQuestionIndex];
 
   return (
-    <div className="grid gap-6 py-6 max-h-[calc(100vh-180px)] overflow-y-auto pr-2">
+    <div className="grid gap-6 py-6 max-h-[calc(100vh-180px)] overflow-y-auto pr-2 bg-white rounded-lg p-4">
       <div className="space-y-2">
-        <Label htmlFor="week-select" className="text-orange-300 font-medium">Week Number</Label>
+        <Label htmlFor="week-select" className="text-orange-400 font-medium">Week Number</Label>
         <Select
           onValueChange={(value) => setFormState(prev => ({ ...prev, weekNumber: Number(value) }))}
           value={String(formState.weekNumber)}
         >
-          <SelectTrigger id="week-select" className="w-full p-3 border border-orange-500/30 rounded-xl bg-gray-900 text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 ease-in-out shadow-lg hover:border-orange-400">
+          <SelectTrigger id="week-select" className="w-full p-3 border border-orange-600/30 rounded-xl bg-orange-50 text-black focus:ring-2 focus:ring-orange-600 focus:border-orange-600 transition-all duration-200 ease-in-out shadow-lg hover:border-orange-500">
             <SelectValue placeholder="Select a week" />
           </SelectTrigger>
-          <SelectContent className="bg-gray-900 text-white border border-orange-500/30 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+          <SelectContent className="bg-orange-100 text-black border border-orange-600/30 rounded-xl shadow-xl max-h-60 overflow-y-auto">
             {Array.from({ length: totalWeeks }, (_, i) => i + 1).map((week) => (
-              <SelectItem key={week} value={String(week)} className="hover:bg-orange-500/20 focus:bg-orange-500/20 cursor-pointer py-2 px-4 transition-colors duration-200 ease-in-out">
+              <SelectItem key={week} value={String(week)} className="hover:bg-orange-600/20 focus:bg-orange-600/20 cursor-pointer py-2 px-4 transition-colors duration-200 ease-in-out">
                 Week {week}
               </SelectItem>
             ))}
@@ -185,7 +185,7 @@ const QuizForm: React.FC<QuizFormProps> = ({
         </Select>
       </div>
 
-      <h3 className="text-xl font-bold text-orange-400 mt-6">Questions</h3>
+      <h3 className="text-xl font-bold text-orange-300 mt-6">Questions</h3>
       {formState.questions.length > 0 ? (
         <div className="flex items-center justify-between mb-4">
           <Button
@@ -193,11 +193,11 @@ const QuizForm: React.FC<QuizFormProps> = ({
             size="icon"
             onClick={() => navigateQuestions('prev')}
             disabled={currentQuestionIndex === 0}
-            className="border-orange-500/50 text-orange-400 hover:bg-orange-500/20 rounded-full shadow-md transition-all duration-200 ease-in-out"
+            className="border-orange-600/50 text-orange-300 hover:bg-orange-600/20 rounded-full shadow-md transition-all duration-200 ease-in-out"
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
-          <span className="text-lg font-semibold text-orange-300">
+          <span className="text-lg font-semibold text-orange-400">
             Question {currentQuestionIndex + 1} of {formState.questions.length}
           </span>
           <Button
@@ -213,7 +213,7 @@ const QuizForm: React.FC<QuizFormProps> = ({
       ) : null}
 
       {currentQuestion ? (
-        <Card key={currentQuestion.id || currentQuestionIndex} className="mb-4 p-6 bg-gray-800 border-orange-500/30 rounded-2xl shadow-xl">
+        <Card key={currentQuestion.id || currentQuestionIndex} className="mb-4 p-6 bg-orange-100 border-orange-500/30 rounded-2xl shadow-xl">
           <CardHeader className="flex flex-row justify-between items-center p-0 pb-4">
             <CardTitle className="text-xl font-bold text-orange-400">Question {currentQuestionIndex + 1}</CardTitle>
             <Button variant="destructive" size="sm" onClick={() => removeQuestion(currentQuestionIndex)} className="bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-md transition-all duration-200 ease-in-out">

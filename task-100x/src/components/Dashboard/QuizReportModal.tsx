@@ -51,9 +51,9 @@ export const QuizReportModal = ({ attemptId, isOpen, onClose }: QuizReportModalP
   if (isLoading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[800px] bg-gray-800 text-white">
+        <DialogContent className="sm:max-w-[800px] bg-gray-800 text-gray-200">
           <DialogHeader>
-            <DialogTitle className="text-white">Loading Quiz Report...</DialogTitle>
+            <DialogTitle className="text-orange-400">Loading Quiz Report...</DialogTitle>
           </DialogHeader>
           <div className="py-4 text-center">Loading detailed quiz report...</div>
         </DialogContent>
@@ -64,9 +64,9 @@ export const QuizReportModal = ({ attemptId, isOpen, onClose }: QuizReportModalP
   if (!reportData) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[800px] bg-gray-800 text-white">
+        <DialogContent className="sm:max-w-[800px] bg-gray-800 text-gray-200">
           <DialogHeader>
-            <DialogTitle className="text-white">Quiz Report</DialogTitle>
+            <DialogTitle className="text-orange-400">Quiz Report</DialogTitle>
           </DialogHeader>
           <div className="py-4 text-center">No report data available.</div>
         </DialogContent>
@@ -76,37 +76,37 @@ export const QuizReportModal = ({ attemptId, isOpen, onClose }: QuizReportModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[800px] bg-gray-800 text-white">
+      <DialogContent className="sm:max-w-[800px] bg-gray-800 text-gray-200">
         <DialogHeader>
-          <DialogTitle className="text-white">Quiz Report - Attempt ID: {reportData.id}</DialogTitle>
+          <DialogTitle className="text-orange-400">Quiz Report - Attempt ID: {reportData.id}</DialogTitle>
         </DialogHeader>
         <div className="flex justify-center space-x-4 mb-4">
           <Button
             onClick={() => setViewMode('attempted')}
             variant={viewMode === 'attempted' ? 'default' : 'outline'}
-            className={viewMode === 'attempted' ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'text-white border-gray-600 hover:bg-gray-700'}
+            className={viewMode === 'attempted' ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'text-gray-200 border-gray-700 hover:bg-gray-700 hover:text-white'}
           >
             View Attempted Quiz
           </Button>
           <Button
             onClick={() => setViewMode('feedback')}
             variant={viewMode === 'feedback' ? 'default' : 'outline'}
-            className={viewMode === 'feedback' ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'text-white border-gray-600 hover:bg-gray-700'}
+            className={viewMode === 'feedback' ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'text-gray-200 border-gray-700 hover:bg-gray-700 hover:text-white'}
           >
             View Feedback
           </Button>
         </div>
 
         {viewMode === 'attempted' && (
-          <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-4">
+          <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-4 text-gray-200">
             {reportData.questions.map((question, index) => (
-              <div key={question.id} className="bg-gray-900 p-4 rounded-lg shadow-md">
-                <h4 className="text-lg font-semibold mb-2">Question {index + 1}: {question.text}</h4>
+              <div key={question.id} className="bg-gray-900 p-4 rounded-lg shadow-md border border-gray-700">
+                <h4 className="text-lg font-semibold mb-2 text-orange-300">Question {index + 1}: {question.text}</h4>
                 <div className="space-y-2">
                   {question.options.map(option => (
                     <div
                       key={option.id}
-                      className={`p-2 rounded-md border ${option.id === question.selectedOptionId ? 'bg-blue-600 border-blue-600' : option.isCorrect ? 'bg-green-600 border-green-600' : 'border-gray-700'}`}
+                      className={`p-2 rounded-md border ${option.id === question.selectedOptionId ? 'bg-blue-700 border-blue-700' : option.isCorrect ? 'bg-green-700 border-green-700' : 'border-gray-700'}`}
                     >
                       <span className={`${option.id === question.selectedOptionId ? 'font-bold' : ''}`}>
                         {option.text}
@@ -116,12 +116,12 @@ export const QuizReportModal = ({ attemptId, isOpen, onClose }: QuizReportModalP
                     </div>
                   ))}
                   {question.type === 'TEXT' && question.attemptedAnswerText && (
-                    <div className="p-2 rounded-md border border-blue-600 bg-blue-600">
+                    <div className="p-2 rounded-md border border-blue-700 bg-blue-700">
                       <span className="font-bold">Your Text Answer:</span> {question.attemptedAnswerText}
                     </div>
                   )}
                   {question.type === 'TEXT' && question.correctAnswerText && (
-                    <div className="p-2 rounded-md border border-green-600 bg-green-600">
+                    <div className="p-2 rounded-md border border-green-700 bg-green-700">
                       <span className="font-bold">Correct Text Answer:</span> {question.correctAnswerText}
                     </div>
                   )}
@@ -132,20 +132,20 @@ export const QuizReportModal = ({ attemptId, isOpen, onClose }: QuizReportModalP
         )}
 
         {viewMode === 'feedback' && reportData.feedbackReport && (
-          <div className="bg-gray-900 p-4 rounded-lg shadow-md max-h-[60vh] overflow-y-auto">
-            <h4 className="text-lg font-semibold mb-2">Feedback Report:</h4>
+          <div className="bg-gray-900 p-4 rounded-lg shadow-md max-h-[60vh] overflow-y-auto border border-gray-700">
+            <h4 className="text-lg font-semibold mb-2 text-orange-300">Feedback Report:</h4>
             <p className="text-gray-300 whitespace-pre-wrap">{reportData.feedbackReport.reportContent}</p>
           </div>
         )}
 
         {viewMode === 'feedback' && !reportData.feedbackReport && (
-          <div className="bg-gray-900 p-4 rounded-lg shadow-md max-h-[60vh] overflow-y-auto">
+          <div className="bg-gray-900 p-4 rounded-lg shadow-md max-h-[60vh] overflow-y-auto border border-gray-700">
             <p className="text-gray-300">No feedback available for this attempt.</p>
           </div>
         )}
 
         <div className="mt-4 flex justify-end">
-          <Button onClick={onClose} variant="outline" className="text-white border-gray-600 hover:bg-gray-700">
+          <Button onClick={onClose} variant="outline" className="text-gray-200 border-gray-700 hover:bg-gray-700 hover:text-white">
             Close
           </Button>
         </div>

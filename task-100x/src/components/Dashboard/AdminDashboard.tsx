@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
+import logo from '../../../public/100x.svg'
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, BookOpen, Award, TrendingUp, Edit, Trash2, Loader2, HelpCircle } from 'lucide-react';
@@ -59,6 +60,8 @@ interface Cohort {
 }
 
 const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
+  const gilroyFont = 'Gilroy, sans-serif';
+  const jetbrainsMonoFont = 'Jetbrains Mono, monospace';
   const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
   const [isQuizManagementOpen, setIsQuizManagementOpen] = useState(false);
   const [selectedWeekForEdit, setSelectedWeekForEdit] = useState<number | null>(null);
@@ -505,7 +508,7 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className="flex justify-center items-center h-screen bg-white" style={{ fontFamily: gilroyFont }}>
         <Loader2 className="h-10 w-10 animate-spin text-orange-500" />
       </div>
     );
@@ -520,9 +523,9 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
       />
 
       <Dialog open={isQuizManagementOpen} onOpenChange={setIsQuizManagementOpen}>
-        <DialogContent className="sm:max-w-[800px]">
+        <DialogContent className="sm:max-w-[800px] bg-orange-100 text-black" style={{ fontFamily: jetbrainsMonoFont }}>
           <DialogHeader>
-            <DialogTitle>Quiz Management</DialogTitle>
+            <DialogTitle className="text-black">Quiz Management</DialogTitle>
           </DialogHeader>
           <QuizManagementComponent
             quizzes={quizzes}
@@ -564,21 +567,24 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
 
 
       {hasSelectedCohort && (
-        <div className="min-h-screen bg-gray-800 p-6 font-sans">
+        <div className="min-h-screen bg-white p-6 font-sans" style={{ fontFamily: gilroyFont }}>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-extrabold text-orange-500 tracking-tight">Admin Dashboard</h1>
-            <p className="text-gray-400 mt-2 text-lg">Welcome back, <span className="font-semibold text-orange-300">{userEmail}</span></p>
+          <div className="flex items-center">
+            <img src={logo} alt="100xEngineers Logo" className="h-12 mr-4" />
+            <div>
+              <h1 className="text-4xl font-extrabold text-black tracking-tight">Admin Dashboard</h1>
+              <p className="text-gray-700 mt-2 text-lg">Welcome back, <span className="font-semibold text-black">{userEmail}</span></p>
+            </div>
           </div>
           <div className="flex items-center space-x-4">
-            <Badge className="bg-orange-600/20 text-orange-400 border-orange-500/30 px-5 py-2 rounded-full text-base font-medium shadow-lg">
+            <Badge className="bg-orange-500 text-black border-orange-700 px-5 py-2 rounded-full text-base font-medium shadow-lg">
               Administrator
             </Badge>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 text-orange-400 hover:text-orange-300 transition-colors duration-200"
+              className="flex items-center gap-2 text-black hover:text-gray-800 transition-colors duration-200"
             >
               <LogOut className="w-5 h-5" />
               Logout
@@ -590,16 +596,16 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         {stats.map((stat, index) => (
-          <Card key={index} className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg hover:shadow-orange-500/20 transition-all duration-300 ease-in-out">
+          <Card key={index} className="bg-orange-100 border border-orange-200 rounded-xl shadow-lg hover:shadow-orange-300/20 transition-all duration-300 ease-in-out">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-gray-300">{stat.title}</CardTitle>
-                <stat.icon className="w-6 h-6 text-orange-400" />
+                <CardTitle className="text-sm font-medium text-black">{stat.title}</CardTitle>
+                <stat.icon className="w-6 h-6 text-orange-500" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-orange-500 mb-1">{stat.value}</div>
-              <p className="text-xs text-gray-400">{stat.change} from last month</p>
+              <div className="text-3xl font-bold text-orange-700 mb-1">{stat.value}</div>
+              <p className="text-xs text-gray-700">{stat.change} from last month</p>
             </CardContent>
           </Card>
         ))}
@@ -607,16 +613,16 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
 
       {/* Resource and Quiz Management Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-        <Card className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg">
+        <Card className="bg-orange-100 border border-orange-200 rounded-xl shadow-lg">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-orange-400">Resource Management</CardTitle>
+            <CardTitle className="text-2xl font-bold text-orange-700">Resource Management</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-5">
-              <p className="text-gray-300 text-lg">Create and assign learning resources to different weeks for learners.</p>
+              <p className="text-black text-lg">Create and assign learning resources to different weeks for learners.</p>
               <Button 
                 onClick={handleNewAssignment}
-                className="px-8 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+                className="px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
                 disabled={loading}
               >
                 {loading ? <Loader2 className="h-5 w-5 animate-spin mr-3" /> : null} Assign Resources
@@ -625,16 +631,16 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg">
+        <Card className="bg-orange-100 border border-orange-200 rounded-xl shadow-lg">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-orange-400">Quiz Management</CardTitle>
+            <CardTitle className="text-2xl font-bold text-orange-700">Quiz Management</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-5">
-              <p className="text-gray-300 text-lg">Create, edit, and manage quizzes for your learners.</p>
+              <p className="text-black text-lg">Create, edit, and manage quizzes for your learners.</p>
               <Button
                 onClick={() => setIsQuizManagementOpen(true)}
-                className="px-8 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+                className="px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
               >
                 <HelpCircle className="mr-3 h-5 w-5" />
                 Manage Quizzes
@@ -643,14 +649,14 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg mb-10">
+        <Card className="bg-orange-100 border border-orange-200 rounded-xl shadow-lg mb-10">
            <div className='flex justify-between items-center'>
            <CardHeader>
-             <CardTitle className="text-2xl font-bold text-orange-400">Session Management</CardTitle>
+             <CardTitle className="text-2xl font-bold text-orange-700">Session Management</CardTitle>
            </CardHeader>
            <Button
                  onClick={handleCreateSession}
-                 className="mx-5 px-8 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+                 className="mx-5 px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
                >
                  Create New Session
                </Button>
@@ -660,16 +666,16 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
                {sessions.length > 0 ? (
                  <div className="space-y-4">
                    {sessions.map((session) => (
-                     <div key={session.id} className="bg-gray-800 border border-gray-700 rounded-lg p-5 shadow-md">
+                     <div key={session.id} className="bg-orange-200 border border-orange-300 rounded-lg p-5 shadow-md">
                        <div className="flex items-center justify-between mb-2">
-                         <h4 className="text-xl font-semibold text-orange-300">{session.title} (Week {session.weekNumber})</h4>
+                         <h4 className="text-xl font-semibold text-orange-800">{session.title} (Week {session.weekNumber})</h4>
                          <div className="flex gap-3">
                            <Button
                              onClick={() => {
                                setEditingSession(session);
                                setIsSessionModalOpen(true);
                              }}
-                             className="p-2 text-gray-400 hover:text-orange-400 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                             className="p-2 text-orange-700 hover:text-orange-900 hover:bg-orange-300 rounded-md transition-colors duration-200"
                              title="Edit Session"
                              disabled={loading}
                            >
@@ -677,7 +683,7 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
                            </Button>
                            <Button
                              onClick={() => handleDeleteSession(session.id)}
-                             className="p-2 text-gray-400 hover:text-red-500 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                             className="p-2 text-red-600 hover:text-red-800 hover:bg-orange-300 rounded-md transition-colors duration-200"
                              title="Delete Session"
                              disabled={loading}
                            >
@@ -685,12 +691,12 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
                            </Button>
                          </div>
                        </div>
-                       <p className="text-gray-400">{session.description}</p>
+                       <p className="text-black">{session.description}</p>
                      </div>
                    ))}
                  </div>
                ) : (
-                 <p className="text-gray-400">No sessions created yet.</p>
+                 <p className="text-black">No sessions created yet.</p>
                )}
              </div>
            </CardContent>
@@ -699,20 +705,20 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
 
       {/* Assigned Weeks */}
       {assignedWeeks.length > 0 && (
-        <Card className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg mb-10">
+        <Card className="bg-orange-100 border border-orange-200 rounded-xl shadow-lg mb-10">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-orange-400">Assigned Weekly Resources</CardTitle>
+            <CardTitle className="text-2xl font-bold text-orange-700">Assigned Weekly Resources</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               {assignedWeeks.map((weekData) => (
-                <div key={weekData?.week} className="bg-gray-800 border border-gray-700 rounded-lg p-5 shadow-md">
+                <div key={weekData?.week} className="bg-orange-200 border border-orange-300 rounded-lg p-5 shadow-md">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-xl font-semibold text-orange-300">Week {weekData?.week}</h4>
+                    <h4 className="text-xl font-semibold text-orange-800">Week {weekData?.week}</h4>
                     <div className="flex gap-3">
                       <Button
                         onClick={() => handleEditWeek(weekData?.week)}
-                        className="p-2 text-gray-400 hover:text-orange-400 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                        className="p-2 text-orange-700 hover:text-orange-900 hover:bg-orange-300 rounded-md transition-colors duration-200"
                         title="Edit Week"
                         disabled={loading}
                       >
@@ -720,7 +726,7 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
                       </Button>
                       <Button
                         onClick={() => handleDeleteWeek(weekData?.week)}
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                        className="p-2 text-red-600 hover:text-red-800 hover:bg-orange-300 rounded-md transition-colors duration-200"
                         title="Delete Week"
                         disabled={loading}
                       >
@@ -730,15 +736,15 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
                   </div>
                   <div className="space-y-3">
                     {weekData?.resources?.map((resource) => (
-                      <div key={resource.id} className="flex items-center justify-between p-4 bg-gray-700/50 rounded-md border border-gray-600/50">
+                      <div key={resource.id} className="flex items-center justify-between p-4 bg-orange-300/50 rounded-md border border-orange-400/50">
                         <div className="flex items-center gap-4">
                           <div className={`w-4 h-4 rounded-full ${
                             resource.type === 'VIDEO' ? 'bg-red-500' :
                             resource.type === 'ARTICLE' ? 'bg-blue-500' : 'bg-green-500'
                           }`} />
                           <div>
-                            <p className="text-orange-300 font-medium text-lg">{resource.title}</p>
-                            <p className="text-sm text-gray-400">{resource.type} • {resource.url}</p>
+                            <p className="text-orange-800 font-medium text-lg">{resource.title}</p>
+                            <p className="text-sm text-black">{resource.type} • {resource.url}</p>
                           </div>
                         </div>
                       </div>
@@ -763,6 +769,7 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
         onResourcesAssigned={(week, resources) => handleResourcesAssigned(week, resources as Resource[])}
         cohortId={cohortId}
         totalWeeks={cohorts.find(c => c.id === cohortId)?.totalWeeks || 12} // Pass totalWeeks of selected cohort
+        fontFamily={jetbrainsMonoFont}
       />
     </div>
   )}
