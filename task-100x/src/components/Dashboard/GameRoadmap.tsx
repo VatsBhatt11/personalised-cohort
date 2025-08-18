@@ -207,7 +207,7 @@ const GameRoadmap = ({ onLevelClick, userName, weeklyProgress, allResources }: G
                     w-full
                     ${level.isUnlocked
                       ? level.isCompleted
-                        ? 'bg-cyan-500/20 border border-cyan-400/60 shadow-xl shadow-cyan-500/30'
+                        ? 'bg-cyan-500/80 border border-cyan-400 shadow-xl shadow-cyan-500/30'
                         : level.isActive
                           ? 'bg-orange-400 border-2 border-orange-500 shadow-2xl shadow-orange-500/40 ring-4 ring-orange-400/20'
                           : 'bg-orange-900/60 border border-orange-800/40 hover:border-orange-600/70 hover:shadow-xl hover:shadow-orange-500/30'
@@ -225,9 +225,9 @@ const GameRoadmap = ({ onLevelClick, userName, weeklyProgress, allResources }: G
                       w-12 h-12 sm:w-16 sm:h-16 rounded-full border-4 flex items-center justify-center font-bold text-lg sm:text-xl shrink-0 transition-all duration-500 relative
                       ${level.isUnlocked
                         ? level.isCompleted
-                          ? 'bg-gradient-to-br from-cyan-400/30 to-cyan-600/30 border-cyan-400 text-cyan-300 shadow-2xl shadow-cyan-500/40'
+                          ? 'bg-gradient-to-br from-cyan-400 to-cyan-600 border-cyan-400 text-cyan-300 shadow-2xl shadow-cyan-500/40'
                           : level.isActive
-                            ? 'border-orange-600 text-white bg-gradient-to-br from-orange-500 to-orange-400 shadow-2xl shadow-orange-500/50'
+                            ? 'border-orange-600 text-white bg-gradient-to-br from-orange-400 to-orange-600 shadow-2xl shadow-orange-500/50'
                             : 'border-orange-600/70 text-orange-100 bg-gradient-to-br from-orange-900/30 to-orange-950/30'
                         : 'border-orange-700 text-orange-200 bg-gradient-to-br from-orange-950/30 to-orange-900/30'
                       }
@@ -269,7 +269,7 @@ const GameRoadmap = ({ onLevelClick, userName, weeklyProgress, allResources }: G
                     <Badge className={`
                       px-3 py-1 rounded-full text-xs sm:text-sm font-semibold
                       ${level.isCompleted
-                        ? 'bg-cyan-500/30 text-cyan-300'
+                        ? 'bg-cyan-500 text-white'
                         : level.isActive
                           ? 'bg-orange-600/30 text-white'
                           : 'bg-orange-900/30 text-orange-300'

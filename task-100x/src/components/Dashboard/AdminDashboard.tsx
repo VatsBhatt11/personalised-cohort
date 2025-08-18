@@ -571,12 +571,8 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
-          <div className="flex items-center">
+          <div className="flex items-center bg-orange-400 rounded-xl p-4">
             <img src={logo} alt="100xEngineers Logo" className="h-12 mr-4" />
-            <div>
-              <h1 className="text-4xl font-extrabold text-black tracking-tight">Admin Dashboard</h1>
-              <p className="text-gray-700 mt-2 text-lg">Welcome back, <span className="font-semibold text-black">{userEmail}</span></p>
-            </div>
           </div>
           <div className="flex items-center space-x-4">
             <Badge className="bg-orange-500 text-black border-orange-700 px-5 py-2 rounded-full text-base font-medium shadow-lg">

@@ -165,7 +165,7 @@ export const QuizAttemptComponent = ({ quizId, resourceId, onAttemptComplete, on
 
   if (showReportButton && submittedAttemptId) {
     return (
-      <div className="p-4 bg-gray-900 rounded-lg shadow-lg text-center">
+      <div className="p-4 bg-orange-100 rounded-lg shadow-lg text-center">
         <h2 className="text-2xl font-bold mb-4 text-orange-400">Quiz Submitted!</h2>
         <p className="text-lg mb-6 text-gray-300">You can now view your detailed report or close this window.</p>
         <div className="flex justify-center space-x-4">
@@ -181,10 +181,10 @@ export const QuizAttemptComponent = ({ quizId, resourceId, onAttemptComplete, on
   }
 
   return (
-    <div className="p-4 bg-gray-900 rounded-lg shadow-lg">
+    <div className="p-4 bg-orange-100 rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold mb-4 text-orange-400">Quiz for Week {quizData.weekNumber}</h2>
 
-      <div className="bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+      <div className="bg-orange-300 p-6 rounded-lg shadow-md mb-6">
         <h3 className="text-xl font-semibold mb-4 text-orange-300">Question {currentQuestionIndex + 1} of {quizData.questions.length}</h3>
         <p className="text-lg mb-4 text-gray-200">{currentQuestion.text}</p>
           <div className="space-y-3 text-white">

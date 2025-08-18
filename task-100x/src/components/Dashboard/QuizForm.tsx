@@ -227,21 +227,21 @@ const QuizForm: React.FC<QuizFormProps> = ({
                 id={`questionText-${currentQuestionIndex}`}
                 value={currentQuestion.questionText}
                 onChange={(e) => handleQuestionChange(currentQuestionIndex, 'questionText', e.target.value)}
-                className="w-full bg-gray-800 border border-orange-600/50 text-orange-300 px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out placeholder:text-gray-500"
+                className="w-full bg-orange-100 border border-orange-600/50 text-orange-300 px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out placeholder:text-gray-500"
                 placeholder="Enter question text"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 bg-orange-100">
               <Label htmlFor={`questionType-${currentQuestionIndex}`} className="text-orange-300 font-medium">Question Type</Label>
               <Select
                 value={currentQuestion.questionType}
                 onValueChange={(value: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER') => handleQuestionChange(currentQuestionIndex, 'questionType', value)}
               >
-                <SelectTrigger id={`questionType-${currentQuestionIndex}`}><SelectValue placeholder="Select a type" /></SelectTrigger>
+                <SelectTrigger className='bg-orange-100 text-orange-400' id={`questionType-${currentQuestionIndex}`}><SelectValue placeholder="Select a type" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="MULTIPLE_CHOICE">Multiple Choice</SelectItem>
-                  <SelectItem value="TRUE_FALSE">True/False</SelectItem>
-                  <SelectItem value="SHORT_ANSWER">Short Answer</SelectItem>
+                  <SelectItem className='bg-orange-100 text-orange-400' value="MULTIPLE_CHOICE">Multiple Choice</SelectItem>
+                  <SelectItem className='bg-orange-100 text-orange-400 my-1' value="TRUE_FALSE">True/False</SelectItem>
+                  <SelectItem className='bg-orange-100 text-orange-400' value="SHORT_ANSWER">Short Answer</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -256,6 +256,7 @@ const QuizForm: React.FC<QuizFormProps> = ({
                       value={opt.optionText}
                       onChange={(e) => handleOptionChange(currentQuestionIndex, oIndex, 'optionText', e.target.value)}
                       placeholder="Option text" 
+                      className='bg-orange-100 text-orange-400'
                     />
                     <input
                       type="checkbox"
@@ -281,7 +282,7 @@ const QuizForm: React.FC<QuizFormProps> = ({
         <p className="text-center text-gray-500">No questions yet. Click "Add Question" to start.</p>
       )}
       <div className="flex justify-between mt-4">
-        <Button type="button" onClick={addQuestion}>
+        <Button type="button" className='bg-orange-500' onClick={addQuestion}>
           <PlusCircle className="mr-2 h-4 w-4" /> Add Question
         </Button>
         <Button type="button" onClick={handleSubmit}>

@@ -196,25 +196,25 @@ const Dashboard = ({ userEmail,userName }: DashboardProps) => {
   return (
     <SidebarProvider>
       <div className="h-screen w-full bg-white relative overflow-hidden flex" style={{ fontFamily: gilroyFont }}>
-        <Sidebar className="bg-white border-r border-orange-500/30 w-64 p-4">
-          <div className="mb-6 flex justify-center">
+        <Sidebar className="bg-orange-100 border-r border-orange-500/80 w-64 p-2">
+          <div className="mb-6 flex justify-center bg-orange-300 p-3 rounded-xl">
             <img src={logo} alt="100xEngineers Logo" className="h-12" />
           </div>
           <SidebarMenu className="space-y-2">
             <SidebarMenuButton 
               onClick={() => setActiveTab('challenges')} 
               isActive={activeTab === 'challenges'}
-              className={`flex items-center gap-3 px-4 py-2 rounded-lg text-left w-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 ${activeTab === 'challenges' ? 'bg-orange-500/20' : 'hover:bg-orange-500/10'} text-black`}
+              className={`flex items-center gap-3 px-4 py-2 rounded-lg text-left w-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 ${activeTab === 'challenges' ? 'bg-orange-500/70' : 'hover:bg-orange-500/50'} text-black`}
             >
-              <Home className="w-5 h-5 text-orange-500" />
+              <Home className="w-5 h-5 text-orange-700" />
               <span className="text-black font-medium">Challenges</span>
             </SidebarMenuButton>
             <SidebarMenuButton 
               onClick={() => setActiveTab('leaderboard')} 
               isActive={activeTab === 'leaderboard'}
-              className={`flex items-center gap-3 px-4 py-2 rounded-lg text-left w-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 ${activeTab === 'leaderboard' ? 'bg-orange-500/20' : 'hover:bg-orange-500/10'} text-black`}
+              className={`flex items-center gap-3 px-4 py-2 rounded-lg text-left w-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 ${activeTab === 'leaderboard' ? 'bg-orange-500/70' : 'hover:bg-orange-500/50'} text-black`}
             >
-              <Trophy className="w-5 h-5 text-orange-500" />
+              <Trophy className="w-5 h-5 text-orange-700" />
               <span className="text-black font-medium">Leaderboard</span>
             </SidebarMenuButton>
 

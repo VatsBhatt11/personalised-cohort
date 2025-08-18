@@ -348,7 +348,7 @@ const AdminResourceModal = ({
                     <input
                       id="duration"
                       type="number"
-                      className="flex h-10 w-full rounded-xl border border-orange-500/30 bg-gray-800 px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white transition-all duration-200 ease-in-out"
+                      className="flex h-10 w-full rounded-xl border text-black border-orange-500/30 bg-orange-100 px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 ease-in-out"
                       value={newResource.duration}
                       onChange={(e) => setNewResource({ ...newResource, duration: parseInt(e.target.value) || 0 })}
                       placeholder="e.g., 60"
@@ -478,7 +478,7 @@ const AdminResourceModal = ({
             <Button
               variant="outline"
               onClick={handleClose}
-              className="border-orange-600/50 text-black hover:bg-orange-600/20 rounded-xl shadow-md transition-all duration-200 ease-in-out"
+              className="border-orange-600/50 text-black bg-orange-600 hover:bg-orange-700 rounded-xl shadow-md transition-all duration-200 ease-in-out"
               disabled={loading}
             >
               Cancel
