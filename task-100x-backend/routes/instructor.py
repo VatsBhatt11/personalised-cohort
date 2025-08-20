@@ -55,7 +55,7 @@ async def create_quiz(quiz_data: QuizCreate, current_user = Depends(get_current_
 
     new_quiz = await prisma.quiz.create(
         data={
-            "cohortId": quiz_data.cohortId,
+
             "weekNumber": quiz_data.weekNumber,
             "questions": {
                 "create": [
@@ -139,12 +139,7 @@ async def generate_quiz_ai(quiz_ai_data: GenerateQuizAI, current_user = Depends(
                         } for q in questions_for_db
                     ]
                 },
-                "tasks": {
-                    "create": {
-                        "status": "PENDING",
-                        "assignedDate": datetime.now(timezone.utc)
-                    }
-                }
+
             },
             include={
                 "questions": {
