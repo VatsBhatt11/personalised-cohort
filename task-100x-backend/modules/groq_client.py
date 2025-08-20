@@ -93,8 +93,10 @@ async def generate_quiz_from_transcription(transcription: str) -> dict:
     Each option MUST have 'optionText' and 'isCorrect' (boolean).
 
     The output MUST be a JSON object with a single key 'questions', which is an array of question objects.
+    The entire response MUST be a single JSON object, not multiple concatenated JSON objects.
 
     Example JSON format:
+    ```json
     {
         "questions": [
             {
@@ -105,10 +107,10 @@ async def generate_quiz_from_transcription(transcription: str) -> dict:
                     {"optionText": "Paris", "isCorrect": true},
                     {"optionText": "Rome", "isCorrect": false}
                 ]
-            },
-
+            }
         ]
     }
+    ```
 
     Ensure the questions are relevant to the transcription and cover key concepts.
     """
