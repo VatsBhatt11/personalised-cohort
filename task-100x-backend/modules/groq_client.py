@@ -62,7 +62,7 @@ async def generate_personalized_message(context: dict) -> str:
                 "content": user_message,
             },
         ],
-        model="llama3-8b-8192", # Using a suitable Groq model
+        model="llama-3.3-70b-versatile", # Using a suitable Groq model
         temperature=0.7,
         max_tokens=100, # Adjust max_tokens to fit message length requirements
     )
@@ -132,7 +132,7 @@ async def generate_quiz_from_transcription(transcription: str) -> dict:
                 "content": user_message,
             },
         ],
-        model="llama3-8b-8192", # Using a suitable Groq model
+        model="llama-3.3-70b-versatile", # Using a suitable Groq model
         temperature=0.7,
     )
 

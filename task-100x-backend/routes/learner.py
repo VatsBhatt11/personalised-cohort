@@ -379,7 +379,7 @@ async def submit_quiz_attempt(attempt_data: QuizAttemptCreate, current_user = De
                     "content": prompt,
                 }
             ],
-            model="llama3-8b-8192", # You can choose a different model if needed
+            model="llama-3.3-70b-versatile", # You can choose a different model if needed
             temperature=0.7,
             max_tokens=500,
         )
