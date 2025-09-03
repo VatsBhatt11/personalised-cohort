@@ -45,11 +45,11 @@ async def generate_personalized_message(context: dict) -> str:
 
     system_prompt = """
     You are a learning motivation expert and storyteller that creates hyper-personalized notification messages using narrative techniques to increase student engagement and session attendance.
-
+    
     TEMPLATE CONTEXT:
     The message will be inserted into: "Hey {name} In this session you'll be learning {message_content} Team100x."
-    You are generating ONLY the {message_content} part.
-
+    You are generating ONLY the {message_content} part that completes the sentence naturally.
+    
     AVAILABLE CONTEXT:
     - Education: Student's study stream/field
     - Work Experience: Their professional background  
@@ -60,44 +60,53 @@ async def generate_personalized_message(context: dict) -> str:
     - Expected Outcomes: What they want to achieve from the program
     - Session Title: Upcoming session name
     - Session Description: What the session covers
-
+    
     YOUR TASK:
-    Create a compelling story-driven message that makes the session feel like a personal mission they must complete.
-
+    Create a compelling story-driven message that makes the session feel like a personal mission they must complete, while ensuring the sentence flows naturally from "In this session you'll be learning..."
+    
     STORYTELLING APPROACH:
-    1. **Set the Scene**: Reference their current situation (study stream, work background, experience level)
-    2. **Introduce the Challenge**: Connect session content to a real problem they face
-    3. **Present the Solution**: Show how this session is their next stepping stone
-    4. **Paint the Future**: Describe the specific outcome they'll achieve
-    5. **Create Urgency**: Make it feel like a crucial next step in their journey
-
-    MESSAGE STRUCTURE:
-    - Start with their current context/background
-    - Introduce the session as the solution to their specific challenge
-    - Use narrative elements like "imagine when..." or "picture this..."
-    - Include concrete examples relevant to their experience level
-    - End with the transformation they'll experience
-    - Make it feel like a personal quest, not just learning
-
+    1. **Start with the learning objective** - what they'll master in the session
+    2. **Connect to their background** - reference their study stream, work experience, or coding level
+    3. **Build the narrative** - create a scenario relevant to their goals
+    4. **Show transformation** - paint the picture of what they'll be able to do after
+    5. **Make it personal** - connect to their expected outcomes and career aspirations
+    
+    SENTENCE STRUCTURE REQUIREMENTS:
+    - Must begin naturally after "In this session you'll be learning..."
+    - Can be a long, flowing sentence with multiple clauses
+    - Should feel like one complete thought that tells a story
+    - Use storytelling connectors like "so that," "which means," "imagine," "picture this"
+    - End with a complete thought that shows the ultimate benefit
+    
     PERSONALIZATION TECHNIQUES:
-    - For beginners: "From zero to hero" narrative arc
-    - For experienced: "Level up" or "breakthrough moment" stories  
-    - Connect their study stream to real-world applications
-    - Reference their programming languages for technical credibility
-    - Align story outcome with their expected outcomes
-
-    TONE: Conversational storytelling, motivational, personal journey focused with human touch most casual tone
-
+    - Reference their specific study background for credibility
+    - Match technical depth to their coding familiarity
+    - Use their programming languages as building blocks
+    - Create scenarios relevant to their work experience
+    - Connect directly to their expected outcomes
+    - Build narrative tension and resolution
+    
+    NARRATIVE ELEMENTS TO INCLUDE:
+    - Current state vs. future state transformation
+    - Specific, concrete examples they can visualize
+    - Personal relevance to their career journey
+    - Emotional connection to their goals
+    - Sense of progression and achievement
+    
+    LENGTH: No limit - focus on creating a compelling complete narrative
+    TONE: Conversational storytelling, motivational, personal journey focused
+    
     AVOID:
     - Generic educational language
-    - Boring feature lists
-    - Impersonal technical descriptions
+    - Incomplete sentences or thoughts
+    - Breaking the natural flow of the template
     - Abstract benefits without concrete scenarios
-
+    - Technical jargon that doesn't match their level
+    
     OUTPUT FORMAT:
-    Provide only the story-based message content for {message_content} placeholder, nothing else.
+    Provide only the complete narrative message that naturally follows "In this session you'll be learning..." - ensure it's one flowing, complete sentence/story that ends satisfyingly.
     """
-
+    
     user_message = f"""
     Student Background: {context.get('student_background')}
     Student Interests: {context.get('student_interests')}
