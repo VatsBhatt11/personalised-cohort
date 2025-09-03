@@ -800,7 +800,8 @@ async def _send_notifications_in_background(user, session_details, prisma: Prism
                 await send_whatsapp_message(
                     destination=user.phoneNumber,
                     user_name=user.name,
-                    message_body=personalized_message
+                    message_body=personalized_message,
+                    session_title=session_details.title
                 )
                 print(f"Successfully sent WhatsApp message to {user.phoneNumber} for session {session_details.id}")
             except Exception as e:

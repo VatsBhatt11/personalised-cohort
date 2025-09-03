@@ -9,6 +9,7 @@ async def send_whatsapp_message(
     destination: str,
     user_name: str,
     message_body: str,
+    session_title: str,
     api_key: str = AISENSY_API_KEY,
     campaign_name: str = AISENSY_CAMPAIGN_NAME
 ):
@@ -25,7 +26,7 @@ async def send_whatsapp_message(
         "campaignName": campaign_name,
         "destination": destination,
         "userName": user_name,
-        "templateParams": [user_name, message_body] 
+        "templateParams": [session_title, user_name, message_body] 
     }
 
     try:
