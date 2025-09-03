@@ -86,7 +86,6 @@ async def generate_personalized_message(context: dict) -> str:
     - Reference their programming languages for technical credibility
     - Align story outcome with their expected outcomes
 
-    LENGTH: 100-250 words
     TONE: Conversational storytelling, motivational, personal journey focused with human touch most casual tone
 
     AVOID:
