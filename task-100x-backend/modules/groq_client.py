@@ -78,12 +78,8 @@ async def generate_personalized_message(context: dict) -> str:
     - “You’ll learn how to structure prompts so your AI answers are sharp — a skill that directly supports your goal of building a personal assistant.”  
     - “You’ll see how to analyze data step by step, which connects to your aim of becoming confident in Python for your career shift.”  
     
-    OUTPUT:
-    Return only two bullet points, no extra text.
+    OUTPUT: Two concise bullet points, clearly labeled as 'Pointer 1:' and 'Pointer 2:', no extra text.
     """
-    
-    
-    
 
     user_message = f"""
     Student Background: {context.get('student_background')}
@@ -112,14 +108,16 @@ async def generate_personalized_message(context: dict) -> str:
     response_content = chat_completion.choices[0].message.content
     print(f"Groq API raw response: {response_content}") # Log the raw response
     
-    # Extract JSON from markdown code block if present
-    if '```json' in response_content:
-        json_start = response_content.find('{')
-        json_end = response_content.rfind('}')
-        if json_start != -1 and json_end != -1:
-            return response_content[json_start:json_end+1]
-    
-    return response_content
+    # Parse the two pointers from the response content
+    pointers = {"pointer1": "", "pointer2": ""}
+    lines = response_content.strip().split('\n')
+    for line in lines:
+        if line.startswith('Pointer 1:'):
+            pointers["pointer1"] = line.replace('Pointer 1:', '').strip()
+        elif line.startswith('Pointer 2:'):
+            pointers["pointer2"] = line.replace('Pointer 2:', '').strip()
+
+    return pointers
 
 async def generate_quiz_from_transcription(transcription: str) -> dict:
     client = Groq(

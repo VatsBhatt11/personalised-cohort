@@ -829,7 +829,7 @@ async def _send_notifications_in_background(user, session_details, prisma: Prism
         }
 
         # Call Groq API to generate message
-        personalized_message = await generate_personalized_message(context)
+        personalized_message_pointers = await generate_personalized_message(context)
 
         # Calculate remaining time and status
         ist = timezone(timedelta(hours=5, minutes=30))
@@ -854,7 +854,8 @@ async def _send_notifications_in_background(user, session_details, prisma: Prism
             await send_whatsapp_message(
                 destination=user.phoneNumber,
                 user_name=user.name,
-                message_body=personalized_message,
+                message_body_1=personalized_message_pointers["pointer1"],
+                message_body_2=personalized_message_pointers["pointer2"],
                 session_title=session_details.title,
                 remaining_time="06:00 PM IST",
                 status=status,
@@ -865,7 +866,7 @@ async def _send_notifications_in_background(user, session_details, prisma: Prism
             data={
                 "studentId": user.id,
                 "sessionId": session_details.id,
-                "message": personalized_message,
+                "message": f"Pointer 1: {personalized_message_pointers['pointer1']}\nPointer 2: {personalized_message_pointers['pointer2']}",
                 "status": "SENT",
             }
         )
@@ -1110,7 +1111,15 @@ async def _resend_notification_in_background(notification, prisma: Prisma):
         print(f"Session with ID {notification.sessionId} not found for resending notification.")
         return
 
-    personalized_message = notification.message
+    # Parse the two pointers from the stored message
+    message_lines = notification.message.split('\n')
+    pointer1 = ""
+    pointer2 = ""
+    for line in message_lines:
+        if line.startswith('Pointer 1:'):
+            pointer1 = line.replace('Pointer 1:', '').strip()
+        elif line.startswith('Pointer 2:'):
+            pointer2 = line.replace('Pointer 2:', '').strip()
 
     ist = timezone(timedelta(hours=5, minutes=30))
     now_ist = datetime.now(ist)
@@ -1136,7 +1145,8 @@ async def _resend_notification_in_background(notification, prisma: Prisma):
         await send_whatsapp_message(
             destination=user.phoneNumber,
             user_name=user.name,
-            message_body=personalized_message,
+            message_body_1=pointer1,
+            message_body_2=pointer2,
             session_title=session_details.title,
             remaining_time="06:00 PM IST",
             status=status,
