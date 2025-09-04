@@ -1164,12 +1164,3 @@ async def _resend_notification_in_background(notification, prisma: Prisma):
             status=status,
             media=media
         )
-
-    await prisma.notification.create(
-        data={
-            "studentId": user.id,
-            "sessionId": session_details.id,
-            "message": personalized_message,
-            "status": "RESENT",
-        }
-    )
