@@ -112,10 +112,11 @@ async def generate_personalized_message(context: dict) -> str:
     pointers = {"pointer1": "", "pointer2": ""}
     lines = response_content.strip().split('\n')
     for line in lines:
-        if line.startswith('Pointer 1:'):
-            pointers["pointer1"] = line.replace('Pointer 1:', '').strip()
-        elif line.startswith('Pointer 2:'):
-            pointers["pointer2"] = line.replace('Pointer 2:', '').strip()
+        cleaned_line = line.lstrip('- ').strip() # Remove leading hyphen and space
+        if cleaned_line.startswith('Pointer 1:'):
+            pointers["pointer1"] = cleaned_line.replace('Pointer 1:', '').strip()
+        elif cleaned_line.startswith('Pointer 2:'):
+            pointers["pointer2"] = cleaned_line.replace('Pointer 2:', '').strip()
 
     return pointers
 
