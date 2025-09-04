@@ -72,7 +72,9 @@ async def generate_personalized_message(context: dict) -> str:
     - Focus on the "wow, I did it!" moment
 
     SIMPLE STORY STRUCTURE:
-    "[what they'll learn], and imagine [future success moment based on their goals] - people will ask you [question about their new skill], and you'll remember this exact moment when everything clicked."
+    - [What they'll learn]
+    - [Future success moment based on their goals]
+    - [A moment of realization when everything clicked]
 
     LANGUAGE GUIDELINES:
     - Use words like: imagine, picture, think about, remember when
@@ -85,10 +87,10 @@ async def generate_personalized_message(context: dict) -> str:
 
     PERSONALIZATION:
     - Reference their background simply (e.g., "as someone from marketing")
-    - Connect to what they want to achieve
-    - Make the success story realistic for them
+    - Connect to what they want to achieve and how it applies to their future projects.
+    - Make the success story realistic and hyper-personalized for them.
 
-    OUTPUT: One flowing sentence that completes the template and tells their success story.
+    OUTPUT: A few concise bullet points that complete the template and tell their success story.
     """
 
     user_message = f"""
