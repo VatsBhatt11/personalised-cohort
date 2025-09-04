@@ -847,7 +847,7 @@ async def _send_notifications_in_background(user, session_details, prisma: Prism
         
         await prisma.notification.create(
             data={
-                "student": {"connect": {"id": user.id}},
+                "studentId": user.id,
                 "sessionId": session_details.id,
                 "message": personalized_message,
                 "status": "SENT",

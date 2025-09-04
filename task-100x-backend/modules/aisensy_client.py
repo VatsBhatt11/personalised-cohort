@@ -29,6 +29,7 @@ async def send_whatsapp_message(
         "campaignName": campaign_name,
         "destination": destination,
         "userName": user_name,
+        "media" : media,
         "templateParams": [session_title, user_name, message_body, remaining_time, status] 
     }
 
