@@ -287,9 +287,7 @@ async def create_session(
             file_name = f"{uuid.uuid4()}-{image.filename}"
             response = supabase.storage.from_("test").upload(file_name, file_content, {"content-type": image.content_type})
             image_url = supabase.storage.from_("test").get_public_url(file_name)
-            # if response.get("error"):
-            #     raise HTTPException(status_code=500, detail=f"Supabase upload error: {response['error']}")
-
+           
             # Construct the public URL
             # image_url = f"{SUPABASE_URL}/storage/v1/object/public/test/{file_name}"
         except Exception as e:

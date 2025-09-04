@@ -33,6 +33,8 @@ async def send_whatsapp_message(
         "templateParams": [session_title, user_name, message_body, remaining_time, status] 
     }
 
+    print(payload)
+
     if media:
         payload["media"] = media
 
