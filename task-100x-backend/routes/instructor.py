@@ -784,6 +784,7 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
 
 async def _send_notifications_in_background(user, session_details, prisma: Prisma):
     print('Entered')
+    media = None  # Initialize media to None
     if user.launchpad:
         context = {
             "student_background": {
@@ -819,6 +820,23 @@ async def _send_notifications_in_background(user, session_details, prisma: Prism
             status = "Started"
             remaining_time = "0 minutes"
 
+        if user.phoneNumber:
+            print(f"Attempting to send WhatsApp message to {user.phoneNumber} for session {session_details.id}")
+            if session_details.imageUrl:
+                media = {
+                    "url": session_details.imageUrl,
+                    "filename": "session_image.jpg"
+                }
+            await send_whatsapp_message(
+                destination=user.phoneNumber,
+                user_name=user.name,
+                message_body=personalized_message,
+                session_title=session_details.title,
+                remaining_time=remaining_time,
+                status=status,
+                media=media
+            )
+        
         await prisma.notification.create(
             data={
                 "studentId": user.id,
