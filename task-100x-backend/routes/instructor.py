@@ -841,10 +841,8 @@ async def _send_notifications_in_background(user, session_details, prisma: Prism
 
         if remaining_minutes > 0:
             status = f"Starting in {remaining_minutes} minutes"
-            remaining_time = f"{remaining_minutes} minutes"
         else:
             status = "Started"
-            remaining_time = "0 minutes"
 
         if user.phoneNumber:
             print(f"Attempting to send WhatsApp message to {user.phoneNumber} for session {session_details.id}")
@@ -871,24 +869,6 @@ async def _send_notifications_in_background(user, session_details, prisma: Prism
                 "status": "SENT",
             }
         )
-
-        if user.phoneNumber:
-            print(f"Attempting to send WhatsApp message to {user.phoneNumber} for session {session_details.id}")
-            media = None
-            if session_details.imageUrl:
-                media = {
-                    "url": session_details.imageUrl,
-                    "filename": "session_image.jpg"
-                }
-            await send_whatsapp_message(
-                destination=user.phoneNumber,
-                user_name=user.name,
-                message_body=personalized_message,
-                session_title=session_details.title,
-                remaining_time="06:00 PM IST",
-                status=status,
-                media=media
-            )
 
 @router.get("/cohorts/{cohort_id}/sessions")
 async def get_sessions(
@@ -1141,10 +1121,8 @@ async def _resend_notification_in_background(notification, prisma: Prisma):
 
     if remaining_minutes > 0:
         status = f"Starting in {remaining_minutes} minutes"
-        remaining_time = f"{remaining_minutes} minutes"
     else:
         status = "Started"
-        remaining_time = "0 minutes"
 
     media = None
     if session_details.imageUrl:
