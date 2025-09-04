@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prisma import Prisma
+from fastapi.staticfiles import StaticFiles
 
 # Load environment variables
 load_dotenv()
@@ -35,6 +36,9 @@ async def lifespan(app: FastAPI):
     await prisma_client.disconnect()
 
 app = FastAPI(lifespan=lifespan)
+
+# Mount the static files directory
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Configure CORS
 app.add_middleware(

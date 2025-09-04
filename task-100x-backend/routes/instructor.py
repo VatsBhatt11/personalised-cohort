@@ -182,8 +182,7 @@ class SessionCreate(BaseModel):
     description: str
     weekNumber: int
     lectureNumber: int
-    imageUrl: Optional[str] = None
-    lectureNumber: int
+    cohortId: str
     imageUrl: Optional[str] = None
 
 class SessionUpdate(BaseModel):
@@ -817,29 +816,48 @@ async def _send_notifications_in_background(user, session_details, prisma: Prism
         # Call Groq API to generate message
         personalized_message = await generate_personalized_message(context)
 
+        # Calculate remaining time and status
+        ist = timezone(timedelta(hours=5, minutes=30))
+        now_ist = datetime.now(ist)
+        session_time_ist = datetime.now(ist).replace(hour=18, minute=0, second=0, microsecond=0)
+
+        remaining_time_delta = session_time_ist - now_ist
+        remaining_minutes = int(remaining_time_delta.total_seconds() / 60)
+
+        if remaining_minutes > 0:
+            status = f"Starting in {remaining_minutes} minutes"
+            remaining_time = f"{remaining_minutes} minutes"
+        else:
+            status = "Started"
+            remaining_time = "0 minutes"
+
         await prisma.notification.create(
             data={
                 "studentId": user.id,
                 "sessionId": session_details.id,
                 "message": personalized_message,
-                "status": "SENT"
+                "status": "SENT",
+                "media": media
             }
         )
 
         if user.phoneNumber:
             print(f"Attempting to send WhatsApp message to {user.phoneNumber} for session {session_details.id}")
-            try:
-                await send_whatsapp_message(
-                    destination=user.phoneNumber,
-                    user_name=user.name,
-                    message_body=personalized_message,
-                    session_title=session_details.title
-                )
-                print(f"Successfully sent WhatsApp message to {user.phoneNumber} for session {session_details.id}")
-            except Exception as e:
-                print(f"Error sending WhatsApp message to {user.phoneNumber} for session {session_details.id}: {e}")
-        else:
-            print(f"User {user.id} does not have a phone number. Skipping WhatsApp notification.")
+            media = None
+            if session_details.imageUrl:
+                media = {
+                    "url": session_details.imageUrl,
+                    "filename": "session_image.jpg"
+                }
+            await send_whatsapp_message(
+                destination=user.phoneNumber,
+                user_name=user.name,
+                message_body=personalized_message,
+                session_title=session_details.title,
+                remaining_time=remaining_time,
+                status=status,
+                media=media
+            )
 
 @router.get("/cohorts/{cohort_id}/sessions")
 async def get_sessions(
@@ -861,15 +879,22 @@ async def get_sessions(
         "message": "Sessions retrieved successfully"
     }
 
-@router.put("/sessions/{session_id}")
+@router.put("/sessions/{session_id}", response_model=SessionResponse)
 async def update_session(
     session_id: str,
     session_details: SessionUpdate,
+    image: UploadFile = File(None),
     current_user = Depends(get_current_user),
     prisma: Prisma = Depends(get_prisma_client)
 ):
     if current_user.role != "INSTRUCTOR":
         raise HTTPException(status_code=403, detail="Only instructors can update sessions")
+
+    if image:
+        file_path = f"uploads/{image.filename}"
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(image.file, buffer)
+        session_details.imageUrl = f"/{file_path}"
 
     existing_session = await prisma.session.find_unique(where={"id": session_id})
     if not existing_session:

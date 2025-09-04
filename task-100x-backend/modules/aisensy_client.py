@@ -10,6 +10,9 @@ async def send_whatsapp_message(
     user_name: str,
     message_body: str,
     session_title: str,
+    remaining_time: str,
+    status: str,
+    media: dict = None,
     api_key: str = AISENSY_API_KEY,
     campaign_name: str = AISENSY_CAMPAIGN_NAME
 ):
@@ -26,8 +29,11 @@ async def send_whatsapp_message(
         "campaignName": campaign_name,
         "destination": destination,
         "userName": user_name,
-        "templateParams": [session_title, user_name, message_body] 
+        "templateParams": [session_title, user_name, message_body, remaining_time, status] 
     }
+
+    if media:
+        payload["media"] = media
 
     try:
         async with httpx.AsyncClient() as client:

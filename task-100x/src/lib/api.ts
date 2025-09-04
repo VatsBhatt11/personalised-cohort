@@ -162,6 +162,8 @@ export interface Session {
   title: string;
   description: string;
   weekNumber: number;
+  lectureNumber: number;
+  imageUrl?: string;
   cohortId: string;
 }
 
@@ -483,16 +485,14 @@ export const instructor = {
       title: string;
       description: string;
       weekNumber: number;
-      cohortId?: string;
+      lectureNumber: number;
+      imageUrl?: string;
+      cohortId: string;
     }
   ): Promise<Session> => {
     const response = await api.post<Session>(
       `/api/cohorts/${cohortId}/sessions`,
-      {
-        title: sessionData.title,
-        description: sessionData.description,
-        weekNumber: sessionData.weekNumber,
-      }
+      sessionData
     );
     return response.data;
   },
@@ -504,7 +504,13 @@ export const instructor = {
   },
   updateSession: async (
     sessionId: string,
-    sessionData: { title?: string; description?: string; weekNumber?: number }
+    sessionData: {
+      title?: string;
+      description?: string;
+      weekNumber?: number;
+      lectureNumber?: number;
+      imageUrl?: string;
+    }
   ): Promise<Session> => {
     const response = await api.put<Session>(
       `/api/sessions/${sessionId}`,

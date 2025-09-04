@@ -210,6 +210,7 @@ const SessionManagementModal = ({
               ref={fileInputRef}
               onChange={handleImageChange}
               className="hidden"
+              accept="image/*"
             />
             <Button onClick={() => fileInputRef.current?.click()} variant="outline">
               Upload Image
