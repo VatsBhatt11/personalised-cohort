@@ -7,6 +7,7 @@ from datetime import datetime, timezone, timedelta
 import os
 import asyncio
 import time
+import shutil
 from typing import List
 from fastapi import APIRouter, Body, Depends, HTTPException, Form, UploadFile, File
 import csv
@@ -270,7 +271,9 @@ async def create_session(
 
     image_url = None
     if image:
-        file_path = f"uploads/{image.filename}"
+        upload_dir = "uploads"
+        os.makedirs(upload_dir, exist_ok=True)
+        file_path = f"{upload_dir}/{image.filename}"
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
         image_url = f"/{file_path}"
