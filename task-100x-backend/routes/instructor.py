@@ -262,7 +262,7 @@ async def create_session(
             }
         )
         for notification in notifications:
-            asyncio.create_task(send_whatsapp_message(notification.message, notification.recipient))
+            asyncio.create_task(_resend_notification_in_background(notification, prisma))
         
         return {
             "success": True,
@@ -1116,3 +1116,60 @@ async def get_cohort_dashboard(cohort_id: str, current_user = Depends(get_curren
         },
         "message": "Dashboard data retrieved successfully"
     }
+
+
+async def _resend_notification_in_background(notification, prisma: Prisma):
+    print(f"Resending notification for student {notification.studentId} and session {notification.sessionId}")
+    user = await prisma.user.find_unique(where={"id": notification.studentId})
+    if not user:
+        print(f"User with ID {notification.studentId} not found for resending notification.")
+        return
+
+    session_details = await prisma.session.find_unique(where={"id": notification.sessionId})
+    if not session_details:
+        print(f"Session with ID {notification.sessionId} not found for resending notification.")
+        return
+
+    personalized_message = notification.message
+
+    ist = timezone(timedelta(hours=5, minutes=30))
+    now_ist = datetime.now(ist)
+    session_time_ist = datetime.now(ist).replace(hour=18, minute=0, second=0, microsecond=0)
+
+    remaining_time_delta = session_time_ist - now_ist
+    remaining_minutes = int(remaining_time_delta.total_seconds() / 60)
+
+    if remaining_minutes > 0:
+        status = f"Starting in {remaining_minutes} minutes"
+        remaining_time = f"{remaining_minutes} minutes"
+    else:
+        status = "Started"
+        remaining_time = "0 minutes"
+
+    media = None
+    if session_details.imageUrl:
+        media = {
+            "url": session_details.imageUrl,
+            "filename": "session_image.jpg"
+        }
+
+    if user.phoneNumber:
+        print(f"Attempting to resend WhatsApp message to {user.phoneNumber} for session {session_details.title}")
+        await send_whatsapp_message(
+            destination=user.phoneNumber,
+            user_name=user.name,
+            message_body=personalized_message,
+            session_title=session_details.title,
+            remaining_time=remaining_time,
+            status=status,
+            media=media
+        )
+
+    await prisma.notification.create(
+        data={
+            "studentId": user.id,
+            "sessionId": session_details.id,
+            "message": personalized_message,
+            "status": "RESENT",
+        }
+    )
