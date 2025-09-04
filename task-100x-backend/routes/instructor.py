@@ -193,14 +193,8 @@ class SessionUpdate(BaseModel):
     imageUrl: Optional[str] = None
 
 class CreateSessionResponse(BaseModel):
-    id: str
-    title: str
-    description: str
-    weekNumber: int
-    cohortId: str
-    createdAt: datetime
-    updatedAt: datetime
     success: bool
+    data: SessionResponse
     message: str
 
 class SessionResponse(BaseModel):
@@ -222,7 +216,7 @@ class WeeklyResourcePayload(BaseModel):
     isOptional: Optional[bool] = False
     quizId: Optional[str] = None
 
-@router.post("/cohorts/{cohort_id}/sessions", response_model=SessionResponse)
+@router.post("/cohorts/{cohort_id}/sessions", response_model=CreateSessionResponse)
 async def create_session(
     cohort_id: str,
     title: str = Form(...),
