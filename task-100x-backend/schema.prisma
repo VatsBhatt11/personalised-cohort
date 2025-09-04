@@ -190,14 +190,16 @@ model Notification {
 }
 
 model Session {
-  id          String   @id @default(uuid())
-  cohortId    String
-  title       String
-  description String
-  weekNumber  Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  cohort      Cohort   @relation(fields: [cohortId], references: [id])
+  id            String   @id @default(uuid())
+  cohortId      String
+  title         String
+  description   String
+  weekNumber    Int
+  lectureNumber Int      @default(1)
+  imageUrl      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  cohort        Cohort   @relation(fields: [cohortId], references: [id])
 }
 
 model Launchpad {

@@ -181,11 +181,17 @@ class SessionCreate(BaseModel):
     title: str
     description: str
     weekNumber: int
+    lectureNumber: int
+    imageUrl: Optional[str] = None
+    lectureNumber: int
+    imageUrl: Optional[str] = None
 
 class SessionUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     weekNumber: Optional[int] = None
+    lectureNumber: Optional[int] = None
+    imageUrl: Optional[str] = None
 
 class CreateSessionResponse(BaseModel):
     id: str

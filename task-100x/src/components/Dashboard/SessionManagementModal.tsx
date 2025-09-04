@@ -12,6 +12,8 @@ interface Session {
   title: string;
   description: string;
   weekNumber: number;
+  lectureNumber: number;
+  imageUrl?: string;
   cohortId: string;
 }
 
@@ -35,6 +37,8 @@ const SessionManagementModal = ({
   const [sessionTitle, setSessionTitle] = useState('');
   const [sessionDescription, setSessionDescription] = useState('');
   const [sessionWeekNumber, setSessionWeekNumber] = useState<number>(1);
+  const [lectureNumber, setLectureNumber] = useState<number>(1);
+  const [imageUrl, setImageUrl] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -43,57 +47,62 @@ const SessionManagementModal = ({
       setSessionTitle(editingSession.title);
       setSessionDescription(editingSession.description);
       setSessionWeekNumber(editingSession.weekNumber);
+      setLectureNumber(editingSession.lectureNumber);
+      setImageUrl(editingSession.imageUrl || '');
     } else {
       setSessionTitle('');
       setSessionDescription('');
       setSessionWeekNumber(1);
+      setLectureNumber(1);
+      setImageUrl('');
     }
   }, [editingSession]);
 
   const handleSubmit = async () => {
-    if (!cohortId) {
+    if (!sessionTitle || !sessionDescription || !sessionWeekNumber || !lectureNumber) {
       toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Cohort not selected.',
-      });
-      return;
-    }
-
-    if (!sessionTitle.trim() || !sessionDescription.trim() || !sessionWeekNumber) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Session title, description, and week number are required.',
+        variant: "destructive",
+        title: "Missing Fields",
+        description: "Please fill in all required fields.",
       });
       return;
     }
 
     setLoading(true);
     try {
+      const sessionData = {
+        title: sessionTitle,
+        description: sessionDescription,
+        weekNumber: sessionWeekNumber,
+        lectureNumber: lectureNumber,
+        imageUrl: imageUrl || undefined,
+        cohortId,
+      };
+
       if (editingSession) {
-        // Update existing session
-        await instructor.updateSession(editingSession.id, { title: sessionTitle, description: sessionDescription, weekNumber: sessionWeekNumber });
+        await instructor.updateSession(editingSession.id, sessionData);
         toast({
-          title: 'Success',
-          description: 'Session updated successfully.',
+          title: "Success",
+          description: "Session updated successfully.",
         });
       } else {
         // Create new session
-        await instructor.createSession(cohortId, { title: sessionTitle, description: sessionDescription, weekNumber: sessionWeekNumber });
+        await instructor.createSession(cohortId,sessionData);
         toast({
-          title: 'Success',
-          description: 'Session details submitted and notification process initiated.',
+          title: "Success",
+          description: "Session created successfully.",
         });
       }
+
+      onSessionCreated();
       onClose();
       // The useEffect hook will handle resetting the form when editingSession becomes null
     } catch (error) {
       console.error('Failed to save session:', error);
       toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: `Failed to ${editingSession ? 'update' : 'submit'} session details. Please try again.` 
+        variant: "destructive",
+        title: "Error",
+        description: error.response?.data?.detail || "An error occurred. Please try again.",
       });
     } finally {
       setLoading(false);
@@ -103,8 +112,8 @@ const SessionManagementModal = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] glass border-orange-600/20 rounded-2xl bg-orange-100 text-black shadow-xl">
-        <DialogHeader><DialogTitle className="text-2xl font-bold text-orange-400">Manage Sessions</DialogTitle>
-
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold text-orange-400">Manage Sessions</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <h3 className="text-lg font-semibold text-orange-400">{editingSession ? 'Edit Session' : 'Create New Session'}</h3>
@@ -146,6 +155,34 @@ const SessionManagementModal = ({
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="lectureNumber" className="text-orange-400">Lecture Number</Label>
+            <Select
+              value={String(lectureNumber)}
+              onValueChange={(value) => setLectureNumber(parseInt(value))}
+            >
+              <SelectTrigger id="lectureNumber" className="w-full p-3 border border-orange-600/30 rounded-xl bg-orange-50 text-black focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 ease-in-out shadow-lg hover:border-orange-400">
+                <SelectValue placeholder="Select a lecture" />
+              </SelectTrigger>
+              <SelectContent className="bg-orange-50 text-black border border-orange-600/30 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                {Array.from({ length: 7 }, (_, i) => i + 1).map((lecture) => (
+                  <SelectItem key={lecture} value={String(lecture)} className="hover:bg-orange-600/20 focus:bg-orange-600/20 cursor-pointer py-2 px-4 transition-colors duration-200 ease-in-out text-black">
+                    Lecture {lecture}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="imageUrl" className="text-orange-400">Image URL</Label>
+            <Input
+              id="imageUrl"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="Enter image URL"
+              className="bg-orange-50 border border-orange-600/50 text-black px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out placeholder:text-gray-500"
+            />
+          </div>
           <Button onClick={handleSubmit} disabled={loading} className="bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 ease-in-out">
             {loading ? (editingSession ? 'Updating...' : 'Submitting...') : (editingSession ? 'Update Session' : 'Create Session')}
           </Button>
@@ -153,8 +190,6 @@ const SessionManagementModal = ({
             <Button variant="outline" onClick={() => {
               onClose(); // This will trigger the useEffect to reset the form
             }} className="border-orange-600/50 text-black hover:bg-orange-600/20 rounded-xl shadow-lg transition-all duration-200 ease-in-out">
-              
-            
               Cancel Edit
             </Button>
           )}
