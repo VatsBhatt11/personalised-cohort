@@ -858,7 +858,7 @@ async def _send_notifications_in_background(user, session_details, prisma: Prism
                 user_name=user.name,
                 message_body=personalized_message,
                 session_title=session_details.title,
-                remaining_time=remaining_time,
+                remaining_time="06:00 PM IST",
                 status=status,
                 media=media
             )
@@ -885,7 +885,7 @@ async def _send_notifications_in_background(user, session_details, prisma: Prism
                 user_name=user.name,
                 message_body=personalized_message,
                 session_title=session_details.title,
-                remaining_time=remaining_time,
+                remaining_time="06:00 PM IST",
                 status=status,
                 media=media
             )
@@ -1160,7 +1160,7 @@ async def _resend_notification_in_background(notification, prisma: Prisma):
             user_name=user.name,
             message_body=personalized_message,
             session_title=session_details.title,
-            remaining_time=remaining_time,
+            remaining_time="06:00 PM IST",
             status=status,
             media=media
         )
