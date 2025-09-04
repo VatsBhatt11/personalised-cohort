@@ -208,14 +208,7 @@ class CreateSessionResponse(BaseModel):
     data: SessionResponse
     message: str
 
-class SessionResponse(BaseModel):
-    id: str
-    title: str
-    description: str
-    weekNumber: int
-    cohortId: str
-    createdAt: datetime
-    updatedAt: datetime
+
 
 class WeeklyResourcePayload(BaseModel):
     id: Optional[str] = None
@@ -261,7 +254,17 @@ async def create_session(
         
         return {
             "success": True,
-            "data": SessionResponse.model_validate(existing_session.model_dump()),
+            "data": SessionResponse(
+                id=existing_session.id,
+                title=existing_session.title,
+                description=existing_session.description,
+                weekNumber=existing_session.weekNumber,
+                lectureNumber=existing_session.lectureNumber,
+                cohortId=existing_session.cohortId,
+                imageUrl=existing_session.imageUrl,
+                createdAt=existing_session.createdAt,
+                updatedAt=existing_session.updatedAt
+            ),
             "message": "Session already exists, notifications resent."
         }
 
