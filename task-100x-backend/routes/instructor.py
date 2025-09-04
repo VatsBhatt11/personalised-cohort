@@ -843,7 +843,6 @@ async def _send_notifications_in_background(user, session_details, prisma: Prism
                 "sessionId": session_details.id,
                 "message": personalized_message,
                 "status": "SENT",
-                "media": media
             }
         )
 
