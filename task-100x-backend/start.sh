@@ -49,6 +49,9 @@ fi
 
 echo "✅ Migrations completed successfully"
 
+# Create uploads directory if it doesn't exist
+mkdir -p uploads
+
 # Start FastAPI server
 echo "Starting FastAPI server..."
 exec uvicorn main:app --host ${HOST:-0.0.0.0} --port ${PORT:-8000}

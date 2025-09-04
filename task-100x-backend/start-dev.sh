@@ -10,6 +10,9 @@ echo "✅ Using your existing Supabase database"
 echo "✅ Your .env file is already configured"
 echo ""
 
+# Create uploads directory if it doesn't exist
+mkdir -p uploads
+
 # Start the services
 echo "🏗️  Starting backend service..."
 docker compose up -d
