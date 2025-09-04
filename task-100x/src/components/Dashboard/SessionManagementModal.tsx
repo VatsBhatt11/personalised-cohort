@@ -85,20 +85,9 @@ const SessionManagementModal = ({
       let uploadedImageUrl = imageUrl;
 
       if (selectedImage) {
-        const formData = new FormData();
-        formData.append('file', selectedImage);
-
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new Error('Image upload failed');
-        }
-
-        const data = await response.json();
-        uploadedImageUrl = data.url;
+        // Instead of uploading separately, pass the file directly to the API call
+        // The API client will handle the FormData creation and upload
+        // uploadedImageUrl will be set by the API response if successful
       }
 
       const sessionData = {
@@ -108,6 +97,7 @@ const SessionManagementModal = ({
         lectureNumber: lectureNumber,
         imageUrl: uploadedImageUrl || undefined,
         cohortId,
+        imageFile: selectedImage, // Pass the selected image file directly
       };
 
       if (editingSession) {

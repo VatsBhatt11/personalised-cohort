@@ -487,12 +487,30 @@ export const instructor = {
       weekNumber: number;
       lectureNumber: number;
       imageUrl?: string;
-      cohortId: string;
-    }
+    },
+    image?: File | null
   ): Promise<Session> => {
+    const formData = new FormData();
+    formData.append("cohortId", cohortId);
+    formData.append("title", sessionData.title);
+    formData.append("description", sessionData.description);
+    formData.append("weekNumber", sessionData.weekNumber.toString());
+    formData.append("lectureNumber", sessionData.lectureNumber.toString());
+    if (sessionData.imageUrl) {
+      formData.append("imageUrl", sessionData.imageUrl);
+    }
+    if (image) {
+      formData.append("image", image);
+    }
+
     const response = await api.post<Session>(
       `/api/cohorts/${cohortId}/sessions`,
-      sessionData
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
     return response.data;
   },
@@ -510,11 +528,29 @@ export const instructor = {
       weekNumber?: number;
       lectureNumber?: number;
       imageUrl?: string;
-    }
+    },
+    image?: File | null
   ): Promise<Session> => {
+    const formData = new FormData();
+    if (sessionData.title) formData.append("title", sessionData.title);
+    if (sessionData.description) formData.append("description", sessionData.description);
+    if (sessionData.weekNumber) formData.append("weekNumber", sessionData.weekNumber.toString());
+    if (sessionData.lectureNumber) formData.append("lectureNumber", sessionData.lectureNumber.toString());
+    if (sessionData.imageUrl) {
+      formData.append("imageUrl", sessionData.imageUrl);
+    }
+    if (image) {
+      formData.append("image", image);
+    }
+
     const response = await api.put<Session>(
       `/api/sessions/${sessionId}`,
-      sessionData
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
     return response.data;
   },
