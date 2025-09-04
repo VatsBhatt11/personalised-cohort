@@ -1,3 +1,4 @@
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, Body
 from pydantic import BaseModel
 from prisma import Prisma
@@ -16,6 +17,16 @@ from modules.groq_client import generate_personalized_message, generate_quiz_fro
 from routes.auth import get_current_user
 from modules.aisensy_client import send_whatsapp_message
 from modules.db_connector import DBConnection
+from supabase import create_client, Client
+
+# Supabase Initialization
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise ValueError("SUPABASE_URL and SUPABASE_KEY environment variables must be set")
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 router = APIRouter()
 
@@ -271,12 +282,17 @@ async def create_session(
 
     image_url = None
     if image:
-        upload_dir = "uploads"
-        os.makedirs(upload_dir, exist_ok=True)
-        file_path = f"{upload_dir}/{image.filename}"
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(image.file, buffer)
-        image_url = f"/{file_path}"
+        try:
+            file_content = await image.read()
+            file_name = f"{uuid.uuid4()}-{image.filename}"
+            response = supabase.storage.from_("test").upload(file_name, file_content, {"content-type": image.content_type})
+            if response.get("error"):
+                raise HTTPException(status_code=500, detail=f"Supabase upload error: {response['error']}")
+            
+            # Construct the public URL
+            image_url = f"{SUPABASE_URL}/storage/v1/object/public/test/{file_name}"
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to upload image to Supabase: {e}")
 
     new_session = await prisma.session.create(
         data={

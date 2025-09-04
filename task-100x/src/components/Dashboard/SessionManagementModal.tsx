@@ -82,13 +82,7 @@ const SessionManagementModal = ({
 
     setLoading(true);
     try {
-      let uploadedImageUrl = imageUrl;
-
-      if (selectedImage) {
-        // Instead of uploading separately, pass the file directly to the API call
-        // The API client will handle the FormData creation and upload
-        // uploadedImageUrl will be set by the API response if successful
-      }
+      const uploadedImageUrl = imageUrl;
 
       const sessionData = {
         title: sessionTitle,
@@ -107,7 +101,7 @@ const SessionManagementModal = ({
           description: "Session updated successfully.",
         });
       } else {
-        await instructor.createSession(cohortId, sessionData);
+        await instructor.createSession(cohortId, sessionData, selectedImage);
         toast({
           title: "Success",
           description: "Session created successfully.",
