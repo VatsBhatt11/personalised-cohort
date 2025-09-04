@@ -222,10 +222,14 @@ class WeeklyResourcePayload(BaseModel):
     isOptional: Optional[bool] = False
     quizId: Optional[str] = None
 
-@router.post("/cohorts/{cohort_id}/sessions", response_model=CreateSessionResponse)
+@router.post("/cohorts/{cohort_id}/sessions", response_model=SessionResponse)
 async def create_session(
     cohort_id: str,
-    session_data: SessionCreate,
+    title: str = Form(...),
+    description: str = Form(...),
+    weekNumber: int = Form(...),
+    lectureNumber: int = Form(...),
+    image: UploadFile = File(None),
     current_user = Depends(get_current_user),
     prisma: Prisma = Depends(get_prisma_client)
 ):
@@ -235,56 +239,46 @@ async def create_session(
     existing_session = await prisma.session.find_first(
         where={
             "cohortId": cohort_id,
-            "weekNumber": session_data.weekNumber,
-            "lectureNumber": session_data.lectureNumber,
+            "weekNumber": weekNumber,
+            "lectureNumber": lectureNumber,
         }
     )
 
     if existing_session:
         # Resend notifications
         notifications = await prisma.notification.find_many(
-            where={"sessionId": existing_session.id}
+            where={
+                "sessionId": existing_session.id
+            }
         )
         for notification in notifications:
             asyncio.create_task(send_whatsapp_message(notification.message, notification.recipient))
         
-        return CreateSessionResponse(
-            id=existing_session.id,
-            title=existing_session.title,
-            description=existing_session.description,
-            weekNumber=existing_session.weekNumber,
-            cohortId=existing_session.cohortId,
-            createdAt=existing_session.createdAt,
-            updatedAt=existing_session.updatedAt,
-            success=True,
-            message="Session already exists, notifications resent."
-        )
-
-    cohort = await prisma.cohort.find_unique(
-        where={"id": cohort_id},
-        include={
-            "plans": {
-                "include": {
-                    "user": True
-                }
-            }
+        return {
+            "success": True,
+            "data": SessionResponse.model_validate(existing_session.model_dump()),
+            "message": "Session already exists, notifications resent."
         }
-    )
-    if not cohort:
-        raise HTTPException(status_code=404, detail="Cohort not found")
+
+    image_url = None
+    if image:
+        file_path = f"uploads/{image.filename}"
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(image.file, buffer)
+        image_url = f"/{file_path}"
 
     new_session = await prisma.session.create(
         data={
-            "title": session_data.title,
-            "description": session_data.description,
-            "weekNumber": session_data.weekNumber,
-            "lectureNumber": session_data.lectureNumber,
-            "imageUrl": session_data.imageUrl,
             "cohortId": cohort_id,
+            "title": title,
+            "description": description,
+            "weekNumber": weekNumber,
+            "lectureNumber": lectureNumber,
+            "imageUrl": image_url
         }
     )
 
-    # Asynchronously send notification
+    # Asynchronously send notification for new session
     users_with_launchpad = await prisma.user.find_many(
         where={
             "launchpad": {
@@ -297,19 +291,13 @@ async def create_session(
     )
 
     for user in users_with_launchpad:
-        asyncio.create_task(_send_notifications_in_background(user, new_session, prisma)) # Pass prisma client
+        asyncio.create_task(_send_notifications_in_background(user, new_session, prisma))
 
-    return CreateSessionResponse(
-          id=new_session.id,
-          title=new_session.title,
-          description=new_session.description,
-          weekNumber=new_session.weekNumber,
-          cohortId=new_session.cohortId,
-          createdAt=new_session.createdAt,
-          updatedAt=new_session.updatedAt,
-          success=True,
-          message="Session created successfully and notification initiated"
-     )
+    return {
+        "success": True,
+        "data": SessionResponse.model_validate(new_session.model_dump()),
+        "message": "Session created successfully and notification initiated"
+    }
 
 @router.post("/resources")
 async def create_resource(resource: ResourceCreate, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)): 
@@ -882,7 +870,10 @@ async def get_sessions(
 @router.put("/sessions/{session_id}", response_model=SessionResponse)
 async def update_session(
     session_id: str,
-    session_details: SessionUpdate,
+    title: str = Form(...),
+    description: str = Form(...),
+    weekNumber: int = Form(...),
+    lectureNumber: int = Form(...),
     image: UploadFile = File(None),
     current_user = Depends(get_current_user),
     prisma: Prisma = Depends(get_prisma_client)
@@ -890,11 +881,12 @@ async def update_session(
     if current_user.role != "INSTRUCTOR":
         raise HTTPException(status_code=403, detail="Only instructors can update sessions")
 
+    image_url = None
     if image:
         file_path = f"uploads/{image.filename}"
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
-        session_details.imageUrl = f"/{file_path}"
+        image_url = f"/{file_path}"
 
     existing_session = await prisma.session.find_unique(where={"id": session_id})
     if not existing_session:
@@ -902,7 +894,13 @@ async def update_session(
 
     updated_session = await prisma.session.update(
         where={"id": session_id},
-        data=session_details.model_dump(exclude_unset=True)
+        data={
+            "title": title,
+            "description": description,
+            "weekNumber": weekNumber,
+            "lectureNumber": lectureNumber,
+            "imageUrl": image_url if image_url else existing_session.imageUrl # Keep existing image if no new one is uploaded
+        }
     )
 
     # Asynchronously send notification for updated session

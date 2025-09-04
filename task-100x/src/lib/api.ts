@@ -533,9 +533,12 @@ export const instructor = {
   ): Promise<Session> => {
     const formData = new FormData();
     if (sessionData.title) formData.append("title", sessionData.title);
-    if (sessionData.description) formData.append("description", sessionData.description);
-    if (sessionData.weekNumber) formData.append("weekNumber", sessionData.weekNumber.toString());
-    if (sessionData.lectureNumber) formData.append("lectureNumber", sessionData.lectureNumber.toString());
+    if (sessionData.description)
+      formData.append("description", sessionData.description);
+    if (sessionData.weekNumber)
+      formData.append("weekNumber", sessionData.weekNumber.toString());
+    if (sessionData.lectureNumber)
+      formData.append("lectureNumber", sessionData.lectureNumber.toString());
     if (sessionData.imageUrl) {
       formData.append("imageUrl", sessionData.imageUrl);
     }
