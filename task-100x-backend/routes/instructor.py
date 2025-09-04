@@ -192,6 +192,17 @@ class SessionUpdate(BaseModel):
     lectureNumber: Optional[int] = None
     imageUrl: Optional[str] = None
 
+class SessionResponse(BaseModel):
+    id: str
+    title: str
+    description: str
+    weekNumber: int
+    lectureNumber: int
+    cohortId: str
+    imageUrl: Optional[str] = None
+    createdAt: datetime
+    updatedAt: datetime
+
 class CreateSessionResponse(BaseModel):
     success: bool
     data: SessionResponse
@@ -833,7 +844,7 @@ async def _send_notifications_in_background(user, session_details, prisma: Prism
         
         await prisma.notification.create(
             data={
-                "studentId": user.id,
+                "student": {"connect": {"id": user.id}},
                 "sessionId": session_details.id,
                 "message": personalized_message,
                 "status": "SENT",
