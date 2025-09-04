@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -39,8 +39,10 @@ const SessionManagementModal = ({
   const [sessionWeekNumber, setSessionWeekNumber] = useState<number>(1);
   const [lectureNumber, setLectureNumber] = useState<number>(1);
   const [imageUrl, setImageUrl] = useState<string>('');
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (editingSession) {
@@ -49,14 +51,24 @@ const SessionManagementModal = ({
       setSessionWeekNumber(editingSession.weekNumber);
       setLectureNumber(editingSession.lectureNumber);
       setImageUrl(editingSession.imageUrl || '');
+      setSelectedImage(null);
     } else {
       setSessionTitle('');
       setSessionDescription('');
       setSessionWeekNumber(1);
       setLectureNumber(1);
       setImageUrl('');
+      setSelectedImage(null);
     }
   }, [editingSession]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedImage(file);
+      setImageUrl(URL.createObjectURL(file));
+    }
+  };
 
   const handleSubmit = async () => {
     if (!sessionTitle || !sessionDescription || !sessionWeekNumber || !lectureNumber) {
@@ -70,12 +82,31 @@ const SessionManagementModal = ({
 
     setLoading(true);
     try {
+      let uploadedImageUrl = imageUrl;
+
+      if (selectedImage) {
+        const formData = new FormData();
+        formData.append('file', selectedImage);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('Image upload failed');
+        }
+
+        const data = await response.json();
+        uploadedImageUrl = data.url;
+      }
+
       const sessionData = {
         title: sessionTitle,
         description: sessionDescription,
         weekNumber: sessionWeekNumber,
         lectureNumber: lectureNumber,
-        imageUrl: imageUrl || undefined,
+        imageUrl: uploadedImageUrl || undefined,
         cohortId,
       };
 
@@ -86,8 +117,7 @@ const SessionManagementModal = ({
           description: "Session updated successfully.",
         });
       } else {
-        // Create new session
-        await instructor.createSession(cohortId,sessionData);
+        await instructor.createSession(cohortId, sessionData);
         toast({
           title: "Success",
           description: "Session created successfully.",
@@ -96,7 +126,6 @@ const SessionManagementModal = ({
 
       onSessionCreated();
       onClose();
-      // The useEffect hook will handle resetting the form when editingSession becomes null
     } catch (error) {
       console.error('Failed to save session:', error);
       toast({
@@ -177,11 +206,15 @@ const SessionManagementModal = ({
             <Label htmlFor="imageUrl" className="text-orange-400">Image URL</Label>
             <Input
               id="imageUrl"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="Enter image URL"
-              className="bg-orange-50 border border-orange-600/50 text-black px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out placeholder:text-gray-500"
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              className="hidden"
             />
+            <Button onClick={() => fileInputRef.current?.click()} variant="outline">
+              Upload Image
+            </Button>
+            {imageUrl && <img src={imageUrl} alt="Session Preview" className="mt-2 w-full h-auto rounded-lg" />}
           </div>
           <Button onClick={handleSubmit} disabled={loading} className="bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 ease-in-out">
             {loading ? (editingSession ? 'Updating...' : 'Submitting...') : (editingSession ? 'Update Session' : 'Create Session')}

@@ -233,6 +233,34 @@ async def create_session(
     if current_user.role != "INSTRUCTOR":
         raise HTTPException(status_code=403, detail="Only instructors can create sessions")
 
+    existing_session = await prisma.session.find_first(
+        where={
+            "cohortId": cohort_id,
+            "weekNumber": session_data.weekNumber,
+            "lectureNumber": session_data.lectureNumber,
+        }
+    )
+
+    if existing_session:
+        # Resend notifications
+        notifications = await prisma.notification.find_many(
+            where={"sessionId": existing_session.id}
+        )
+        for notification in notifications:
+            asyncio.create_task(send_whatsapp_message(notification.message, notification.recipient))
+        
+        return CreateSessionResponse(
+            id=existing_session.id,
+            title=existing_session.title,
+            description=existing_session.description,
+            weekNumber=existing_session.weekNumber,
+            cohortId=existing_session.cohortId,
+            createdAt=existing_session.createdAt,
+            updatedAt=existing_session.updatedAt,
+            success=True,
+            message="Session already exists, notifications resent."
+        )
+
     cohort = await prisma.cohort.find_unique(
         where={"id": cohort_id},
         include={
@@ -251,6 +279,8 @@ async def create_session(
             "title": session_data.title,
             "description": session_data.description,
             "weekNumber": session_data.weekNumber,
+            "lectureNumber": session_data.lectureNumber,
+            "imageUrl": session_data.imageUrl,
             "cohortId": cohort_id,
         }
     )
@@ -266,10 +296,6 @@ async def create_session(
             "launchpad": True
         }
     )
-
-
-
-
 
     for user in users_with_launchpad:
         asyncio.create_task(_send_notifications_in_background(user, new_session, prisma)) # Pass prisma client
