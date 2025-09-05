@@ -68,7 +68,7 @@ class DBConnection:
                     "user_id": existing.id
                 }
 
-            phone = row.get("PhoneNumber") or row.get("phone") or row.get("Phone") or None
+            phone = row.get("Phone Number") or row.get("phone") or row.get("Phone") or None
             phone = phone.strip() if isinstance(phone, str) else None
 
             user = await self.db.user.create(
