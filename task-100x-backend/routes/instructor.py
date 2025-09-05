@@ -18,7 +18,6 @@ from routes.auth import get_current_user
 from modules.aisensy_client import send_whatsapp_message
 from modules.db_connector import DBConnection
 from supabase import create_client, Client
-import collections
 
 # Supabase Initialization
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -30,9 +29,6 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 router = APIRouter()
-
-notification_queue = asyncio.Queue()
-_notification_processor_task = None
 
 
 class ResourceCreate(BaseModel):
@@ -249,13 +245,6 @@ async def create_session(
 ):
     if current_user.role != "INSTRUCTOR":
         raise HTTPException(status_code=403, detail="Only instructors can create sessions")
-
-    global _notification_processor_task
-    if _notification_processor_task is None or _notification_processor_task.done():
-        print("Starting _process_notification_queue as a background task...")
-        _notification_processor_task = asyncio.create_task(_process_notification_queue(prisma))
-    else:
-        print("_process_notification_queue is already running.")
 
     existing_session = await prisma.session.find_first(
         where={
@@ -820,71 +809,68 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
         }
     )
 
-async def _process_notification_queue(prisma: Prisma):
-    print("DBConnection established for notification queue.")
-    print("Starting _process_notification_queue...")
-    while True:
-        try:
-            print("Waiting for task in notification_queue...")
-            user, session_details, prisma_from_queue = await notification_queue.get()
-            print(f"Processing notification for user {user.id}...")
-
-            # Generate personalized message
-            personalized_message = await generate_personalized_message(
-                user_name=user.name,
-                user_email=user.email,
-                user_phone=user.phone,
-                user_cohort_id=user.cohortId,
-                user_current_session_id=session_details.id,
-            )
-
-            pointer1 = personalized_message.get("pointer1")
-            pointer2 = personalized_message.get("pointer2")
-
-            if not pointer1 or not pointer2:
-                print(f"Skipping notification for user {user.id} due to empty pointers.")
-                continue
-
-            # Send WhatsApp message
-            send_success = await send_whatsapp_message(
-                user_phone=user.phone,
-                user_name=user.name,
-                message_body_1=pointer1,
-                message_body_2=pointer2,
-            )
-
-            if send_success:
-                # Save notification details
-                await prisma_from_queue.notification.create(
-                    data={
-                        "userId": user.id,
-                        "sessionId": session_details.id,
-                        "message": f"Pointer 1: {pointer1}\nPointer 2: {pointer2}",
-                        "status": "sent",
-                    }
-                )
-                print(f"Notification sent and saved for user {user.id}")
-            else:
-                await prisma_from_queue.notification.create(
-                    data={
-                        "userId": user.id,
-                        "sessionId": session_details.id,
-                        "message": f"Pointer 1: {pointer1}\nPointer 2: {pointer2}",
-                        "status": "failed",
-                    }
-                )
-                print(f"Failed to send notification for user {user.id}")
-
-        except Exception as e:
-            print(f"Error processing notification for user {user.id}: {e}")
-        finally:
-            notification_queue.task_done()
-            await asyncio.sleep(1)  # Delay to respect API rate limits
-
-
 async def _send_notifications_in_background(user, session_details, prisma: Prisma):
-    await notification_queue.put((user, session_details, prisma))
-    print(f"Notification task for user {user.id} added to queue.")
+    print('Entered')
+    media = None  # Initialize media to None
+    if user.launchpad:
+        context = {
+            "student_background": {
+                "education": user.launchpad.studyStream,
+                "experience": user.launchpad.workExperience,
+                "current_role": user.launchpad.yearsOfExperience
+            },
+            "student_interests": {
+                "coding_familiarity": user.launchpad.codingFamiliarity,
+                "python_familiarity": user.launchpad.pythonFamiliarity,
+                "languages": user.launchpad.languages
+            },
+            "student_future_goals": user.launchpad.expectedOutcomes,
+            "upcoming_session_title": session_details.title,
+            "upcoming_session_description": session_details.description
+        }
+
+        # Call Groq API to generate message
+        personalized_message_pointers = await generate_personalized_message(context)
+
+        # Calculate remaining time and status
+        ist = timezone(timedelta(hours=5, minutes=30))
+        now_ist = datetime.now(ist)
+        session_time_ist = datetime.now(ist).replace(hour=18, minute=0, second=0, microsecond=0)
+
+        remaining_time_delta = session_time_ist - now_ist
+        remaining_minutes = int(remaining_time_delta.total_seconds() / 60)
+
+        if remaining_minutes > 0:
+            status = f"Starting in {remaining_minutes} minutes"
+        else:
+            status = "Started"
+
+        if user.phoneNumber:
+            print(f"Attempting to send WhatsApp message to {user.phoneNumber} for session {session_details.id}")
+            if session_details.imageUrl:
+                media = {
+                    "url": session_details.imageUrl,
+                    "filename": "session_image.jpg"
+                }
+            await send_whatsapp_message(
+                destination=user.phoneNumber,
+                user_name=user.name,
+                message_body_1=personalized_message_pointers["pointer1"],
+                message_body_2=personalized_message_pointers["pointer2"],
+                session_title=session_details.title,
+                remaining_time="06:00 PM IST",
+                status=status,
+                media=media
+            )
+        
+        await prisma.notification.create(
+            data={
+                "studentId": user.id,
+                "sessionId": session_details.id,
+                "message": f"Pointer 1: {personalized_message_pointers['pointer1']}\nPointer 2: {personalized_message_pointers['pointer2']}",
+                "status": "SENT",
+            }
+        )
 
 @router.get("/cohorts/{cohort_id}/sessions")
 async def get_sessions(
