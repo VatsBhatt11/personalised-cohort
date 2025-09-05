@@ -253,7 +253,7 @@ async def create_session(
     global _notification_processor_task
     if _notification_processor_task is None or _notification_processor_task.done():
         print("Starting _process_notification_queue as a background task...")
-        _notification_processor_task = asyncio.create_task(_process_notification_queue())
+        _notification_processor_task = asyncio.create_task(_process_notification_queue(prisma))
     else:
         print("_process_notification_queue is already running.")
 
@@ -820,26 +820,22 @@ async def create_weekly_resource(cohort_id: str, week_number: int, resources: Li
         }
     )
 
-async def _process_notification_queue():
+async def _process_notification_queue(prisma: Prisma):
+    print("DBConnection established for notification queue.")
+    print("Starting _process_notification_queue...")
     while True:
-        task_data = await notification_queue.get()
-        user_id = task_data["user_id"]
-        session_id = task_data["session_id"]
-        cohort_id = task_data["cohort_id"]
-        
         try:
-            user = await db_connector.get_user_by_id(user_id)
-            if not user:
-                print(f"User with ID {user_id} not found. Skipping notification.")
-                continue
+            print("Waiting for task in notification_queue...")
+            user, session_details, prisma_from_queue = await notification_queue.get()
+            print(f"Processing notification for user {user.id}...")
 
             # Generate personalized message
-            personalized_message = await groq_client.generate_personalized_message(
+            personalized_message = await generate_personalized_message(
                 user_name=user.name,
                 user_email=user.email,
                 user_phone=user.phone,
-                user_cohort_id=cohort_id,
-                user_current_session_id=session_id,
+                user_cohort_id=user.cohortId,
+                user_current_session_id=session_details.id,
             )
 
             pointer1 = personalized_message.get("pointer1")
@@ -850,7 +846,7 @@ async def _process_notification_queue():
                 continue
 
             # Send WhatsApp message
-            send_success = await aisensy_client.send_whatsapp_message(
+            send_success = await send_whatsapp_message(
                 user_phone=user.phone,
                 user_name=user.name,
                 message_body_1=pointer1,
@@ -859,24 +855,28 @@ async def _process_notification_queue():
 
             if send_success:
                 # Save notification details
-                await db_connector.save_notification(
-                    user_id=user.id,
-                    session_id=session_id,
-                    message=f"Pointer 1: {pointer1}\nPointer 2: {pointer2}",
-                    status="sent",
+                await prisma_from_queue.notification.create(
+                    data={
+                        "userId": user.id,
+                        "sessionId": session_details.id,
+                        "message": f"Pointer 1: {pointer1}\nPointer 2: {pointer2}",
+                        "status": "sent",
+                    }
                 )
                 print(f"Notification sent and saved for user {user.id}")
             else:
-                await db_connector.save_notification(
-                    user_id=user.id,
-                    session_id=session_id,
-                    message=f"Pointer 1: {pointer1}\nPointer 2: {pointer2}",
-                    status="failed",
+                await prisma_from_queue.notification.create(
+                    data={
+                        "userId": user.id,
+                        "sessionId": session_details.id,
+                        "message": f"Pointer 1: {pointer1}\nPointer 2: {pointer2}",
+                        "status": "failed",
+                    }
                 )
                 print(f"Failed to send notification for user {user.id}")
 
         except Exception as e:
-            print(f"Error processing notification for user {user_id}: {e}")
+            print(f"Error processing notification for user {user.id}: {e}")
         finally:
             notification_queue.task_done()
             await asyncio.sleep(1)  # Delay to respect API rate limits
