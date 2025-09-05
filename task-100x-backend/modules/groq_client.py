@@ -79,7 +79,7 @@ async def generate_personalized_message(context: dict) -> str:
     - “You’ll see how to analyze data step by step, which connects to your aim of becoming confident in Python for your career shift.”  
     
     OUTPUT:
-    Two concise bullet points, each with a maximum of 20 words, clearly labeled as 'Pointer 1:' and 'Pointer 2:', no extra text.
+    Two concise bullet points, each between 15-20 words, clearly labeled as 'Pointer 1:' and 'Pointer 2:', no extra text.
     """
 
     user_message = f"""
