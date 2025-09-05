@@ -78,7 +78,8 @@ async def generate_personalized_message(context: dict) -> str:
     - “You’ll learn how to structure prompts so your AI answers are sharp — a skill that directly supports your goal of building a personal assistant.”  
     - “You’ll see how to analyze data step by step, which connects to your aim of becoming confident in Python for your career shift.”  
     
-    OUTPUT: Two concise bullet points, clearly labeled as 'Pointer 1:' and 'Pointer 2:', no extra text.
+    OUTPUT:
+    Two concise bullet points, each with a maximum of 20 words, clearly labeled as 'Pointer 1:' and 'Pointer 2:', no extra text.
     """
 
     user_message = f"""

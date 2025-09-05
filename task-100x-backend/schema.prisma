@@ -15,7 +15,7 @@ model User {
   password      String
   name          String?
   phoneNumber   String?
-  createdFrom   String         @default("platform") // 'platform' or 'csv'
+  createdFrom   String         @default("platform")
   role          Role
   plans         Plan[]
   streak        Streak?

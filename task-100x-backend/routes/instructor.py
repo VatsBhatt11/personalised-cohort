@@ -851,16 +851,16 @@ async def _send_notifications_in_background(user, session_details, prisma: Prism
                     "url": session_details.imageUrl,
                     "filename": "session_image.jpg"
                 }
-            await send_whatsapp_message(
-                destination=user.phoneNumber,
-                user_name=user.name,
-                message_body_1=personalized_message_pointers["pointer1"],
-                message_body_2=personalized_message_pointers["pointer2"],
-                session_title=session_details.title,
-                remaining_time="06:00 PM IST",
-                status=status,
-                media=media
-            )
+            # await send_whatsapp_message(
+            #     destination=user.phoneNumber,
+            #     user_name=user.name,
+            #     message_body_1=personalized_message_pointers["pointer1"],
+            #     message_body_2=personalized_message_pointers["pointer2"],
+            #     session_title=session_details.title,
+            #     remaining_time="06:00 PM IST",
+            #     status=status,
+            #     media=media
+            # )
         
         await prisma.notification.create(
             data={
@@ -1142,13 +1142,13 @@ async def _resend_notification_in_background(notification, prisma: Prisma):
 
     if user.phoneNumber:
         print(f"Attempting to resend WhatsApp message to {user.phoneNumber} for session {session_details.title}")
-        await send_whatsapp_message(
-            destination=user.phoneNumber,
-            user_name=user.name,
-            message_body_1=pointer1,
-            message_body_2=pointer2,
-            session_title=session_details.title,
-            remaining_time="06:00 PM IST",
-            status=status,
-            media=media
-        )
+        # await send_whatsapp_message(
+        #     destination=user.phoneNumber,
+        #     user_name=user.name,
+        #     message_body_1=pointer1,
+        #     message_body_2=pointer2,
+        #     session_title=session_details.title,
+        #     remaining_time="06:00 PM IST",
+        #     status=status,
+        #     media=media
+        # )
