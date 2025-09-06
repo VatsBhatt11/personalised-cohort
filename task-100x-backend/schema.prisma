@@ -17,6 +17,7 @@ model User {
   phoneNumber   String?
   createdFrom   String         @default("platform")
   role          Role
+  type          String?
   plans         Plan[]
   streak        Streak?
   cohortId      String?
@@ -202,6 +203,7 @@ model Session {
   updatedAt     DateTime       @updatedAt
   cohort        Cohort         @relation(fields: [cohortId], references: [id])
   notifications Notification[]
+  sessionType String?
 }
 
 model Launchpad {

@@ -15,6 +15,7 @@ interface Session {
   lectureNumber: number;
   imageUrl?: string;
   cohortId: string;
+  sessionType?: string;
 }
 
 interface SessionManagementModalProps {
@@ -40,6 +41,7 @@ const SessionManagementModal = ({
   const [lectureNumber, setLectureNumber] = useState<number>(1);
   const [imageUrl, setImageUrl] = useState<string>('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+    const [sessionType, setSessionType] = useState<string>('combined');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -51,6 +53,7 @@ const SessionManagementModal = ({
       setSessionWeekNumber(editingSession.weekNumber);
       setLectureNumber(editingSession.lectureNumber);
       setImageUrl(editingSession.imageUrl || '');
+       setSessionType(editingSession.sessionType || '');
       setSelectedImage(null);
     } else {
       setSessionTitle('');
@@ -59,6 +62,7 @@ const SessionManagementModal = ({
       setLectureNumber(1);
       setImageUrl('');
       setSelectedImage(null);
+       setSessionType('');
     }
   }, [editingSession]);
 
@@ -71,7 +75,7 @@ const SessionManagementModal = ({
   };
 
   const handleSubmit = async () => {
-    if (!sessionTitle || !sessionDescription || !sessionWeekNumber || !lectureNumber) {
+    if (!sessionTitle || !sessionDescription || !sessionWeekNumber || !lectureNumber || !sessionType) {
       toast({
         variant: "destructive",
         title: "Missing Fields",
@@ -92,6 +96,7 @@ const SessionManagementModal = ({
         imageUrl: uploadedImageUrl || undefined,
         cohortId,
         imageFile: selectedImage, // Pass the selected image file directly
+           sessionType: sessionType,
       };
 
       if (editingSession) {
@@ -149,6 +154,28 @@ const SessionManagementModal = ({
               placeholder="e.g., A deep dive into React hooks"
               className="bg-orange-50 border border-orange-600/50 text-black px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out placeholder:text-gray-500"
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="sessionType" className="text-orange-400">Session Type</Label>
+            <Select
+              value={sessionType}
+              onValueChange={(value) => setSessionType(value)}
+            >
+              <SelectTrigger id="sessionType" className="w-full p-3 border border-orange-600/30 rounded-xl bg-orange-50 text-black focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 ease-in-out shadow-lg hover:border-orange-400">
+                <SelectValue placeholder="Select session type" />
+              </SelectTrigger>
+              <SelectContent className="bg-orange-50 text-black border border-orange-600/30 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                <SelectItem value="code" className="hover:bg-orange-600/20 focus:bg-orange-600/20 cursor-pointer py-2 px-4 transition-colors duration-200 ease-in-out text-black">
+                  Code
+                </SelectItem>
+                <SelectItem value="no-code" className="hover:bg-orange-600/20 focus:bg-orange-600/20 cursor-pointer py-2 px-4 transition-colors duration-200 ease-in-out text-black">
+                  No-Code
+                </SelectItem>
+                <SelectItem value="combined" className="hover:bg-orange-600/20 focus:bg-orange-600/20 cursor-pointer py-2 px-4 transition-colors duration-200 ease-in-out text-black">
+                  Combined
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="sessionWeekNumber" className="text-orange-400">Week Number</Label>

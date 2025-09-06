@@ -165,6 +165,7 @@ export interface Session {
   lectureNumber: number;
   imageUrl?: string;
   cohortId: string;
+  sessionType?: string;
 }
 
 interface DashboardMetrics {
@@ -487,6 +488,7 @@ export const instructor = {
       weekNumber: number;
       lectureNumber: number;
       imageUrl?: string;
+      sessionType?: string;
     },
     image?: File | null
   ): Promise<Session> => {
@@ -498,6 +500,9 @@ export const instructor = {
     formData.append("lectureNumber", sessionData.lectureNumber.toString());
     if (sessionData.imageUrl) {
       formData.append("imageUrl", sessionData.imageUrl);
+    }
+    if (sessionData.sessionType) {
+      formData.append("sessionType", sessionData.sessionType);
     }
     if (image) {
       formData.append("image", image);
@@ -528,6 +533,7 @@ export const instructor = {
       weekNumber?: number;
       lectureNumber?: number;
       imageUrl?: string;
+      sessionType?: string;
     },
     image?: File | null
   ): Promise<Session> => {
@@ -545,6 +551,8 @@ export const instructor = {
     if (image) {
       formData.append("image", image);
     }
+    if (sessionData.sessionType)
+      formData.append("sessionType", sessionData.sessionType);
 
     const response = await api.put<Session>(
       `/api/sessions/${sessionId}`,

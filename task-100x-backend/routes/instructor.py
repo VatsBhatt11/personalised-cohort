@@ -13,6 +13,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Form, UploadFile, F
 import csv
 from prisma import Prisma
 from modules.groq_client import generate_personalized_message, generate_quiz_from_transcription
+from modules.openai_client import generate_personalized_message_openai
 from routes.auth import get_current_user
 from modules.aisensy_client import send_whatsapp_message
 from modules.db_connector import DBConnection
@@ -194,6 +195,7 @@ class SessionCreate(BaseModel):
     lectureNumber: int
     cohortId: str
     imageUrl: Optional[str] = None
+    sessionType: Optional[str] = None
 
 class SessionUpdate(BaseModel):
     title: Optional[str] = None
@@ -201,6 +203,7 @@ class SessionUpdate(BaseModel):
     weekNumber: Optional[int] = None
     lectureNumber: Optional[int] = None
     imageUrl: Optional[str] = None
+    sessionType: Optional[str] = None
 
 class SessionResponse(BaseModel):
     id: str
@@ -210,6 +213,7 @@ class SessionResponse(BaseModel):
     lectureNumber: int
     cohortId: str
     imageUrl: Optional[str] = None
+    sessionType: Optional[str] = None
     createdAt: datetime
     updatedAt: datetime
 
@@ -238,6 +242,7 @@ async def create_session(
     weekNumber: int = Form(...),
     lectureNumber: int = Form(...),
     image: UploadFile = File(None),
+    sessionType: Optional[str] = Form(None),
     current_user = Depends(get_current_user),
     prisma: Prisma = Depends(get_prisma_client)
 ):
@@ -298,6 +303,7 @@ async def create_session(
             "description": description,
             "weekNumber": weekNumber,
             "lectureNumber": lectureNumber,
+            "sessionType": sessionType,
             "imageUrl": image_url
         }
     )
@@ -308,7 +314,8 @@ async def create_session(
             "launchpad": {
                 "isNot": None
             },
-            "cohortId": cohort_id  # Filter by cohort_id
+            "cohortId": cohort_id,
+            "sessionType": sessionType
         },
         include={
             "launchpad": True
@@ -325,6 +332,7 @@ async def create_session(
                 "upcoming_session_description": new_session.description
             }
             personalized_message = await generate_personalized_message(context)
+            # personalized_message = await generate_personalized_message_openai(context)
             await prisma.notification.create(
                 data={
                     "studentId": user.id,
@@ -848,6 +856,7 @@ async def _send_notifications_in_background(user, session_details, prisma: Prism
 
         # Call Groq API to generate message
         personalized_message_pointers = await generate_personalized_message(context)
+        # personalized_message_pointers = await generate_personalized_message_openai(context)
 
         # Calculate remaining time and status
         ist = timezone(timedelta(hours=5, minutes=30))
@@ -918,7 +927,8 @@ async def update_session(
     lectureNumber: int = Form(...),
     image: UploadFile = File(None),
     current_user = Depends(get_current_user),
-    prisma: Prisma = Depends(get_prisma_client)
+    prisma: Prisma = Depends(get_prisma_client),
+    sessionType: Optional[str] = None
 ):
     if current_user.role != "INSTRUCTOR":
         raise HTTPException(status_code=403, detail="Only instructors can update sessions")
@@ -940,6 +950,7 @@ async def update_session(
             "title": title,
             "description": description,
             "weekNumber": weekNumber,
+            "sessionType" : sessionType,
             "lectureNumber": lectureNumber,
             "imageUrl": image_url if image_url else existing_session.imageUrl # Keep existing image if no new one is uploaded
         }
@@ -950,17 +961,14 @@ async def update_session(
         where={
             "launchpad": {
                 "isNot": None  # Only users who have filled out the launchpad
-            }
+            },
+            "type": sessionType
         },
         include={
             "launchpad": True
         }
     )
-
-    for user in users_with_launchpad:
-        # asyncio.create_task(_send_notifications_in_background(user, updated_session, prisma)) # Removed
-        pass # Placeholder for future direct notification generation
-
+    
     return {
         "success": True,
         "data": SessionResponse.model_validate(updated_session.model_dump()),

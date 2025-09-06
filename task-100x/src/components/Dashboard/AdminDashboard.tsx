@@ -36,6 +36,7 @@ interface Session {
   description: string;
   weekNumber: number;
   cohortId: string;
+  sessionType?: string;
 }
 
  interface AdminDashboardProps {
