@@ -9,7 +9,7 @@ import os
 import time
 import shutil
 from typing import List
-from fastapi import APIRouter, Body, Depends, HTTPException, Form, UploadFile, File
+from fastapi import APIRouter, Body, Depends, HTTPException, Form, UploadFile, File, Query
 import csv
 from prisma import Prisma
 from modules.groq_client import generate_personalized_message, generate_quiz_from_transcription
@@ -1189,7 +1189,7 @@ async def send_notifications(
     notifications_to_send = await prisma.notification.find_many(
         where={
             "status": "generated",
-            "sessionId": payload.sessionId
+            "sessionId": sessionId
         },
         include={
             "user": True,

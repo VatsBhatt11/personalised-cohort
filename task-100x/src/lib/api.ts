@@ -561,7 +561,9 @@ export const instructor = {
     await api.delete(`/api/sessions/${sessionId}`);
   },
   sendNotifications: async (sessionId: string) => {
-    const response = await api.post(`/api/send-notifications?sessionId=${sessionId}`);
+    const response = await api.post(
+      `/api/send-notifications?sessionId=${sessionId}`
+    );
     return response.data;
   },
 };
