@@ -346,6 +346,7 @@ async def create_session(
                 }
             )
             print(f"Notification generated and saved for user {user.id}")
+            time.sleep(1.2) # Delay for 0.6 seconds to limit to 100 notifications per minute
         except Exception as e:
             print(f"Failed to generate or save notification for user {user.id}: {e}")
 

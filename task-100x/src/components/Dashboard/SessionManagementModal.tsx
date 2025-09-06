@@ -133,7 +133,7 @@ const SessionManagementModal = ({
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-orange-400">Manage Sessions</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-4 py-4 overflow-y-auto max-h-[70vh] scrollbar-hide">
           <h3 className="text-lg font-semibold text-orange-400">{editingSession ? 'Edit Session' : 'Create New Session'}</h3>
           <div className="space-y-2">
             <Label htmlFor="sessionTitle" className="text-orange-400">Session Title</Label>
