@@ -309,14 +309,18 @@ async def create_session(
     )
 
     # Asynchronously send notification for new session
-    users_with_launchpad = await prisma.user.find_many(
-        where={
-            "launchpad": {
-                "isNot": None
-            },
-            "cohortId": cohort_id,
-            "type": sessionType
+    user_where_clause = {
+        "launchpad": {
+            "isNot": None
         },
+        "cohortId": cohort_id,
+    }
+
+    if sessionType and sessionType != "combined":
+        user_where_clause["type"] = sessionType
+
+    users_with_launchpad = await prisma.user.find_many(
+        where=user_where_clause,
         include={
             "launchpad": True
         }
