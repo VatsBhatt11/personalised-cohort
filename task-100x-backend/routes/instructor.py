@@ -1202,59 +1202,61 @@ async def send_notifications(
 
     for notification in notifications_to_send:
         try:
-            print(f"User number: {notification.user.phoneNumber}")
-            if notification.user and notification.user.phoneNumber:
-                whatsapp_number = notification.user.phoneNumber
+            # Fetch the user explicitly using studentId
+            user_from_db = await prisma.user.find_unique(
+                where={"id": notification.studentId}
+            )
+
+            if user_from_db and user_from_db.phoneNumber:
+                whatsapp_number = user_from_db.phoneNumber
+            else:
+                print(f"Skipping WhatsApp notification for user {notification.studentId} (Name: {user_from_db.name if user_from_db else 'N/A'}) due to missing phone number.")
+                continue
                 
-                # Extract pointer1 and pointer2 from the stored message
-                message_lines = notification.message.split('\n')
-                pointer1 = ""
-                pointer2 = ""
-                for line in message_lines:
-                    if line.startswith('Pointer 1:'):
-                        pointer1 = line.replace('Pointer 1:', '').strip()
-                    elif line.startswith('Pointer 2:'):
-                        pointer2 = line.replace('Pointer 2:', '').strip()
-
-                # Calculate remaining time and status (re-introducing logic from _send_notifications_in_background)
-                ist = timezone(timedelta(hours=5, minutes=30))
-                now_ist = datetime.now(ist)
-                # Assuming session_details.date is a datetime object and session time is 6 PM IST
-                session_time_ist = notification.session.createdAt.replace(hour=18, minute=0, second=0, microsecond=0)
-
-                remaining_time_delta = session_time_ist - now_ist
-                remaining_minutes = int(remaining_time_delta.total_seconds() / 60)
-
-                status = ""
-                if remaining_minutes > 0:
-                    status = f"Starting in {remaining_minutes} minutes"
-                else:
-                    status = "Started"
-
-                media = None
-                if notification.session.imageUrl:
-                    media = {
-                        "url": notification.session.imageUrl,
-                        "filename": "session_image.jpg"
-                    }
-
-                print(f"Attempting to send WhatsApp message to {whatsapp_number} for notification {notification.id}")
-                await send_whatsapp_message(
-                    destination=whatsapp_number,
-                    user_name=notification.user.name,
-                    message_body_1=pointer1,
-                    message_body_2=pointer2,
-                    session_title=notification.session.title,
-                    remaining_time="06:00 PM IST", # This can be made dynamic if needed
-                    status=status,
-                    media=media
-                )
-                await prisma.notification.update(
-                    where={"id": notification.id},
-                    data={
-                        "status": "sent"
-                    }
-                )
+            # Extract pointer1 and pointer2 from the stored message
+            message_lines = notification.message.split('\n')
+            pointer1 = ""
+            pointer2 = ""
+            for line in message_lines:
+                if line.startswith('Pointer 1:'):
+                    pointer1 = line.replace('Pointer 1:', '').strip()
+                elif line.startswith('Pointer 2:'):
+                    pointer2 = line.replace('Pointer 2:', '').strip()
+            # Calculate remaining time and status (re-introducing logic from _send_notifications_in_background)
+            ist = timezone(timedelta(hours=5, minutes=30))
+            now_ist = datetime.now(ist)
+            # Assuming session_details.date is a datetime object and session time is 6 PM IST
+            session_time_ist = notification.session.createdAt.replace(hour=18, minute=0, second=0, microsecond=0)
+            remaining_time_delta = session_time_ist - now_ist
+            remaining_minutes = int(remaining_time_delta.total_seconds() / 60)
+            status = ""
+            if remaining_minutes > 0:
+                status = f"Starting in {remaining_minutes} minutes"
+            else:
+                status = "Started"
+            media = None
+            if notification.session.imageUrl:
+                media = {
+                    "url": notification.session.imageUrl,
+                    "filename": "session_image.jpg"
+                }
+            print(f"Attempting to send WhatsApp message to {whatsapp_number} for notification {notification.id}")
+            await send_whatsapp_message(
+                destination=whatsapp_number,
+                user_name=notification.user.name,
+                message_body_1=pointer1,
+                message_body_2=pointer2,
+                session_title=notification.session.title,
+                remaining_time="06:00 PM IST", # This can be made dynamic if needed
+                status=status,
+                media=media
+            )
+            await prisma.notification.update(
+                where={"id": notification.id},
+                data={
+                    "status": "sent"
+                }
+            )
         except Exception as e:
             print(f"Failed to send notification {notification.id}: {e}")
             await prisma.notification.update(
