@@ -41,6 +41,7 @@ class DBConnection:
         Returns:
             dict: {status, reason, email, user_id, error?}
         """
+        type =  row.get("Type")
         email = row.get("Email") or row.get("email")
         if not self.connected:
             return {
@@ -79,7 +80,8 @@ class DBConnection:
                     "phoneNumber": phone,
                     "createdFrom": "csv",
                     "role": "LEARNER",
-                    "cohortId": cohort_id
+                    "cohortId": cohort_id,
+                    "type" : type
                 }
             )
 
