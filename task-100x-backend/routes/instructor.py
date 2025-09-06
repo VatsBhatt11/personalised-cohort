@@ -6,7 +6,7 @@ from main import get_prisma_client
 from typing import List, Optional
 from datetime import datetime, timezone, timedelta
 import os
-import asyncio
+# import asyncio # Removed as queue is no longer used
 import time
 import shutil
 from typing import List
@@ -18,7 +18,6 @@ from routes.auth import get_current_user
 from modules.aisensy_client import send_whatsapp_message
 from modules.db_connector import DBConnection
 from supabase import create_client, Client
-
 # Supabase Initialization
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
@@ -318,7 +317,19 @@ async def create_session(
     )
 
     for user in users_with_launchpad:
-        asyncio.create_task(_send_notifications_in_background(user, new_session, prisma))
+        try:
+            personalized_message = await groq_client.generate_personalized_message(user, new_session)
+            await prisma.notification.create(
+                data={
+                    "userId": user.id,
+                    "sessionId": new_session.id,
+                    "message": personalized_message,
+                    "status": "generated"
+                }
+            )
+            print(f"Notification generated and saved for user {user.id}")
+        except Exception as e:
+            print(f"Failed to generate or save notification for user {user.id}: {e}")
 
     return {
         "success": True,
@@ -941,7 +952,8 @@ async def update_session(
     )
 
     for user in users_with_launchpad:
-        asyncio.create_task(_send_notifications_in_background(user, updated_session, prisma))
+        # asyncio.create_task(_send_notifications_in_background(user, updated_session, prisma)) # Removed
+        pass # Placeholder for future direct notification generation
 
     return {
         "success": True,
@@ -1153,3 +1165,53 @@ async def _resend_notification_in_background(notification, prisma: Prisma):
             status=status,
             media=media
         )
+        
+    # Removed the _process_notification_queue and _send_notifications_in_background functions
+
+@router.post("/send-notifications")
+async def send_notifications(
+    current_user = Depends(get_current_user),
+    prisma: Prisma = Depends(get_prisma_client)
+):
+    if current_user.role != "INSTRUCTOR":
+        raise HTTPException(status_code=403, detail="Only instructors can send notifications")
+
+    notifications_to_send = await prisma.notification.find_many(
+        where={
+            "status": "generated"
+        },
+        include={
+            "user": True,
+            "session": True
+        }
+    )
+
+    if not notifications_to_send:
+        return {"success": True, "message": "No generated notifications to send."}
+
+    for notification in notifications_to_send:
+        try:
+            if notification.user and notification.user.launchpad and notification.user.launchpad.whatsappNumber:
+                whatsapp_number = notification.user.launchpad.whatsappNumber
+                message = notification.message
+                print(f"Attempting to send WhatsApp message to {whatsapp_number} for notification {notification.id}")
+                await aisensy_client.send_whatsapp_message(whatsapp_number, message)
+                await prisma.notification.update(
+                    where={"id": notification.id},
+                    data={"status": "sent"}
+                )
+                print(f"Notification {notification.id} sent successfully.")
+            else:
+                await prisma.notification.update(
+                    where={"id": notification.id},
+                    data={"status": "failed", "error": "User or WhatsApp number not found."}
+                )
+                print(f"Notification {notification.id} failed: User or WhatsApp number not found.")
+        except Exception as e:
+            await prisma.notification.update(
+                where={"id": notification.id},
+                data={"status": "failed", "error": str(e)}
+            )
+            print(f"Failed to send notification {notification.id}: {e}")
+
+    return {"success": True, "message": "Attempted to send all generated notifications."}

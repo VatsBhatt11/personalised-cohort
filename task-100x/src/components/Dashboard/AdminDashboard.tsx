@@ -290,6 +290,31 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
     }
   };
 
+  const handleSendNotifications = async () => {
+    if (!cohortId) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please select a cohort before sending notifications.",
+      });
+      return;
+    }
+    try {
+      await instructor.sendNotifications();
+      toast({
+        title: "Success",
+        description: "Notifications sent successfully.",
+      });
+    } catch (error) {
+      console.error("Failed to send notifications:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.response?.data?.detail || "An error occurred while sending notifications.",
+      });
+    }
+  };
+
   const handleCreateSession = () => {
     if (!cohortId) {
       toast({
@@ -655,6 +680,12 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
                  className="mx-5 px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
                >
                  Create New Session
+               </Button>
+               <Button
+                 onClick={handleSendNotifications}
+                 className="mx-5 px-8 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+               >
+                 Send Notifications
                </Button>
           </div>
            <CardContent>
