@@ -203,7 +203,7 @@ model Session {
   updatedAt     DateTime       @updatedAt
   cohort        Cohort         @relation(fields: [cohortId], references: [id])
   notifications Notification[]
-  sessionType String?
+  sessionType   String?
 }
 
 model Launchpad {
