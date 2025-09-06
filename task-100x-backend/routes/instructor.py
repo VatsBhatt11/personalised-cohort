@@ -591,6 +591,7 @@ async def create_cohort(cohort_name: str = Form(...), total_weeks: int = Form(..
                 "Email": row_data.get("Email"),
                 "Name": row_data.get("Name"),
                 "Phone Number": row_data.get("Phone Number") if row_data.get("Phone Number") else None,
+                "Type" : row_data.get("Type"),
                 "Student": row_data.get("Student"),
                 "Work Experience": row_data.get("Work Experience"),
                 "Study Stream": row_data.get("Study Stream"),
