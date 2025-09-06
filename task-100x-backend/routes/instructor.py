@@ -1169,7 +1169,12 @@ async def _resend_notification_in_background(notification, prisma: Prisma):
     # Removed the _process_notification_queue and _send_notifications_in_background functions
 
 @router.post("/send-notifications")
+class SendNotificationPayload(BaseModel):
+    sessionId: str
+
+@router.post("/send-notifications")
 async def send_notifications(
+    payload: SendNotificationPayload,
     current_user = Depends(get_current_user),
     prisma: Prisma = Depends(get_prisma_client)
 ):
@@ -1178,7 +1183,8 @@ async def send_notifications(
 
     notifications_to_send = await prisma.notification.find_many(
         where={
-            "status": "generated"
+            "status": "generated",
+            "sessionId": payload.sessionId
         },
         include={
             "user": True,
@@ -1187,7 +1193,7 @@ async def send_notifications(
     )
 
     if not notifications_to_send:
-        return {"success": True, "message": "No generated notifications to send."}
+        return {"success": True, "message": "No generated notifications to send for this session."}
 
     for notification in notifications_to_send:
         try:
@@ -1198,20 +1204,16 @@ async def send_notifications(
                 await aisensy_client.send_whatsapp_message(whatsapp_number, message)
                 await prisma.notification.update(
                     where={"id": notification.id},
-                    data={"status": "sent"}
+                    data={
+                        "status": "sent"
+                    }
                 )
-                print(f"Notification {notification.id} sent successfully.")
-            else:
-                await prisma.notification.update(
-                    where={"id": notification.id},
-                    data={"status": "failed", "error": "User or WhatsApp number not found."}
-                )
-                print(f"Notification {notification.id} failed: User or WhatsApp number not found.")
         except Exception as e:
+            print(f"Failed to send notification {notification.id}: {e}")
             await prisma.notification.update(
                 where={"id": notification.id},
-                data={"status": "failed", "error": str(e)}
+                data={
+                    "status": "failed"
+                }
             )
-            print(f"Failed to send notification {notification.id}: {e}")
-
-    return {"success": True, "message": "Attempted to send all generated notifications."}
+    return {"success": True, "message": f"Attempted to send {len(notifications_to_send)} notifications."}

@@ -560,7 +560,8 @@ export const instructor = {
   deleteSession: async (sessionId: string) => {
     await api.delete(`/api/sessions/${sessionId}`);
   },
-  sendNotifications: async () => {
-    await api.post("/api/send-notifications");
+  sendNotifications: async (sessionId: string) => {
+    const response = await api.post('/api/send-notifications', { sessionId });
+    return response.data;
   },
 };

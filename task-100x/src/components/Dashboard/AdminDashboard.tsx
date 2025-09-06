@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import logo from '../../../public/100x.svg'
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BookOpen, Award, TrendingUp, Edit, Trash2, Loader2, HelpCircle } from 'lucide-react';
+import { Users, BookOpen, Award, TrendingUp, Edit, Trash2, Loader2, HelpCircle, Send } from 'lucide-react';
 import QuizForm from './QuizForm';
 import QuizCard from './QuizCard';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -290,7 +290,7 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
     }
   };
 
-  const handleSendNotifications = async () => {
+  const handleSendNotifications = async (sessionId: string) => {
     if (!cohortId) {
       toast({
         variant: "destructive",
@@ -300,7 +300,7 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
       return;
     }
     try {
-      await instructor.sendNotifications();
+      await instructor.sendNotifications(sessionId);
       toast({
         title: "Success",
         description: "Notifications sent successfully.",
@@ -681,12 +681,6 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
                >
                  Create New Session
                </Button>
-               <Button
-                 onClick={handleSendNotifications}
-                 className="mx-5 px-8 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
-               >
-                 Send Notifications
-               </Button>
           </div>
            <CardContent>
              <div className="space-y-6">
@@ -715,6 +709,14 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
                              disabled={loading}
                            >
                              <Trash2 className="w-5 h-5" />
+                           </Button>
+                           <Button
+                             onClick={() => handleSendNotifications(session.id)}
+                             className="p-2 text-green-600 hover:text-green-800 hover:bg-orange-300 rounded-md transition-colors duration-200"
+                             title="Send Notifications"
+                             disabled={loading}
+                           >
+                             <Send className="w-5 h-5" />
                            </Button>
                          </div>
                        </div>
