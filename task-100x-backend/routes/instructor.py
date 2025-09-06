@@ -1202,6 +1202,7 @@ async def send_notifications(
 
     for notification in notifications_to_send:
         try:
+            print(f"User number: {notification.user.phoneNumber}")
             if notification.user and notification.user.phoneNumber:
                 whatsapp_number = notification.user.phoneNumber
                 
@@ -1238,7 +1239,7 @@ async def send_notifications(
                     }
 
                 print(f"Attempting to send WhatsApp message to {whatsapp_number} for notification {notification.id}")
-                await aisensy_client.send_whatsapp_message(
+                await send_whatsapp_message(
                     destination=whatsapp_number,
                     user_name=notification.user.name,
                     message_body_1=pointer1,
