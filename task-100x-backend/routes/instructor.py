@@ -1219,7 +1219,7 @@ async def send_notifications(
                 ist = timezone(timedelta(hours=5, minutes=30))
                 now_ist = datetime.now(ist)
                 # Assuming session_details.date is a datetime object and session time is 6 PM IST
-                session_time_ist = notification.session.date.replace(hour=18, minute=0, second=0, microsecond=0)
+                session_time_ist = notification.session.createdAt.replace(hour=18, minute=0, second=0, microsecond=0)
 
                 remaining_time_delta = session_time_ist - now_ist
                 remaining_minutes = int(remaining_time_delta.total_seconds() / 60)
