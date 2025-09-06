@@ -6,7 +6,6 @@ from main import get_prisma_client
 from typing import List, Optional
 from datetime import datetime, timezone, timedelta
 import os
-# import asyncio # Removed as queue is no longer used
 import time
 import shutil
 from typing import List
@@ -318,7 +317,7 @@ async def create_session(
 
     for user in users_with_launchpad:
         try:
-            personalized_message = await groq_client.generate_personalized_message(user, new_session)
+            personalized_message = await generate_personalized_message(user, new_session)
             await prisma.notification.create(
                 data={
                     "userId": user.id,
