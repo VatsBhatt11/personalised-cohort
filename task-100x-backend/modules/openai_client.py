@@ -63,7 +63,7 @@ async def generate_personalized_message_openai(context: dict) -> str:
                     "content": user_message,
                 },
             ],
-            model="gpt-4-turbo",  # Or "gpt-4" or "gpt-4-turbo" based on your preference
+            model="gpt-4o-mini",  # Or "gpt-4" or "gpt-4-turbo" based on your preference
         )
         response_content = chat_completion.choices[0].message.content
         print(f"Groq API raw response: {response_content}") # Log the raw response

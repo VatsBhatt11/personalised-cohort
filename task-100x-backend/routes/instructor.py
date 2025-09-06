@@ -335,8 +335,8 @@ async def create_session(
                 "upcoming_session_title": new_session.title,
                 "upcoming_session_description": new_session.description
             }
-            personalized_message = await generate_personalized_message(context)
-            # personalized_message = await generate_personalized_message_openai(context)
+            # personalized_message = await generate_personalized_message(context)
+            personalized_message = await generate_personalized_message_openai(context)
             await prisma.notification.create(
                 data={
                     "studentId": user.id,
@@ -861,8 +861,8 @@ async def _send_notifications_in_background(user, session_details, prisma: Prism
         }
 
         # Call Groq API to generate message
-        personalized_message_pointers = await generate_personalized_message(context)
-        # personalized_message_pointers = await generate_personalized_message_openai(context)
+        # personalized_message_pointers = await generate_personalized_message(context)
+        personalized_message_pointers = await generate_personalized_message_openai(context)
 
         # Calculate remaining time and status
         ist = timezone(timedelta(hours=5, minutes=30))
