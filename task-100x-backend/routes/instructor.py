@@ -315,7 +315,7 @@ async def create_session(
                 "isNot": None
             },
             "cohortId": cohort_id,
-            "sessionType": sessionType
+            "type": sessionType
         },
         include={
             "launchpad": True
