@@ -317,12 +317,19 @@ async def create_session(
 
     for user in users_with_launchpad:
         try:
-            personalized_message = await generate_personalized_message(user, new_session)
+            context = {
+                "student_background": user.launchpad.studyStream if user.launchpad and user.launchpad.studyStream else "",
+                "student_interests": user.launchpad.codingFamiliarity if user.launchpad and user.launchpad.codingFamiliarity else "",
+                "student_future_goals": user.launchpad.expectedOutcomes if user.launchpad and user.launchpad.expectedOutcomes else "",
+                "upcoming_session_title": new_session.title,
+                "upcoming_session_description": new_session.description
+            }
+            personalized_message = await generate_personalized_message(context)
             await prisma.notification.create(
                 data={
                     "userId": user.id,
                     "sessionId": new_session.id,
-                    "message": personalized_message,
+                    "message": f"Pointer 1: {personalized_message['pointer1']}\nPointer 2: {personalized_message['pointer2']}",
                     "status": "generated"
                 }
             )
@@ -1198,9 +1205,50 @@ async def send_notifications(
         try:
             if notification.user and notification.user.launchpad and notification.user.launchpad.whatsappNumber:
                 whatsapp_number = notification.user.launchpad.whatsappNumber
-                message = notification.message
+                
+                # Extract pointer1 and pointer2 from the stored message
+                message_lines = notification.message.split('\n')
+                pointer1 = ""
+                pointer2 = ""
+                for line in message_lines:
+                    if line.startswith('Pointer 1:'):
+                        pointer1 = line.replace('Pointer 1:', '').strip()
+                    elif line.startswith('Pointer 2:'):
+                        pointer2 = line.replace('Pointer 2:', '').strip()
+
+                # Calculate remaining time and status (re-introducing logic from _send_notifications_in_background)
+                ist = timezone(timedelta(hours=5, minutes=30))
+                now_ist = datetime.now(ist)
+                # Assuming session_details.date is a datetime object and session time is 6 PM IST
+                session_time_ist = notification.session.date.replace(hour=18, minute=0, second=0, microsecond=0)
+
+                remaining_time_delta = session_time_ist - now_ist
+                remaining_minutes = int(remaining_time_delta.total_seconds() / 60)
+
+                status = ""
+                if remaining_minutes > 0:
+                    status = f"Starting in {remaining_minutes} minutes"
+                else:
+                    status = "Started"
+
+                media = None
+                if notification.session.imageUrl:
+                    media = {
+                        "url": notification.session.imageUrl,
+                        "filename": "session_image.jpg"
+                    }
+
                 print(f"Attempting to send WhatsApp message to {whatsapp_number} for notification {notification.id}")
-                await aisensy_client.send_whatsapp_message(whatsapp_number, message)
+                await aisensy_client.send_whatsapp_message(
+                    destination=whatsapp_number,
+                    user_name=notification.user.name,
+                    message_body_1=pointer1,
+                    message_body_2=pointer2,
+                    session_title=notification.session.title,
+                    remaining_time="06:00 PM IST", # This can be made dynamic if needed
+                    status=status,
+                    media=media
+                )
                 await prisma.notification.update(
                     where={"id": notification.id},
                     data={
