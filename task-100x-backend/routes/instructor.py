@@ -1174,13 +1174,12 @@ async def _resend_notification_in_background(notification, prisma: Prisma):
         
     # Removed the _process_notification_queue and _send_notifications_in_background functions
 
-@router.post("/send-notifications")
 class SendNotificationPayload(BaseModel):
     sessionId: str
 
 @router.post("/send-notifications")
 async def send_notifications(
-    payload: SendNotificationPayload,
+    sessionId: str = Query(...),
     current_user = Depends(get_current_user),
     prisma: Prisma = Depends(get_prisma_client)
 ):
