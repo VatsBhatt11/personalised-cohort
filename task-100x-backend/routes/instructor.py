@@ -327,7 +327,7 @@ async def create_session(
             personalized_message = await generate_personalized_message(context)
             await prisma.notification.create(
                 data={
-                    "userId": user.id,
+                    "studentId": user.id,
                     "sessionId": new_session.id,
                     "message": f"Pointer 1: {personalized_message['pointer1']}\nPointer 2: {personalized_message['pointer2']}",
                     "status": "generated"
@@ -1203,8 +1203,8 @@ async def send_notifications(
 
     for notification in notifications_to_send:
         try:
-            if notification.user and notification.user.launchpad and notification.user.launchpad.whatsappNumber:
-                whatsapp_number = notification.user.launchpad.whatsappNumber
+            if notification.user and notification.user.phoneNumber:
+                whatsapp_number = notification.user.phoneNumber
                 
                 # Extract pointer1 and pointer2 from the stored message
                 message_lines = notification.message.split('\n')
