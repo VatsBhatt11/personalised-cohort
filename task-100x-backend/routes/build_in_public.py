@@ -2,6 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from prisma import Prisma
 from typing import List, Optional
 from datetime import datetime
+from main import get_prisma_client
+from fastapi.responses import JSONResponse
+from collections import defaultdict
 
 router = APIRouter()
 
@@ -106,7 +109,7 @@ async def get_user_heatmap(
     userId: str,
     startDate: str = Query(..., alias="startDate"),
     endDate: str = Query(..., alias="endDate"),
-    prisma: PrismaClient = Depends(get_prisma_client),
+    prisma: Prisma = Depends(get_prisma_client),
 ):
     try:
         start_date_obj = datetime.fromisoformat(startDate.replace("Z", "+00:00"))
