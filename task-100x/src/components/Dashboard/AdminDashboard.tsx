@@ -19,6 +19,7 @@ import useAuth from '@/hooks/useAuth';
 import { LogOut } from 'lucide-react';
 import { instructor, learner, WeekResource } from '@/lib/api';
 import axios, { isAxiosError, type AxiosError } from 'axios';
+import { Link } from 'react-router-dom';
 
 interface Resource {
   id?: string;
@@ -660,13 +661,15 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
           <CardContent>
             <div className="space-y-5">
               <p className="text-black text-lg">Create, edit, and manage quizzes for your learners.</p>
-              <Button
-                onClick={() => setIsQuizManagementOpen(true)}
-                className="px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
-              >
-                <HelpCircle className="mr-3 h-5 w-5" />
-                Manage Quizzes
-              </Button>
+              <Link to="/admin/track-100x">
+                <Button
+                  className="px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+                >
+                  <HelpCircle className="mr-3 h-5 w-5" />
+                  Track 100x
+                </Button>
+              </Link>
+              Manage Quizzes
             </div>
           </CardContent>
         </Card>
@@ -728,6 +731,25 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
                ) : (
                  <p className="text-black">No sessions created yet.</p>
                )}
+             </div>
+           </CardContent>
+         </Card>
+
+         <Card className="bg-orange-100 border border-orange-200 rounded-xl shadow-lg">
+           <CardHeader>
+             <CardTitle className="text-2xl font-bold text-orange-700">Build In Public Management</CardTitle>
+           </CardHeader>
+           <CardContent>
+             <div className="space-y-5">
+               <p className="text-black text-lg">Track and manage user activity for the Build in Public initiative.</p>
+               <Link to="/admin/track-100x">
+                 <Button
+                   className="px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+                 >
+                   <TrendingUp className="mr-3 h-5 w-5" />
+                   Track 100x
+                 </Button>
+               </Link>
              </div>
            </CardContent>
          </Card>

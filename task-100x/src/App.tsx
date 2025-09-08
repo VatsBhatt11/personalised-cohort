@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import NotFound from "./pages/NotFound";
+import BuildInPublic from "./pages/BuildInPublic";
+import BuildInPublicUserDetailPage from "./pages/BuildInPublicUserDetailPage";
 
 import AuthPage from "./components/Auth/AuthPage";
 import useAuth from "./hooks/useAuth";
@@ -45,6 +47,12 @@ const App = () => {
                 )
               }
             />
+            {user?.role === 'INSTRUCTOR' && (
+              <Route path="/admin">
+                <Route path="track-100x" element={<BuildInPublic />} />
+                <Route path="track-100x/:userId" element={<BuildInPublicUserDetailPage />} />
+              </Route>
+            )}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

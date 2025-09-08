@@ -12,7 +12,6 @@ generator client {
 enum Platform {
   LINKEDIN
   TWITTER
-  GITHUB
 }
 
 model Post {

@@ -1,0 +1,162 @@
+.calendar-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.calendar-flex {
+  display: flex;
+  min-width: max-content;
+}
+
+.weekday-labels {
+  padding-right: 0.5rem;
+}
+
+.month-label-placeholder {
+  height: 24px;
+}
+
+.weekday {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.month-blocks {
+  display: flex;
+}
+
+.month-column {
+  margin-right: 0.5rem;
+  min-width: calc(16.666% - 0.5rem);
+}
+
+.month-label {
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.week-row {
+  display: flex;
+  height: 24px;
+  align-items: center;
+}
+
+.activity-cell {
+  height: 16px;
+  width: 16px;
+  border-radius: 2px;
+  margin: 0 2px;
+}
+
+.activity-cell.level-0 {
+  background-color: rgba(128, 128, 128, 0.3);
+}
+.activity-cell.level-1 {
+  background-color: #f97316aa;
+}
+.activity-cell.level-2 {
+  background-color: #f97316cc;
+}
+.activity-cell.level-3 {
+  background-color: #f97316;
+}
+
+.empty-cell {
+  height: 16px;
+  width: 16px;
+  margin: 0 2px;
+}
+
+.legend {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.legend-colors {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-box {
+  height: 12px;
+  width: 12px;
+  border-radius: 2px;
+}
+
+.legend-box.level-0 {
+  background-color: rgba(128, 128, 128, 0.3);
+}
+.legend-box.level-1 {
+  background-color: #f97316aa;
+}
+.legend-box.level-2 {
+  background-color: #f97316cc;
+}
+.legend-box.level-3 {
+  background-color: #f97316;
+}
+
+.calendar-header {
+  padding-bottom: 0.5rem;
+}
+
+.calendar-card {
+  margin-top: 1rem;
+}
+
+.calendar-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.streak-metrics {
+  display: flex;
+  gap: 1rem;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.metric-value {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.calendar-controls {
+  display: flex;
+  /* justify-content: space-between; */
+  gap: 2rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.nav-button {
+  height: 32px;
+  width: 32px;
+}
+
+.calendar-range {
+  font-size: 14px;
+}

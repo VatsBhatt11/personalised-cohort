@@ -55,11 +55,12 @@ async def health_check():
     return {"status": "healthy", "message": "API is running"}
 
 # Import and include routers
-from routes import auth, instructor, learner
+from routes import auth, instructor, learner, build_in_public
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(learner.router, prefix="/api", tags=["learner"])
 app.include_router(instructor.router, prefix="/api", tags=["instructor"])
+app.include_router(build_in_public.router, prefix="/api", tags=["build-in-public"])
 
 # For development - run with: python main.py
 if __name__ == "__main__":
