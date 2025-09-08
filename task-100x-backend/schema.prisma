@@ -1,12 +1,30 @@
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // directUrl = env("DIRECT_URL")
 }
 
 generator client {
   provider             = "prisma-client-py"
   recursive_type_depth = -1
+}
+
+enum Platform {
+  LINKEDIN
+  TWITTER
+  GITHUB
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  url         String   @unique
+  platform    Platform
+  createdAt   DateTime @default(now())
+  numLikes    Int      @default(0)
+  numComments Int      @default(0)
+  postedAt    DateTime @default(now())
 }
 
 model User {
@@ -25,6 +43,7 @@ model User {
   quizAttempts  QuizAttempt[]
   notifications Notification[]
   launchpad     Launchpad?
+  Post          Post[]
 }
 
 enum Role {

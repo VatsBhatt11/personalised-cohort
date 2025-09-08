@@ -85,6 +85,19 @@ class DBConnection:
                 }
             )
 
+            linkedin_profile_url = row.get("LinkedIn Profile URL") # Assuming this is the column name in CSV
+            if linkedin_profile_url:
+                await self.db.post.create(
+                    data={
+                        "userId": user.id,
+                        "url": linkedin_profile_url,
+                        "platform": "LINKEDIN",
+                        "numLikes": 0,
+                        "numComments": 0,
+                        "postedAt": user.createdAt # Or a more appropriate default if available
+                    }
+                )
+
             await self.db.launchpad.create(
                 data={
                     "userId": user.id,
