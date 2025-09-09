@@ -1482,6 +1482,7 @@ async def get_user_analytics(user_id: str, prisma: Prisma = Depends(get_prisma_c
             break
 
     return {
+        "name": user.name,
         "totalPosts": total_posts,
         "totalLikes": total_likes,
         "totalComments": total_comments,
