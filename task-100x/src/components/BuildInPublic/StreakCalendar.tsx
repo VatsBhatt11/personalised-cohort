@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import '@/styles/streakCalendar.css'
@@ -24,6 +23,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useToast } from '@/components/ui/use-toast';
+import { instructor } from "@/lib/api";
 
 interface ActivityData {
   [date: string]: number;
@@ -52,16 +52,10 @@ const StreakCalendar = ({ userId }: StreakCalendarProps) => {
     setError(null);
     
     try {
-      const { data } = await axios.get<ActivityData>(`/api/build-in-public/users/${userId}/heatmap`, {
-        params: {
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-        },
-      });
-
+      const data = await instructor.getUserHeatmap(userId);
       const activityMap = new Map(Object.entries(data));
       setStreakData(activityMap);
-    } catch (e: Error) {
+    } catch (e: any) {
       console.error('Error fetching activity data:', e);
       setError('Failed to load activity data');
       toast({

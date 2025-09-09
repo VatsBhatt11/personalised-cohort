@@ -1474,11 +1474,7 @@ async def get_user_heatmap_data(user_id: str, prisma: Prisma = Depends(get_prism
     user = await prisma.user.find_unique(
         where={'id': user_id},
         include={
-            'posts': {
-                'select': {
-                    'createdAt': True,
-                }
-            }
+            'posts': True
         }
     )
 
@@ -1487,7 +1483,7 @@ async def get_user_heatmap_data(user_id: str, prisma: Prisma = Depends(get_prism
 
     heatmap_data = {}
     for post in user.posts:
-        date = post.createdAt.strftime("%Y-%m-%d")
+        date = post.postedAt.strftime("%Y-%m-%d")
         heatmap_data[date] = heatmap_data.get(date, 0) + 1
 
     return heatmap_data

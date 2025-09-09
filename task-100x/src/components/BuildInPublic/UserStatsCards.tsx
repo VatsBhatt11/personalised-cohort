@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, Star, Calendar, Flag } from "lucide-react";
 import '../../styles/userStatsCards.css'
+import { instructor } from "@/lib/api";
 
 interface UserStats {
   currentStreak: number;
@@ -33,7 +33,8 @@ const UserStatsCards = ({ userId }: UserStatsCardsProps) => {
 
   const fetchUserStats = async () => {
     try {
-      const { data } = await axios.get<UserStats>(`/api/build-in-public/users/${userId}/analytics`);
+      if (!userId) return;
+      const data = await instructor.getUserStats(userId);
       setStats(data);
     } catch (error) {
       console.error('Error fetching user stats:', error);
