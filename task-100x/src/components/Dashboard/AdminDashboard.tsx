@@ -19,7 +19,8 @@ import useAuth from '@/hooks/useAuth';
 import { LogOut } from 'lucide-react';
 import { instructor, learner, WeekResource } from '@/lib/api';
 import axios, { isAxiosError, type AxiosError } from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import BuildInPublicUserTable from '@/components/BuildInPublic/BuildInPublicUserTable';
 
 interface Resource {
   id?: string;
@@ -61,7 +62,9 @@ interface Cohort {
   totalWeeks: number;
 }
 
-const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
+const AdminDashboard: React.FC = ({ userEmail }: AdminDashboardProps) => {
+  const location = useLocation();
+  const isBuildInPublicRoute = location.pathname === '/admin/track-100x';
   const gilroyFont = 'Gilroy, sans-serif';
   const jetbrainsMonoFont = 'Jetbrains Mono, monospace';
   const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
@@ -595,27 +598,10 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
 
       {hasSelectedCohort && (
         <div className="min-h-screen bg-white p-6 font-sans" style={{ fontFamily: gilroyFont }}>
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center bg-orange-400 rounded-xl p-4">
-            <img src={logo} alt="100xEngineers Logo" className="h-12 mr-4" />
-          </div>
-          <div className="flex items-center space-x-4">
-            <Badge className="bg-orange-500 text-black border-orange-700 px-5 py-2 rounded-full text-base font-medium shadow-lg">
-              Administrator
-            </Badge>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 text-black hover:text-gray-800 transition-colors duration-200"
-            >
-              <LogOut className="w-5 h-5" />
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
-
+      {isBuildInPublicRoute ? (
+            <BuildInPublicUserTable />
+          ) : (
+            <>
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         {stats.map((stat, index) => (
@@ -666,10 +652,9 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
                   className="px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
                 >
                   <HelpCircle className="mr-3 h-5 w-5" />
-                  Track 100x
+                  Manage Quizzes
                 </Button>
               </Link>
-              Manage Quizzes
             </div>
           </CardContent>
         </Card>
@@ -755,7 +740,6 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
          </Card>
       </div>
 
-      {/* Assigned Weeks */}
       {assignedWeeks.length > 0 && (
         <Card className="bg-orange-100 border border-orange-200 rounded-xl shadow-lg mb-10">
           <CardHeader>
@@ -823,20 +807,10 @@ const AdminDashboard = ({ userEmail }: AdminDashboardProps) => {
         totalWeeks={cohorts.find(c => c.id === cohortId)?.totalWeeks || 12} // Pass totalWeeks of selected cohort
         fontFamily={jetbrainsMonoFont}
       />
-    </div>
+    </>
   )}
+  </div>)}
   </>)
 };
-
-
-
-
-
-
-
-
-
-
-
 
 export default AdminDashboard;

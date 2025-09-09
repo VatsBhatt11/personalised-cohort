@@ -8,8 +8,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 import { useToast } from '@/components/ui/use-toast';
+import { buildInPublic, UserData } from '@/lib/api';
 
 interface UserData {
   id: string;
@@ -30,12 +30,12 @@ const BuildInPublicUserTable = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get<UserData[]>('/api/build-in-public/users');
-        console.log("API Response Data:", response.data); // Log the response data
-        if (Array.isArray(response.data)) {
-          setUsers(response.data);
+        const response = await buildInPublic.getUsers();
+        console.log("API Response Data:", response); // Log the response data
+        if (Array.isArray(response)) {
+          setUsers(response);
         } else {
-          console.error("API response is not an array:", response.data);
+          console.error("API response is not an array:", response);
           setError("Unexpected API response format.");
         }
       } catch (e: any) {

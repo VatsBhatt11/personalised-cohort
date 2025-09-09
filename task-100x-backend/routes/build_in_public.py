@@ -14,7 +14,7 @@ async def get_build_in_public_users():
     await db.connect()
     users = await db.user.find_many(
         include={
-            'Post': {
+            'posts': {
                 'select': {
                     'numLikes': True,
                     'numComments': True,
@@ -26,12 +26,12 @@ async def get_build_in_public_users():
 
     user_data = []
     for user in users:
-        total_posts = len(user.Post)
-        total_likes = sum(post.numLikes for post in user.Post)
-        total_comments = sum(post.numComments for post in user.Post)
+        total_posts = len(user.posts)
+        total_likes = sum(post.numLikes for post in user.posts)
+        total_comments = sum(post.numComments for post in user.posts)
         last_posted = None
-        if user.Post:
-            last_posted = max(post.createdAt for post in user.Post).isoformat()
+        if user.posts:
+            last_posted = max(post.createdAt for post in user.posts).isoformat()
 
         user_data.append({
             "id": user.id,

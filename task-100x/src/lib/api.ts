@@ -185,6 +185,16 @@ interface DashboardMetrics {
   }>;
 }
 
+export interface UserData {
+  id: string;
+  name: string | null;
+  email: string | null;
+  totalPosts: number;
+  lastPosted: string | null;
+  totalLikes: number;
+  totalComments: number;
+}
+
 // const API_BASE_URL = "http://localhost:8000";
 const API_BASE_URL = "https://one00x-be.onrender.com";
 
@@ -572,6 +582,14 @@ export const instructor = {
     const response = await api.post(
       `/api/send-notifications?sessionId=${sessionId}`
     );
+    return response.data;
+  },
+};
+
+// Instructor APIs
+export const buildInPublic = {
+  getUsers: async (): Promise<UserData[]> => {
+    const response = await api.get<UserData[]>('/api/build-in-public/users');
     return response.data;
   },
 };

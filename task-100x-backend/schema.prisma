@@ -16,7 +16,7 @@ enum Platform {
 
 model Post {
   id          String   @id @default(cuid())
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation(name: "UserPosts", fields: [userId], references: [id])
   userId      String
   url         String   @unique
   platform    Platform
@@ -42,7 +42,7 @@ model User {
   quizAttempts  QuizAttempt[]
   notifications Notification[]
   launchpad     Launchpad?
-  Post          Post[]
+  posts         Post[]         @relation(name: "UserPosts")
 }
 
 enum Role {
