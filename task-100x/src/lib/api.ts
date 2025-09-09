@@ -597,6 +597,15 @@ export const instructor = {
     );
     return response.data;
   },
+  fetchLinkedInPostsSequentially: async (linkedinCookie: string) => {
+    const response = await api.post(
+      `/api/build-in-public/fetch-linkedin-posts-sequentially`,
+      {
+        linkedinCookie,
+      }
+    );
+    return response.data;
+  },
   getBuildInPublicUsers: async (cohortId: string): Promise<UserData[]> => {
     const response = await api.get<UserData[]>(
       `/api/build-in-public/users?cohortId=${cohortId}`

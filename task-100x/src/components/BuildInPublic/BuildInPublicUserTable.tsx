@@ -56,7 +56,8 @@ const BuildInPublicUserTable = ({ cohortId }: BuildInPublicUserTableProps) => {
   const handleFetchLinkedInPosts = async () => {
     setIsFetchingPosts(true);
     try {
-      const response = await instructor.fetchLinkedInPosts(linkedinCookie);
+      // const response = await instructor.fetchLinkedInPosts(linkedinCookie);
+      const response = await instructor.fetchLinkedInPostsSequentially(linkedinCookie);
       toast({
         title: "Success",
         description: "LinkedIn posts fetched and updated successfully!",
