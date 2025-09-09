@@ -81,9 +81,9 @@ async def fetch_linkedin_posts(linkedin_cookie_data: LinkedInCookie, current_use
         apify_api_token = os.environ.get("APIFY_API_TOKEN")
         apify_api_url = f"https://api.apify.com/v2/acts/curious_coder~linkedin-post-search-scraper/run-sync-get-dataset-items?token={apify_api_token}"
 
-        async with httpx.AsyncClient(timeout=3600.0) as client:
+        async with httpx.AsyncClient(timeout=21600.0) as client:
             apify_response = await client.post(apify_api_url, json=apify_request_body)
-            apify_response.raise_for_status() # Raise an exception for 4xx or 5xx responses
+            apify_response.raise_for_status()
 
         apify_data = apify_response.json()
 
