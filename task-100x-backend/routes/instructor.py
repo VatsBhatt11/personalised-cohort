@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from prisma import Prisma
 from main import get_prisma_client
 from typing import List, Optional
+import asyncio
 from datetime import datetime, timezone, timedelta
 import os
 import time
