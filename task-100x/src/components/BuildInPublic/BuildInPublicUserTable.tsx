@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Link } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
-import { buildInPublic, UserData } from '@/lib/api';
+import { instructor, UserData } from "@/lib/api";
 
 interface UserData {
   id: string;
@@ -30,21 +30,12 @@ const BuildInPublicUserTable = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await buildInPublic.getUsers();
-        console.log("API Response Data:", response); // Log the response data
-        if (Array.isArray(response)) {
-          setUsers(response);
-        } else {
-          console.error("API response is not an array:", response);
-          setError("Unexpected API response format.");
-        }
-      } catch (e: any) {
-        setError(e.message);
-        toast({
-          title: 'Error',
-          description: e.response?.data?.detail || 'Failed to load users data.',
-          variant: 'destructive',
-        });
+        setLoading(true);
+        const response = await instructor.getBuildInPublicUsers();
+        setUsers(response);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        setError("Failed to fetch users.");
       } finally {
         setLoading(false);
       }

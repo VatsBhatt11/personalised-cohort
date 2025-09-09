@@ -584,12 +584,8 @@ export const instructor = {
     );
     return response.data;
   },
-};
-
-// Instructor APIs
-export const buildInPublic = {
-  getUsers: async (): Promise<UserData[]> => {
-    const response = await api.get<UserData[]>('/api/build-in-public/users');
+  getBuildInPublicUsers: async (): Promise<UserData[]> => {
+    const response = await api.get<UserData[]>("/api/build-in-public/users");
     return response.data;
   },
 };

@@ -20,7 +20,7 @@ import { LogOut } from 'lucide-react';
 import { instructor, learner, WeekResource } from '@/lib/api';
 import axios, { isAxiosError, type AxiosError } from 'axios';
 import { Link, useLocation } from 'react-router-dom';
-import BuildInPublicUserTable from '@/components/BuildInPublic/BuildInPublicUserTable';
+import BuildInPublicUserTable from '../BuildInPublic/BuildInPublicUserTable';
 
 interface Resource {
   id?: string;
