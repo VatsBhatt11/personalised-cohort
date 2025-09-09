@@ -66,25 +66,23 @@ const UserStatsCards = ({ userStats }: UserStatsCardsProps) => {
   }
 
   return (
-    <div className="user-stats-grid">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       {cardData.map((card, idx) => (
-        <Card key={idx} className="user-stats-card">
-          <CardContent className="user-stats-card-content">
-            <div className="user-stats-header">
-              <div className="user-stats-icon">{card.icon}</div>
-              <div>
-                <p className="user-stats-title">{card.title}</p>
-                <h3 className="user-stats-value">
-                  {isLoading ? (
-                    <span className="loading-dots">...</span>
-                  ) : (
-                    <>
-                      {card.value}
-                      {card.unit && <span className="user-stats-unit">{card.unit}</span>}
-                    </>
-                  )}
-                </h3>
-              </div>
+        <Card key={idx} className="bg-white text-black border-orange-500 shadow-md">
+          <CardContent className="flex items-center p-4">
+            <div className="mr-4 text-orange-500">{card.icon}</div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">{card.title}</p>
+              <h3 className="text-2xl font-bold text-black mt-1">
+                {isLoading ? (
+                  <span className="loading-dots text-orange-500">...</span>
+                ) : (
+                  <>
+                    {card.value}
+                    {card.unit && <span className="text-base font-normal text-gray-500 ml-1">{card.unit}</span>}
+                  </>
+                )}
+              </h3>
             </div>
           </CardContent>
         </Card>

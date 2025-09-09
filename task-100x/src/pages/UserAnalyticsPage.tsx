@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { instructor } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Star, Calendar } from "lucide-react";
+import { Trophy, Star, Calendar, Loader2 } from "lucide-react";
 import StreakCalendar from "@/components/BuildInPublic/StreakCalendar";
 
 interface UserStats {
@@ -45,7 +45,11 @@ const UserAnalyticsPage = () => {
   }, [userId, toast]);
 
   if (loading) {
-    return <p>Loading user analytics...</p>;
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <Loader2 className="h-16 w-16 text-orange-500 animate-spin" />
+      </div>
+    );
   }
 
   if (error) {
@@ -57,7 +61,7 @@ const UserAnalyticsPage = () => {
   }
 
   return (
-    <div className="p-4">
+    <div className="min-h-screen bg-white text-black p-4">
       <h1 className="text-2xl font-bold mb-4">User Analytics for {userStats.name}</h1>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <Card>

@@ -57,13 +57,13 @@
 }
 
 .activity-cell.level-0 {
-  background-color: rgba(128, 128, 128, 0.3);
+  background-color: #f973161A;
 }
 .activity-cell.level-1 {
-  background-color: #f97316aa;
+  background-color: #f973164D;
 }
 .activity-cell.level-2 {
-  background-color: #f97316cc;
+  background-color: #f9731680;
 }
 .activity-cell.level-3 {
   background-color: #f97316;
@@ -97,13 +97,13 @@
 }
 
 .legend-box.level-0 {
-  background-color: rgba(128, 128, 128, 0.3);
+  background-color: #f973161A;
 }
 .legend-box.level-1 {
-  background-color: #f97316aa;
+  background-color: #f973164D;
 }
 .legend-box.level-2 {
-  background-color: #f97316cc;
+  background-color: #f9731680;
 }
 .legend-box.level-3 {
   background-color: #f97316;

@@ -6,6 +6,7 @@ import StreakCalendar from "@/components/BuildInPublic/StreakCalendar";
 import { useEffect, useState } from "react";
 import { instructor } from "@/lib/api";
 import { toast } from "@/components/ui/use-toast";
+import { Loader2 } from "lucide-react";
 
 interface UserStats {
   name: string;
@@ -45,7 +46,11 @@ const BuildInPublicUserDetailPage = () => {
   }, [userId, toast]);
 
   if (loading) {
-    return <p>Loading user details...</p>;
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <Loader2 className="h-16 w-16 text-orange-500 animate-spin" />
+      </div>
+    );
   }
 
   if (error) {
@@ -54,14 +59,15 @@ const BuildInPublicUserDetailPage = () => {
 
   return (
     <AppLayout>
-      <div className="p-6">
+      <div className="min-h-screen bg-white text-black p-4">
         <Breadcrumb
+          className="mb-4 text-orange-500"
           items={[
             { label: "Build in Public", link: "/admin/track-100x" },
             { label: userStats?.name ? userStats.name : "User Details", link: `/admin/track-100x/${userId}` },
           ]}
         />
-        <h1 className="text-2xl font-bold mb-4">{userStats?.name ? `${userStats.name}'s` : "User"} Analytics</h1>
+        <h1 className="text-2xl font-bold mb-4 text-black">{userStats?.name ? `${userStats.name}'s` : "User"} Analytics</h1>
         <UserStatsCards userStats={userStats} />
         <StreakCalendar userId={userId} userStats={userStats} />
       </div>

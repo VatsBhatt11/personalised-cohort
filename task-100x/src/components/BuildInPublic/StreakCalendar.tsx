@@ -198,41 +198,41 @@ const StreakCalendar = ({ userId, userStats }: StreakCalendarProps) => {
   };
 
   return (
-    <Card className="calendar-card">
-      <CardHeader className="calendar-header">
-        <CardTitle className="calendar-title">
+    <Card className="bg-white text-black border-orange-500 shadow-md">
+      <CardHeader className="p-4 border-b border-gray-200">
+        <CardTitle className="flex justify-between items-center text-black">
           <span>Your Posting Streak</span>
-          <div className="streak-metrics">
-            <div className="metric">
-              <span className="metric-label">Current</span>
-              <span className="metric-value">{currentStreak} days</span>
+          <div className="flex space-x-4">
+            <div className="text-center">
+              <span className="block text-sm font-medium text-gray-600">Current</span>
+              <span className="block text-2xl font-bold text-orange-500">{currentStreak} days</span>
             </div>
-            <div className="metric">
-              <span className="metric-label">Longest</span>
-              <span className="metric-value">{longestStreak} days</span>
+            <div className="text-center">
+              <span className="block text-sm font-medium text-gray-600">Longest</span>
+              <span className="block text-2xl font-bold text-orange-500">{longestStreak} days</span>
             </div>
           </div>
         </CardTitle>
       </CardHeader>
 
-      <CardContent>
-        <div className="calendar-controls">
+      <CardContent className="p-4">
+        <div className="flex justify-between items-center mb-4">
           <Button
-            variant="outline"
+            variant="default"
             size="icon"
-            className="nav-button"
+            className="bg-orange-500 text-white hover:bg-orange-600"
             onClick={goToPreviousMonth}
             disabled={isLoading}
           >
             <ChevronLeft />
           </Button>
-          <span className="calendar-range">
+          <span className="text-lg font-semibold text-black">
             {format(startDate, "MMM yyyy")} – {format(endDate, "MMM yyyy")}
           </span>
           <Button
-            variant="outline"
+            variant="default"
             size="icon"
-            className="nav-button"
+            className="bg-orange-500 text-white hover:bg-orange-600"
             onClick={goToNextMonth}
             disabled={isLoading}
           >
@@ -241,9 +241,9 @@ const StreakCalendar = ({ userId, userStats }: StreakCalendarProps) => {
         </div>
 
         {error ? (
-          <div className="error-message">{error}</div>
+          <div className="text-red-500 text-center">{error}</div>
         ) : isLoading ? (
-          <div className="loading-message">Loading activity data...</div>
+          <div className="text-gray-500 text-center">Loading activity data...</div>
         ) : (
           renderCalendar()
         )}

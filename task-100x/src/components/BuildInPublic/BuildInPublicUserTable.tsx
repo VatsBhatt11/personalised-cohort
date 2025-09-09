@@ -142,7 +142,7 @@ const BuildInPublicUserTable = ({ cohortId }: BuildInPublicUserTableProps) => {
           placeholder="Enter LinkedIn Cookie"
           value={linkedinCookie}
           onChange={(e) => setLinkedinCookie(e.target.value)}
-          className="flex-grow"
+          className="flex-grow bg-white"
         />
         <Button onClick={handleFetchLinkedInPosts} disabled={isFetchingPosts}>
           {isFetchingPosts ? "Fetching..." : "Fetch LinkedIn Posts"}
@@ -164,7 +164,7 @@ const BuildInPublicUserTable = ({ cohortId }: BuildInPublicUserTableProps) => {
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell><Link to={`/admin/track-100x/${user.id}?userName=${encodeURIComponent(user.name || '')}`}>{user.name}</Link></TableCell>
+                <TableCell><Link to={`/admin/track-100x/${user.id}?userName=${encodeURIComponent(user.name || '')}`} className="text-orange-500 hover:underline">{user.name}</Link></TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.totalPosts}</TableCell>
                 <TableCell>{user.totalLikes}</TableCell>

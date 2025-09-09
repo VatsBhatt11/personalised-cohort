@@ -22,26 +22,26 @@ const BuildInPublic = () => {
   }, []);
 
   return (
-    <div className="p-4">
-      <Breadcrumb className="mb-4">
+    <div className="min-h-screen bg-white text-black p-4">
+      <Breadcrumb className="mb-4 text-orange-500">
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
               <Link to="/">
-                <Home className="icon" />
+                <Home className="icon text-orange-500" />
               </Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
-          <BreadcrumbSeparator />
+          <BreadcrumbSeparator className="text-orange-500" />
           <BreadcrumbItem>
-            <BreadcrumbLink>Build in Public Dashboard</BreadcrumbLink>
+            <BreadcrumbLink className="text-orange-500">Build in Public Dashboard</BreadcrumbLink>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
 
       <div className="page-heading mb-4">
-        <h1 className="text-2xl font-bold">Build in Public Dashboard</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl font-bold text-black">Build in Public Dashboard</h1>
+        <p className="text-gray-600">
           View learners' Build in Public activity
         </p>
       </div>
