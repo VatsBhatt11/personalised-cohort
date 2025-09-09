@@ -14,6 +14,7 @@ from collections import defaultdict
 from typing import List
 from fastapi import APIRouter, Body, Depends, HTTPException, Form, UploadFile, File, Query
 import csv
+import re
 from prisma import Prisma
 from modules.groq_client import generate_personalized_message, generate_quiz_from_transcription
 from modules.openai_client import generate_personalized_message_openai
