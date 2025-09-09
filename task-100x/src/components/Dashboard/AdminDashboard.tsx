@@ -602,6 +602,28 @@ const AdminDashboard: React.FC = ({ userEmail }: AdminDashboardProps) => {
             <BuildInPublicUserTable />
           ) : (
             <>
+                  {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center bg-orange-400 rounded-xl p-4">
+            <img src={logo} alt="100xEngineers Logo" className="h-12 mr-4" />
+          </div>
+          <div className="flex items-center space-x-4">
+            <Badge className="bg-orange-500 text-black border-orange-700 px-5 py-2 rounded-full text-base font-medium shadow-lg">
+              Administrator
+            </Badge>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-black hover:text-gray-800 transition-colors duration-200"
+            >
+              <LogOut className="w-5 h-5" />
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         {stats.map((stat, index) => (
