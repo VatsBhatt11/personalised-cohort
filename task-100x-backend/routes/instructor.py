@@ -1284,8 +1284,16 @@ async def send_notifications(
     return {"success": True, "message": f"Attempted to send {len(notifications_to_send)} notifications."}
 
 @router.get("/build-in-public/users")
-async def get_build_in_public_users(prisma: Prisma = Depends(get_prisma_client)):
+async def get_build_in_public_users(
+    cohortId: Optional[str] = Query(None),
+    prisma: Prisma = Depends(get_prisma_client)
+):
+    where_clause = {}
+    if cohortId:
+        where_clause["cohortId"] = cohortId
+
     users = await prisma.user.find_many(
+        where=where_clause,
         include={
             'posts': {
                 'select': {
