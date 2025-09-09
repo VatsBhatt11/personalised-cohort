@@ -71,7 +71,7 @@ class DBConnection:
 
             phone = row.get("Phone Number") or row.get("phone") or row.get("Phone") or None
             phone = phone.strip() if isinstance(phone, str) else None
-            linkedin_profile_url = row.get("LinkedIn Profile URL")
+            linkedin_profile_url = row.get("Linkedin URLs")
             linkedin_username = None
             if linkedin_profile_url:
                 parts = linkedin_profile_url.strip().split("/in/")
