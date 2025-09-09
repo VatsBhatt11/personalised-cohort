@@ -50,10 +50,6 @@ async def fetch_linkedin_posts(linkedin_cookie_data: LinkedInCookie, current_use
                     "not": None,
                 },
             },
-            select={
-                "linkedinUsername": True,
-                "id": True
-            },
         )
 
         urls = [
