@@ -81,7 +81,16 @@ const AdminDashboard: React.FC = ({ userEmail }: AdminDashboardProps) => {
     average_streak: 0,
   });
   const [loading, setLoading] = useState(false);
-  const [cohortId, setCohortId] = useState<string | null>(null);
+  const [cohortId, setCohortIdState] = useState<string | null>(null);
+
+  const setCohortId = (id: string | null) => {
+    setCohortIdState(id);
+    if (id) {
+      document.cookie = `cohortId=${id}; path=/; max-age=${60 * 60 * 24 * 30}`;
+    } else {
+      document.cookie = `cohortId=; path=/; max-age=0`;
+    }
+  };
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [hasSelectedCohort, setHasSelectedCohort] = useState<boolean>(false);
   const [isCreateCohortModalOpen, setIsCreateCohortModalOpen] = useState(false);
@@ -598,7 +607,7 @@ const AdminDashboard: React.FC = ({ userEmail }: AdminDashboardProps) => {
 
       {hasSelectedCohort && (
         <div className="min-h-screen bg-white p-6 font-sans" style={{ fontFamily: gilroyFont }}>
-      {isBuildInPublicRoute ? (
+      {isBuildInPublicRoute && cohortId ? (
             <BuildInPublicUserTable cohortId={cohortId} />
           ) : (
             <>

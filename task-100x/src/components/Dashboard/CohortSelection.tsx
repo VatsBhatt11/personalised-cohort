@@ -42,7 +42,9 @@ export function CohortSelection({
               <select
                 id="cohort-select"
                 className="mt-1 block w-full pl-4 pr-10 py-3 text-base bg-orange-50 border border-orange-200 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 sm:text-lg transition-colors duration-200"
-                onChange={(e) => setCohortId(e.target.value)}
+                onChange={(e) =>{
+                  setCohortId(e.target.value)
+                }}
                 defaultValue=""
               >
                 <option value="" disabled className="text-gray-500">-- Select Cohort --</option>

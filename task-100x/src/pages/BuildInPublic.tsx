@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import BuildInPublicUserTable from '@/components/BuildInPublic/BuildInPublicUserTable';
 import { Home } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -9,8 +9,18 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { getCookie } from '@/lib/cookieUtils';
 
 const BuildInPublic = () => {
+  const [cohortId, setCohortId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const storedCohortId = getCookie('cohortId');
+    if (storedCohortId) {
+      setCohortId(storedCohortId);
+    }
+  }, []);
+
   return (
     <div className="p-4">
       <Breadcrumb className="mb-4">
@@ -36,7 +46,7 @@ const BuildInPublic = () => {
         </p>
       </div>
 
-      <BuildInPublicUserTable />
+      {cohortId && <BuildInPublicUserTable cohortId={cohortId} />}
     </div>
   );
 };

@@ -33,6 +33,7 @@ const BuildInPublicUserTable = ({ cohortId }: BuildInPublicUserTableProps) => {
 
   useEffect(() => {
     const fetchUsers = async () => {
+      if (!cohortId) return; // Only fetch if cohortId is available
       try {
         setLoading(true);
         const response = await instructor.getBuildInPublicUsers(cohortId);
