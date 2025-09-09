@@ -37,7 +37,7 @@ router = APIRouter()
 class LinkedInCookie(BaseModel):
     linkedinCookie: str
 
-@router.post("/fetch-linkedin-posts")
+@router.post("/build-in-public/fetch-linkedin-posts")
 async def fetch_linkedin_posts(linkedin_cookie_data: LinkedInCookie, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
     if current_user.role != "INSTRUCTOR":
         raise HTTPException(status_code=403, detail="Only instructors can fetch LinkedIn posts")
@@ -1473,7 +1473,7 @@ async def get_user_analytics(user_id: str, prisma: Prisma = Depends(get_prisma_c
         "rank": rank,
     }
 
-@router.get("/users/{userId}/heatmap")
+@router.get("build-in-public/users/{userId}/heatmap")
 async def get_user_heatmap(
     userId: str,
     startDate: str = Query(..., alias="startDate"),

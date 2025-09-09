@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,12 +61,12 @@ const StreakCalendar = ({ userId }: StreakCalendarProps) => {
 
       const activityMap = new Map(Object.entries(data));
       setStreakData(activityMap);
-    } catch (e: any) {
+    } catch (e: Error) {
       console.error('Error fetching activity data:', e);
       setError('Failed to load activity data');
       toast({
         title: 'Error',
-        description: e.response?.data?.detail || 'Failed to load activity data.',
+        description: e.message || 'Failed to load activity data.',
         variant: 'destructive',
       });
     } finally {
