@@ -1,4 +1,5 @@
 import uuid
+import traceback
 from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from pydantic import BaseModel
 from prisma import Prisma
@@ -80,8 +81,8 @@ async def fetch_linkedin_posts(linkedin_cookie_data: LinkedInCookie, current_use
         apify_api_token = os.environ.get("APIFY_API_TOKEN")
         apify_api_url = f"https://api.apify.com/v2/acts/curious_coder~linkedin-post-search-scraper/run-sync-get-dataset-items?token={apify_api_token}"
 
-        async with httpx.AsyncClient() as client:
-            apify_response = await client.post(apify_api_url, json=apify_request_body, timeout=60.0)
+        async with httpx.AsyncClient(timeout=3600.0) as client:
+            apify_response = await client.post(apify_api_url, json=apify_request_body)
             apify_response.raise_for_status() # Raise an exception for 4xx or 5xx responses
 
         apify_data = apify_response.json()
@@ -126,11 +127,17 @@ async def fetch_linkedin_posts(linkedin_cookie_data: LinkedInCookie, current_use
         return {"message": "LinkedIn posts fetched successfully!", "data": apify_data}
 
     except httpx.HTTPStatusError as e:
+        print(f"Apify API HTTP error: {e.response.status_code} - {e.response.text}")
         raise HTTPException(status_code=e.response.status_code, detail=f"Apify API error: {e.response.text}")
+    except httpx.RequestError as e:
+        print(f"HTTPX request error: {e}")
+        raise HTTPException(status_code=500, detail=f"Network or request error: {e}")
     except json.JSONDecodeError:
-        raise HTTPException(status_code=400, detail="Invalid LinkedIn cookie format. Must be a JSON string.")
+        print("JSON decoding error: Invalid LinkedIn cookie format or Apify response.")
+        raise HTTPException(status_code=400, detail="Invalid LinkedIn cookie format or Apify response. Must be a JSON string.")
     except Exception as e:
-        print(f"Error in fetch-linkedin-posts API: {e}")
+        print(f"An unexpected error occurred: {e}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
 
 

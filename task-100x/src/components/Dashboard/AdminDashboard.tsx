@@ -693,14 +693,13 @@ const AdminDashboard: React.FC = ({ userEmail }: AdminDashboardProps) => {
           <CardContent>
             <div className="space-y-5">
               <p className="text-black text-lg">Create, edit, and manage quizzes for your learners.</p>
-              <Link to="/admin/track-100x">
                 <Button
                   className="px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+                  onClick={()=> setIsQuizManagementOpen(true)}
                 >
                   <HelpCircle className="mr-3 h-5 w-5" />
                   Manage Quizzes
                 </Button>
-              </Link>
             </div>
           </CardContent>
         </Card>
