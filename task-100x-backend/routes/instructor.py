@@ -1428,13 +1428,7 @@ async def get_user_analytics(user_id: str, prisma: Prisma = Depends(get_prisma_c
     user = await prisma.user.find_unique(
         where={'id': user_id},
         include={
-            'posts': {
-                'select': {
-                    'createdAt': True,
-                    'numLikes': True,
-                    'numComments': True,
-                }
-            },
+            'posts': True,
             'streak': {
                 'select': {
                     'currentStreak': True,
