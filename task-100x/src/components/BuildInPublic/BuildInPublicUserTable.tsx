@@ -154,6 +154,7 @@ const BuildInPublicUserTable = ({ cohortId }: BuildInPublicUserTableProps) => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Rank</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Total Posts</TableHead>
@@ -163,8 +164,9 @@ const BuildInPublicUserTable = ({ cohortId }: BuildInPublicUserTableProps) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
+            {users.map((user, index) => (
               <TableRow key={user.id}>
+                <TableCell>{index + 1}</TableCell>
                 <TableCell><Link to={`/admin/track-100x/${user.id}?userName=${encodeURIComponent(user.name || '')}`} className="text-orange-500 hover:underline">{user.name}</Link></TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.totalPosts}</TableCell>
