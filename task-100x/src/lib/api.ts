@@ -584,6 +584,16 @@ export const instructor = {
     );
     return response.data;
   },
+  getUsersData: async (): Promise<UserData[]> => {
+    const response = await api.get<UserData[]>(`/api/admin/users`);
+    return response.data;
+  },
+  fetchLinkedInPosts: async (linkedinCookie: string) => {
+    const response = await api.post(`/api/admin/fetch-linkedin-posts`, {
+      linkedinCookie,
+    });
+    return response.data;
+  },
   getBuildInPublicUsers: async (cohortId: string): Promise<UserData[]> => {
     const response = await api.get<UserData[]>(`/api/build-in-public/users?cohortId=${cohortId}`);
     return response.data;

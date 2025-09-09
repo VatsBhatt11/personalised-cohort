@@ -20,6 +20,8 @@ import { LogOut } from 'lucide-react';
 import { instructor, learner, WeekResource } from '@/lib/api';
 import axios, { isAxiosError, type AxiosError } from 'axios';
 import { Link, useLocation } from 'react-router-dom';
+import { Input } from '@/components/ui/input';
+import { toast } from '@/components/ui/use-toast';
 import BuildInPublicUserTable from '../BuildInPublic/BuildInPublicUserTable';
 
 interface Resource {
@@ -62,6 +64,16 @@ interface Cohort {
   totalWeeks: number;
 }
 
+interface UserData {
+  id: string;
+  name: string | null;
+  email: string | null;
+  totalPosts: number;
+  lastPosted: string | null;
+  totalLikes: number;
+  totalComments: number;
+}
+
 const AdminDashboard: React.FC = ({ userEmail }: AdminDashboardProps) => {
   const location = useLocation();
   const isBuildInPublicRoute = location.pathname === '/admin/track-100x';
@@ -101,6 +113,9 @@ const AdminDashboard: React.FC = ({ userEmail }: AdminDashboardProps) => {
   const [isGenerateAIModalOpen, setIsGenerateAIModalOpen] = useState(false);
   const { toast } = useToast();
   const { logout } = useAuth();
+  const [linkedinCookie, setLinkedinCookie] = useState("");
+  const [isFetchingPosts, setIsFetchingPosts] = useState(false);
+  const [usersData, setUsersData] = useState<UserData[]>([]);
 
   const handleLogout = () => {
     logout();
