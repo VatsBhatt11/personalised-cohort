@@ -1429,12 +1429,7 @@ async def get_user_analytics(user_id: str, prisma: Prisma = Depends(get_prisma_c
         where={'id': user_id},
         include={
             'posts': True,
-            'streak': {
-                'select': {
-                    'currentStreak': True,
-                    'weeklyStreak': True,
-                }
-            }
+            'streak': True
         }
     )
 
