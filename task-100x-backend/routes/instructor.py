@@ -1414,6 +1414,8 @@ async def get_build_in_public_users(
             "totalLikes": total_likes,
             "totalComments": total_comments,
         })
+    # Sort by total posts (descending), then total likes (descending)
+    user_data.sort(key=lambda x: (x["totalPosts"], x["totalLikes"]), reverse=True)
     return user_data
 
 @router.get("/build-in-public/users/{user_id}/name")
@@ -1440,14 +1442,44 @@ async def get_user_analytics(user_id: str, prisma: Prisma = Depends(get_prisma_c
     total_likes = sum(post.numLikes for post in user.posts)
     total_comments = sum(post.numComments for post in user.posts)
 
-    # Calculate longest streak (simplified for now, can be improved with more complex logic)
-    # This assumes posts are sorted by createdAt, which they are not by default from Prisma
-    # For a true streak, you'd need to fetch all posts, sort them, and then calculate consecutive days
-    longest_streak = user.streak.currentStreak if user.streak else 0
+    # Calculate longest streak
+    if user.posts:
+        # Sort posts by postedAt to ensure correct streak calculation
+        sorted_posts = sorted(user.posts, key=lambda p: p.postedAt)
+        
+        longest_streak = 0
+        current_streak = 0
+        last_post_date = None
 
-    # For rank, you would need to query all users and sort them by a metric (e.g., total_posts)
-    # This is a placeholder and would require a more complex query
-    rank = 1 # Placeholder
+        for post in sorted_posts:
+            post_date = post.postedAt.date()
+            if last_post_date is None:
+                current_streak = 1
+            elif (post_date - last_post_date).days == 1:
+                current_streak += 1
+            elif (post_date - last_post_date).days > 1:
+                current_streak = 1
+            
+            longest_streak = max(longest_streak, current_streak)
+            last_post_date = post_date
+    else:
+        longest_streak = 0
+
+    # Calculate rank
+    all_users = await prisma.user.find_many(include={'posts': True})
+    users_with_posts = []
+    for u in all_users:
+        users_with_posts.append({
+            "id": u.id,
+            "totalPosts": len(u.posts)
+        })
+    users_with_posts.sort(key=lambda x: x["totalPosts"], reverse=True)
+
+    rank = 1
+    for i, u_data in enumerate(users_with_posts):
+        if u_data["id"] == user_id:
+            rank = i + 1
+            break
 
     return {
         "totalPosts": total_posts,

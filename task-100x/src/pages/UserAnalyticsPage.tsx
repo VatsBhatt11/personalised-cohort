@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { instructor } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,10 +15,20 @@ interface UserStats {
 
 const UserAnalyticsPage = () => {
   const { userId } = useParams<{ userId: string }>();
+  const location = useLocation();
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const [userName, setUserName] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const name = params.get('userName');
+    if (name) {
+      setUserName(decodeURIComponent(name));
+    }
+  }, [location.search]);
 
   useEffect(() => {
     const fetchUserStats = async () => {
@@ -58,7 +68,7 @@ const UserAnalyticsPage = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">User Analytics for {userId}</h1>
+      <h1 className="text-2xl font-bold mb-4">User Analytics for {userName || userId}</h1>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

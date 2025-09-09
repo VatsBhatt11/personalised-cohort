@@ -164,7 +164,7 @@ const BuildInPublicUserTable = ({ cohortId }: BuildInPublicUserTableProps) => {
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell><Link to={`/admin/track-100x/${user.id}`}>{user.name}</Link></TableCell>
+                <TableCell><Link to={`/admin/track-100x/${user.id}?userName=${encodeURIComponent(user.name || '')}`}>{user.name}</Link></TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.totalPosts}</TableCell>
                 <TableCell>{user.totalLikes}</TableCell>
