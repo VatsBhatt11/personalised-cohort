@@ -1,7 +1,7 @@
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // directUrl = env("DIRECT_URL")
 }
 
 generator client {
@@ -27,22 +27,23 @@ model Post {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
-  password      String
-  name          String?
-  phoneNumber   String?
-  createdFrom   String         @default("platform")
-  role          Role
-  type          String?
-  plans         Plan[]
-  streak        Streak?
-  cohortId      String?
-  createdAt     DateTime       @default(now())
-  quizAttempts  QuizAttempt[]
-  notifications Notification[]
-  launchpad     Launchpad?
-  posts         Post[]         @relation(name: "UserPosts")
+  id               String         @id @default(uuid())
+  email            String         @unique
+  password         String
+  name             String?
+  phoneNumber      String?
+  linkedinUsername String?
+  createdFrom      String         @default("platform")
+  role             Role
+  type             String?
+  plans            Plan[]
+  streak           Streak?
+  cohortId         String?
+  createdAt        DateTime       @default(now())
+  quizAttempts     QuizAttempt[]
+  notifications    Notification[]
+  launchpad        Launchpad?
+  posts            Post[]         @relation(name: "UserPosts")
 }
 
 enum Role {
