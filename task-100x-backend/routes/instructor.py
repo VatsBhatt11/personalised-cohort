@@ -1284,10 +1284,8 @@ async def send_notifications(
     return {"success": True, "message": f"Attempted to send {len(notifications_to_send)} notifications."}
 
 @router.get("/build-in-public/users")
-async def get_build_in_public_users():
-    db = Prisma()
-    await db.connect()
-    users = await db.user.find_many(
+async def get_build_in_public_users(prisma: Prisma = Depends(get_prisma_client)):
+    users = await prisma.user.find_many(
         include={
             'posts': {
                 'select': {
@@ -1317,24 +1315,18 @@ async def get_build_in_public_users():
             "totalLikes": total_likes,
             "totalComments": total_comments,
         })
-    await db.disconnect()
     return user_data
 
 @router.get("/build-in-public/users/{user_id}/name")
-async def get_user_name(user_id: str):
-    db = Prisma()
-    await db.connect()
-    user = await db.user.find_unique(where={'id': user_id})
-    await db.disconnect()
+async def get_user_name(user_id: str, prisma: Prisma = Depends(get_prisma_client)):
+    user = await prisma.user.find_unique(where={'id': user_id})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return {"name": user.name}
 
 @router.get("/build-in-public/users/{user_id}/analytics")
-async def get_user_analytics(user_id: str):
-    db = Prisma()
-    await db.connect()
-    user = await db.user.find_unique(
+async def get_user_analytics(user_id: str, prisma: Prisma = Depends(get_prisma_client)):
+    user = await prisma.user.find_unique(
         where={'id': user_id},
         include={
             'posts': {
@@ -1352,7 +1344,6 @@ async def get_user_analytics(user_id: str):
             }
         }
     )
-    await db.disconnect()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
