@@ -71,6 +71,16 @@ class DBConnection:
 
             phone = row.get("Phone Number") or row.get("phone") or row.get("Phone") or None
             phone = phone.strip() if isinstance(phone, str) else None
+            linkedin_profile_url = row.get("LinkedIn Profile URL")
+            linkedin_username = None
+            if linkedin_profile_url:
+                # Extract username from LinkedIn profile URL
+                # Assuming URL format is https://www.linkedin.com/in/username/
+                parts = linkedin_profile_url.strip().split("/in/")
+                if len(parts) > 1:
+                    username_part = parts[1].split("/")[0]
+                    if username_part:
+                        linkedin_username = username_part
 
             user = await self.db.user.create(
                 data={
@@ -81,11 +91,11 @@ class DBConnection:
                     "createdFrom": "csv",
                     "role": "LEARNER",
                     "cohortId": cohort_id,
-                    "type" : type
+                    "type" : type,
+                    "linkedinUsername" : linkedin_username
                 }
             )
 
-            linkedin_profile_url = row.get("LinkedIn Profile URL") # Assuming this is the column name in CSV
             if linkedin_profile_url:
                 await self.db.post.create(
                     data={
