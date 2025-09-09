@@ -1418,13 +1418,6 @@ async def get_build_in_public_users(
     user_data.sort(key=lambda x: (x["totalPosts"], x["totalLikes"]), reverse=True)
     return user_data
 
-@router.get("/build-in-public/users/{user_id}/name")
-async def get_user_name(user_id: str, prisma: Prisma = Depends(get_prisma_client)):
-    user = await prisma.user.find_unique(where={'id': user_id})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return {"name": user.name}
-
 @router.get("/build-in-public/users/{user_id}/analytics")
 async def get_user_analytics(user_id: str, prisma: Prisma = Depends(get_prisma_client)):
     user = await prisma.user.find_unique(

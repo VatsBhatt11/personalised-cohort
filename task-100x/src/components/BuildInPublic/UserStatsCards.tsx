@@ -14,58 +14,44 @@ interface UserStats {
 }
 
 interface UserStatsCardsProps {
-  userId?: string; // Make userId optional
+  userStats: UserStats | null;
 }
 
-const UserStatsCards = ({ userId }: UserStatsCardsProps) => {
-  const [stats, setStats] = useState<UserStats>({
-    currentStreak: 0,
-    longestStreak: 0,
-    totalPosts: 0,
-    rank: 0,
-  });
+const UserStatsCards = ({ userStats }: UserStatsCardsProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchUserStats();
-  }, [userId]); // Add userId to dependency array
-
-  const fetchUserStats = async () => {
-    try {
-      if (!userId) return;
-      const data = await instructor.getUserStats(userId);
-      setStats(data);
-    } catch (error) {
-      console.error('Error fetching user stats:', error);
-      setError('Failed to load user stats');
-    } finally {
+    if (userStats) {
+      setIsLoading(false);
+    } else {
+      setError("User stats not available.");
       setIsLoading(false);
     }
-  };
+  }, [userStats]);
 
   const cardData = [
     {
       title: "Current Streak",
-      value: stats.currentStreak,
+      value: userStats?.currentStreak,
       unit: "days",
       icon: <Calendar size={24} color="#f97316" />,
     },
     {
       title: "Longest Streak",
-      value: stats.longestStreak,
+      value: userStats?.longestStreak,
       unit: "days",
       icon: <Star size={24} color="#f97316" />,
     },
     {
       title: "Total Posts",
-      value: stats.totalPosts,
+      value: userStats?.totalPosts,
       unit: "",
       icon: <Flag size={24} color="#f97316" />,
     },
     {
       title: "Current Rank",
-      value: `#${stats.rank}`,
+      value: `#${userStats?.rank}`,
       unit: "",
       icon: <Trophy size={24} color="#f97316" />,
     },

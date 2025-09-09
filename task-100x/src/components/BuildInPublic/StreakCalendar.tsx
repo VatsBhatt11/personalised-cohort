@@ -29,11 +29,20 @@ interface ActivityData {
   [date: string]: number;
 }
 
-interface StreakCalendarProps {
-  userId: string; 
+interface UserStats {
+  currentStreak: number;
+  longestStreak: number;
+  totalPosts: number;
+  rank: number;
+  name: string;
 }
 
-const StreakCalendar = ({ userId }: StreakCalendarProps) => {
+interface StreakCalendarProps {
+  userId: string;
+  userStats: UserStats;
+}
+
+const StreakCalendar = ({ userId, userStats }: StreakCalendarProps) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [streakData, setStreakData] = useState<Map<string, number>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
@@ -45,12 +54,12 @@ const StreakCalendar = ({ userId }: StreakCalendarProps) => {
 
   useEffect(() => {
     fetchActivityData();
-  }, [currentDate, userId]); 
+  }, [currentDate, userId]);
 
   const fetchActivityData = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const data = await instructor.getUserHeatmap(userId);
       const activityMap = new Map(Object.entries(data));
@@ -74,59 +83,22 @@ const StreakCalendar = ({ userId }: StreakCalendarProps) => {
   const getActivityLevel = (date: Date) => {
     const dateKey = format(date, "yyyy-MM-dd");
     const count = streakData.get(dateKey) || 0;
-    
+
     if (count === 0) return 0;
     if (count === 1) return 1;
     if (count === 2) return 2;
-    return 3; 
+    return 3;
   };
 
   const getActivityCount = (date: Date) => {
     const dateKey = format(date, "yyyy-MM-dd");
     const count = streakData.get(dateKey) || 0;
-    
-    return count; 
+
+    return count;
   };
 
-  const getCurrentStreak = () => {
-    let streak = 0;
-    let today = new Date();
-
-    while (true) {
-      const dateKey = format(today, "yyyy-MM-dd");
-      const count = streakData.get(dateKey) || 0;
-
-      if (count > 0) {
-        streak++;
-        today = subDays(today, 1);
-      } else {
-        break;
-      }
-    }
-
-    return streak;
-  };
-
-  const getLongestStreak = () => {
-    const sortedDates = Array.from(streakData.keys()).sort();
-    let longest = 0;
-    let current = 0;
-
-    for (const dateKey of sortedDates) {
-      const count = streakData.get(dateKey) || 0;
-      if (count > 0) {
-        current++;
-        longest = Math.max(longest, current);
-      } else {
-        current = 0;
-      }
-    }
-
-    return longest;
-  };
-
-  const currentStreak = getCurrentStreak();
-  const longestStreak = getLongestStreak();
+  const currentStreak = userStats?.currentStreak || 0;
+  const longestStreak = userStats?.longestStreak || 0;
 
   const months = Array.from({ length: 6 }, (_, i) => {
     const month = addMonths(startDate, i);
@@ -160,7 +132,7 @@ const StreakCalendar = ({ userId }: StreakCalendarProps) => {
                 for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
                   const adjustedIndex = (getDay(dayCursor) + 6) % 7;
                   days[adjustedIndex][week] = new Date(dayCursor);
-                  dayCursor = subDays(dayCursor, -1); 
+                  dayCursor = subDays(dayCursor, -1);
                 }
               }
 
@@ -245,10 +217,10 @@ const StreakCalendar = ({ userId }: StreakCalendarProps) => {
 
       <CardContent>
         <div className="calendar-controls">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="nav-button" 
+          <Button
+            variant="outline"
+            size="icon"
+            className="nav-button"
             onClick={goToPreviousMonth}
             disabled={isLoading}
           >
@@ -257,17 +229,17 @@ const StreakCalendar = ({ userId }: StreakCalendarProps) => {
           <span className="calendar-range">
             {format(startDate, "MMM yyyy")} – {format(endDate, "MMM yyyy")}
           </span>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="nav-button" 
+          <Button
+            variant="outline"
+            size="icon"
+            className="nav-button"
             onClick={goToNextMonth}
             disabled={isLoading}
           >
             <ChevronRight />
           </Button>
         </div>
-        
+
         {error ? (
           <div className="error-message">{error}</div>
         ) : isLoading ? (
