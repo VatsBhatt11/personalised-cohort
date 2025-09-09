@@ -21,7 +21,11 @@ interface UserData {
   totalComments: number;
 }
 
-const BuildInPublicUserTable = () => {
+interface BuildInPublicUserTableProps {
+  cohortId: string;
+}
+
+const BuildInPublicUserTable = ({ cohortId }: BuildInPublicUserTableProps) => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +35,7 @@ const BuildInPublicUserTable = () => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const response = await instructor.getBuildInPublicUsers();
+        const response = await instructor.getBuildInPublicUsers(cohortId);
         setUsers(response);
       } catch (error) {
         console.error("Error fetching users:", error);
@@ -42,7 +46,7 @@ const BuildInPublicUserTable = () => {
     };
 
     fetchUsers();
-  }, []);
+  }, [cohortId]);
 
   if (loading) {
     return <p>Loading users...</p>;

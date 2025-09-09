@@ -584,8 +584,8 @@ export const instructor = {
     );
     return response.data;
   },
-  getBuildInPublicUsers: async (): Promise<UserData[]> => {
-    const response = await api.get<UserData[]>("/api/build-in-public/users");
+  getBuildInPublicUsers: async (cohortId: string): Promise<UserData[]> => {
+    const response = await api.get<UserData[]>(`/api/build-in-public/users?cohortId=${cohortId}`);
     return response.data;
   },
 };

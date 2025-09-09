@@ -605,6 +605,7 @@ async def create_cohort(cohort_name: str = Form(...), total_weeks: int = Form(..
                 "Expected Outcomes": row_data.get("Expected Outcomes"),
                 "Coding Familiarity": row_data.get("Coding Familiarity"),
                 "Python Familiarity": row_data.get("Python Familiarity"),
+                "LinkedIn Profile URL" : row_data.get("LinkedIn Profile URL"),
                 "Languages": row_data.get("Languages"),
                 "Years of Experience": row_data.get("Years of Experience")
             }

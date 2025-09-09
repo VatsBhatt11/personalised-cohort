@@ -74,8 +74,6 @@ class DBConnection:
             linkedin_profile_url = row.get("LinkedIn Profile URL")
             linkedin_username = None
             if linkedin_profile_url:
-                # Extract username from LinkedIn profile URL
-                # Assuming URL format is https://www.linkedin.com/in/username/
                 parts = linkedin_profile_url.strip().split("/in/")
                 if len(parts) > 1:
                     username_part = parts[1].split("/")[0]

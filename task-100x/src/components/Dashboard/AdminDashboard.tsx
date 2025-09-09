@@ -599,7 +599,7 @@ const AdminDashboard: React.FC = ({ userEmail }: AdminDashboardProps) => {
       {hasSelectedCohort && (
         <div className="min-h-screen bg-white p-6 font-sans" style={{ fontFamily: gilroyFont }}>
       {isBuildInPublicRoute ? (
-            <BuildInPublicUserTable />
+            <BuildInPublicUserTable cohortId={cohortId} />
           ) : (
             <>
                   {/* Header */}
