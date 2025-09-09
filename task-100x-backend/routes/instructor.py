@@ -86,36 +86,40 @@ async def fetch_linkedin_posts(linkedin_cookie_data: LinkedInCookie, current_use
 
         # Process and store the fetched LinkedIn posts in your database
         for post in apify_data:
-            linkedin_username = None
-            if "inputUrl" in post and post["inputUrl"]:
-                parts = post["inputUrl"].split("/in/")
-                if len(parts) > 1:
-                    linkedin_username = parts[1].split("/")[0]
+            # Check if the post has a 'text' field and contains the required keywords
+            if "text" in post and post["text"] is not None:
+                post_text_lower = post["text"].lower()
+                if "100xengineer" in post_text_lower and "0to100x" in post_text_lower:
+                    linkedin_username = None
+                    if "inputUrl" in post and post["inputUrl"]:
+                        parts = post["inputUrl"].split("/in/")
+                        if len(parts) > 1:
+                            linkedin_username = parts[1].split("/")[0]
 
-            if linkedin_username:
-                user_id = next((user.id for user in users if user.linkedinUsername == linkedin_username), None)
+                    if linkedin_username:
+                        user_id = next((user.id for user in users if user.linkedinUsername == linkedin_username), None)
 
-                if user_id:
-                    await prisma.post.upsert(
-                        where={
-                            "url": post["url"]
-                        },
-                        data={
-                            "create": {
-                                "userId": user_id,
-                                "url": post["url"],
-                                "platform": "LINKEDIN",
-                                "numLikes": post.get("numLikes", 0),
-                                "numComments": post.get("numComments", 0),
-                                "postedAt": datetime.fromisoformat(post["postedAtISO"].replace("Z", "+00:00")) if "postedAtISO" in post else datetime.now(timezone.utc),
-                            },
-                            "update": {
-                                "numLikes": post.get("numLikes", 0),
-                                "numComments": post.get("numComments", 0),
-                                "postedAt": datetime.fromisoformat(post["postedAtISO"].replace("Z", "+00:00")) if "postedAtISO" in post else datetime.now(timezone.utc),
-                            },
-                        }
-                    )
+                        if user_id:
+                            await prisma.post.upsert(
+                                where={
+                                    "url": post["url"]
+                                },
+                                data={
+                                    "create": {
+                                        "userId": user_id,
+                                        "url": post["url"],
+                                        "platform": "LINKEDIN",
+                                        "numLikes": post.get("numLikes", 0),
+                                        "numComments": post.get("numComments", 0),
+                                        "postedAt": datetime.fromisoformat(post["postedAtISO"].replace("Z", "+00:00")) if "postedAtISO" in post else datetime.now(timezone.utc),
+                                    },
+                                    "update": {
+                                        "numLikes": post.get("numLikes", 0),
+                                        "numComments": post.get("numComments", 0),
+                                        "postedAt": datetime.fromisoformat(post["postedAtISO"].replace("Z", "+00:00")) if "postedAtISO" in post else datetime.now(timezone.utc),
+                                    },
+                                }
+                            )
 
         return {"message": "LinkedIn posts fetched successfully!", "data": apify_data}
 
