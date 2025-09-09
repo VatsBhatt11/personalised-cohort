@@ -605,7 +605,13 @@ export const instructor = {
   },
   getUserStats: async (userId: string): Promise<UserStats> => {
     const response = await api.get<UserStats>(
-      `/api/admin/users/${userId}/stats`
+      `/api/build-in-public/users/${userId}/analytics`
+    );
+    return response.data;
+  },
+  getUserHeatmap: async (userId: string): Promise<Record<string, number>> => {
+    const response = await api.get<Record<string, number>>(
+      `/api/build-in-public/users/${userId}/heatmap`
     );
     return response.data;
   },

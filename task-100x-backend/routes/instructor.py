@@ -1403,7 +1403,7 @@ async def get_build_in_public_users(
         total_comments = sum(post.numComments for post in user.posts)
         last_posted = None
         if user.posts:
-            last_posted = max(post.createdAt for post in user.posts).isoformat()
+            last_posted = max(post.postedAt for post in user.posts).isoformat()
 
         user_data.append({
             "id": user.id,
@@ -1469,36 +1469,25 @@ async def get_user_analytics(user_id: str, prisma: Prisma = Depends(get_prisma_c
         "rank": rank,
     }
 
-@router.get("build-in-public/users/{userId}/heatmap")
-async def get_user_heatmap(
-    userId: str,
-    startDate: str = Query(..., alias="startDate"),
-    endDate: str = Query(..., alias="endDate"),
-    prisma: Prisma = Depends(get_prisma_client),
-):
-    try:
-        start_date_obj = datetime.fromisoformat(startDate.replace("Z", "+00:00"))
-        end_date_obj = datetime.fromisoformat(endDate.replace("Z", "+00:00"))
+@router.get("/build-in-public/users/{user_id}/heatmap")
+async def get_user_heatmap_data(user_id: str, prisma: Prisma = Depends(get_prisma_client)):
+    user = await prisma.user.find_unique(
+        where={'id': user_id},
+        include={
+            'posts': {
+                'select': {
+                    'createdAt': True,
+                }
+            }
+        }
+    )
 
-        posts = await prisma.post.find_many(
-            where={
-                "userId": userId,
-                "createdAt": {
-                    "gte": start_date_obj,
-                    "lte": end_date_obj,
-                },
-            },
-            select={
-                "createdAt": True,
-            },
-        )
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
 
-        heatmap_data = defaultdict(int)
-        for post in posts:
-            date_key = post.createdAt.strftime("%Y-%m-%d")
-            heatmap_data[date_key] += 1
+    heatmap_data = {}
+    for post in user.posts:
+        date = post.createdAt.strftime("%Y-%m-%d")
+        heatmap_data[date] = heatmap_data.get(date, 0) + 1
 
-        return JSONResponse(content=dict(heatmap_data), status_code=200)
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return heatmap_data
