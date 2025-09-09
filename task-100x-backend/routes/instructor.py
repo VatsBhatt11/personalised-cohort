@@ -1295,13 +1295,7 @@ async def get_build_in_public_users(
     users = await prisma.user.find_many(
         where=where_clause,
         include={
-            'posts': {
-                'select': {
-                    'numLikes': True,
-                    'numComments': True,
-                    'createdAt': True,
-                }
-            }
+            'posts': True
         }
     )
 
