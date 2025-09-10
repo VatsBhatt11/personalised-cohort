@@ -157,7 +157,7 @@ async def fetch_linkedin_posts_sequentially(linkedin_cookie_data: LinkedInCookie
             await asyncio.sleep(120) # Call every 2 minutes
 
     # Start the keep-alive task in the background
-    asyncio.create_task(keep_alive_task())
+    keep_alive_handle = asyncio.create_task(keep_alive_task())
 
     try:
         users = await prisma.user.find_many(
@@ -169,6 +169,7 @@ async def fetch_linkedin_posts_sequentially(linkedin_cookie_data: LinkedInCookie
         )
 
         if not users:
+            keep_alive_handle.cancel() # Cancel the task if no users
             return {"message": "No LinkedIn usernames found to fetch posts for.", "data": []}
 
         all_apify_data = []
@@ -238,18 +239,23 @@ async def fetch_linkedin_posts_sequentially(linkedin_cookie_data: LinkedInCookie
                                         }
                                     )
 
+        keep_alive_handle.cancel() # Cancel the task when processing is complete
         return {"message": "LinkedIn posts fetched and processed sequentially!", "data": all_apify_data}
 
     except httpx.HTTPStatusError as e:
+        keep_alive_handle.cancel() # Cancel the task on error
         print(f"Apify API HTTP error: {e.response.status_code} - {e.response.text}")
         raise HTTPException(status_code=e.response.status_code, detail=f"Apify API error: {e.response.text}")
     except httpx.RequestError as e:
+        keep_alive_handle.cancel() # Cancel the task on error
         print(f"HTTPX request error: {e}")
         raise HTTPException(status_code=500, detail=f"Network or request error: {e}")
     except json.JSONDecodeError:
+        keep_alive_handle.cancel() # Cancel the task on error
         print("JSON decoding error: Invalid LinkedIn cookie format or Apify response.")
         raise HTTPException(status_code=400, detail="Invalid LinkedIn cookie format or Apify response. Must be a JSON string.")
     except Exception as e:
+        keep_alive_handle.cancel() # Cancel the task on error
         print(f"An unexpected error occurred: {e}")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
