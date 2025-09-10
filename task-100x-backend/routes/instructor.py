@@ -146,6 +146,19 @@ async def fetch_linkedin_posts_sequentially(linkedin_cookie_data: LinkedInCookie
     if current_user.role != "INSTRUCTOR":
         raise HTTPException(status_code=403, detail="Only instructors can fetch LinkedIn posts sequentially")
 
+    async def keep_alive_task():
+        while True:
+            try:
+                async with httpx.AsyncClient() as client:
+                    await client.get("https://one00x-be.onrender.com/api/cohorts")
+                print("Keep-alive API called successfully.")
+            except httpx.RequestError as e:
+                print(f"Keep-alive API call failed: {e}")
+            await asyncio.sleep(120) # Call every 2 minutes
+
+    # Start the keep-alive task in the background
+    asyncio.create_task(keep_alive_task())
+
     try:
         users = await prisma.user.find_many(
             where={
@@ -188,15 +201,6 @@ async def fetch_linkedin_posts_sequentially(linkedin_cookie_data: LinkedInCookie
 
                 apify_data = apify_response.json()
                 all_apify_data.extend(apify_data)
-
-                # Call the keep-alive API every 2 minutes
-                async with httpx.AsyncClient() as keep_alive_client:
-                    try:
-                        await keep_alive_client.get("https://one00x-be.onrender.com/api/cohorts")
-                        print("Keep-alive API called successfully.")
-                    except httpx.RequestError as e:
-                        print(f"Keep-alive API call failed: {e}")
-                await asyncio.sleep(120) # Wait for 2 minutes (120 seconds)
 
                 # Process and store the fetched LinkedIn posts in your database
                 for post in apify_data:
