@@ -28,31 +28,45 @@ async def generate_personalized_message_openai(context: dict) -> str:
     Pointer-1 contains: A plain-English explanation of the lecture topic and the specific skill/knowledge they'll gain.
     For eg: For session title 'Intro to API', "Pointer 1: You'll learn how APIs work as communication channels between different software systems."
     
-    Pointer-2 contains: A specific mechanism showing HOW this skill enables progress toward their Expected Outcomes. 
-    Focus on the pathway/bridge between the skill and their goal, not just that it helps. Avoid reusing exact words 
-    from their Expected Outcomes. Instead, explain the underlying capability this skill provides in their target domain.
-    For eg: For Outcome "Build in B2B SaaS space" + API session:
-    "Pointer 2: This integration knowledge lets you connect multiple business tools, creating the interconnected workflows companies need."
+    Pointer-2 contains: An INDIRECT connection showing how this skill creates opportunities or capabilities relevant to their Expected Outcomes. 
+    Don't explicitly mention their goals or use direct phrases like "helps you achieve" or "supports your goal of". Instead, describe 
+    the broader capability or opportunity this skill opens up in their target domain.
+    
+    REFERENCE EXAMPLE:
+    **Lecture Topic:** Introduction to API 
+    **Mentee Outcome:** Start freelancing on projects that help people day to day.
+    - Pointer 1: You'll see how APIs act as bridges, letting tools and apps work together.
+    - Pointer 2: This skill helps in quickly building practical solutions that people use daily.
     
     BRIDGE-BUILDING RULES:
     DO:
-    - Identify specific mechanisms between skill and goal
-    - Reference concrete applications in their target domain  
-    - Use action-oriented language ("enables you to...", "gives you the foundation to...")
-    - Connect to their background when it strengthens the bridge
+    - Make connections through implication and context
+    - Focus on the broader capability the skill provides
+    - Describe opportunities or doors this knowledge opens
+    - Reference what becomes possible with this skill
+    - Use indirect language that implies relevance
     
     DON'T:
+    - Directly reference their stated goals
+    - Use phrases like "this will help you achieve", "supports your goal of", "connects to your aim"
     - Reuse exact words/phrases from Expected Outcomes
-    - Make obvious statements ("this will help achieve your goals")
-    - Be generic about the connection
+    - Make the connection overly obvious or direct
     - Simply state the skill is useful for their field
+    
+    INDIRECT CONNECTION EXAMPLES:
+    Instead of: "This helps you build SaaS products" (direct)
+    Use: "This knowledge opens doors to creating interconnected business tools" (indirect)
+    
+    Instead of: "This supports your freelancing goals" (direct)  
+    Use: "This skill helps in quickly building practical solutions that people use daily" (indirect)
     
     WRITING RULES:
     - Keep it simple and encouraging, like talking to a friend
     - Each point = 1–2 lines max, 15-20 words each
     - Use "you" language consistently
-    - Ground connections in specific, actionable capabilities
+    - Make connections feel natural and conversational
     - Match technical depth to their skill level
+    - Let the relevance be implied rather than stated
     
     OUTPUT:
     Two concise bullet points, each 15-20 words, labeled as 'Pointer 1:' and 'Pointer 2:', no extra text.
