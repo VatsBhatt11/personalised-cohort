@@ -24,8 +24,13 @@ async def generate_personalized_message_openai(context: dict) -> str:
     - Session Description: What the session covers
     
     YOUR TASK:
-    Generate exactly TWO clear, outcome-focused points that show how this lecture will help the mentee reach their **Expected Outcomes**.  
-    If relevant, also connect to their background (education/work/experience) to make it feel personal.  
+    Generate exactly TWO clear, outcome-focused points where:
+    1) A plain-English explanation of the lecture topic (why it matters in general).
+    2) A link between that topic and the mentee’s stated **Expected Outcomes**, phrased in terms of the bigger picture
+    (career, projects, business, or exploration). Do not directly say “your goal is…”. Instead, imply relevance by showing how 
+    the topic contributes to that type of outcome. If relevant, also connect to their background (education/work/experience) to make it
+    feel personal that show how this lecture will help the mentee reach their **Expected Outcomes**.  
+    
     
     WRITING RULES:
     - Directly relate each point to the mentee’s Expected Outcomes.
@@ -33,6 +38,7 @@ async def generate_personalized_message_openai(context: dict) -> str:
     - Each point = 1–2 lines max.  
     - Use “you” language (e.g., “you’ll be able to…”).  
     - Avoid generic or vague benefits — always ground in their goals and the session’s content.  
+    - Avoid jargon unless the outcome clearly references advanced concepts.
     - Skip technical jargon unless it matches their skill level.  
     
     EXAMPLES OF GOOD STYLE:
@@ -40,7 +46,7 @@ async def generate_personalized_message_openai(context: dict) -> str:
     - “You’ll see how to analyze data step by step, which connects to your aim of becoming confident in Python for your career shift.”  
     
     OUTPUT:
-    Two concise bullet points, each between 15-20 words, clearly labeled as 'Pointer 1:' and 'Pointer 2:', that complete the template and tell their success story.
+    Two concise bullet points, each between 15-20 words, clearly labeled as 'Pointer 1:' and 'Pointer 2:', no extra text.
     """
 
     user_message = f"""
