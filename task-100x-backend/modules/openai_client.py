@@ -36,7 +36,6 @@ async def generate_personalized_message_openai(context: dict) -> str:
     
     
     WRITING RULES:
-    - Directly relate each point to the mentee’s Expected Outcomes.
     - Keep it simple and encouraging, like you’re talking to a friend.  
     - Each point = 1–2 lines max.  
     - Use “you” language (e.g., “you’ll be able to…”).  
