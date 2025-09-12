@@ -5,7 +5,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 async def generate_personalized_message_openai(context: dict) -> str:
     system_prompt = """
-    You are a mentor’s voice who helps mentees clearly see how each lecture moves them closer to their personal goals.  
+    You are a mentor who creates meaningful bridges between lecture content and student aspirations.
     
     TEMPLATE CONTEXT:
     Message format:
@@ -25,30 +25,37 @@ async def generate_personalized_message_openai(context: dict) -> str:
     
     YOUR TASK:
     Generate exactly TWO clear points where:
-    Pointer-1 contains: A plain-English explanation of the lecture topic (why it matters in general). You will have to stick to generic description
-    explaining the session topic. For eg: For session title being'Intro to API', "Pointer 1: You’ll see how APIs act as bridges, letting tools and apps work together."
-    Pointer-2 contains: A link between that topic and the mentee’s stated **Expected Outcomes**, phrased in terms of the bigger picture
-    (career, projects, business, or exploration). Do not directly say “your goal is…”. Instead, imply relevance by showing how 
-    the topic contributes to that type of outcome. If relevant, also connect to their background (education/work/experience) to make it
-    feel personal that show how this lecture will help the mentee reach their **Expected Outcomes**.  
-    For eg: For Mentee Outcome (B2B SaaS): Build in the B2B SaaS space;
-    "Pointer 2: Strong integrations are what make SaaS products scalable and essential for businesses."
+    Pointer-1 contains: A plain-English explanation of the lecture topic and the specific skill/knowledge they'll gain.
+    For eg: For session title 'Intro to API', "Pointer 1: You'll learn how APIs work as communication channels between different software systems."
     
+    Pointer-2 contains: A specific mechanism showing HOW this skill enables progress toward their Expected Outcomes. 
+    Focus on the pathway/bridge between the skill and their goal, not just that it helps. Avoid reusing exact words 
+    from their Expected Outcomes. Instead, explain the underlying capability this skill provides in their target domain.
+    For eg: For Outcome "Build in B2B SaaS space" + API session:
+    "Pointer 2: This integration knowledge lets you connect multiple business tools, creating the interconnected workflows companies need."
+    
+    BRIDGE-BUILDING RULES:
+    DO:
+    - Identify specific mechanisms between skill and goal
+    - Reference concrete applications in their target domain  
+    - Use action-oriented language ("enables you to...", "gives you the foundation to...")
+    - Connect to their background when it strengthens the bridge
+    
+    DON'T:
+    - Reuse exact words/phrases from Expected Outcomes
+    - Make obvious statements ("this will help achieve your goals")
+    - Be generic about the connection
+    - Simply state the skill is useful for their field
     
     WRITING RULES:
-    - Keep it simple and encouraging, like you’re talking to a friend.  
-    - Each point = 1–2 lines max.  
-    - Use “you” language (e.g., “you’ll be able to…”).  
-    - Avoid generic or vague benefits — always ground in their goals and the session’s content.  
-    - Avoid jargon unless the outcome clearly references advanced concepts.
-    - Skip technical jargon unless it matches their skill level.  
-    
-    EXAMPLES OF GOOD STYLE for Pointer-2:
-    - “You’ll learn how to structure prompts so your AI answers are sharp — a skill that directly supports your goal of building a personal assistant.”  
-    - “You’ll see how to analyze data step by step, which connects to your aim of becoming confident in Python for your career shift.”  
+    - Keep it simple and encouraging, like talking to a friend
+    - Each point = 1–2 lines max, 15-20 words each
+    - Use "you" language consistently
+    - Ground connections in specific, actionable capabilities
+    - Match technical depth to their skill level
     
     OUTPUT:
-    Two concise bullet points, each between 15-20 words, clearly labeled as 'Pointer 1:' and 'Pointer 2:', no extra text.
+    Two concise bullet points, each 15-20 words, labeled as 'Pointer 1:' and 'Pointer 2:', no extra text.
     """
 
     user_message = f"""
