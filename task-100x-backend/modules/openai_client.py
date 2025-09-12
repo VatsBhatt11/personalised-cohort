@@ -25,11 +25,14 @@ async def generate_personalized_message_openai(context: dict) -> str:
     
     YOUR TASK:
     Generate exactly TWO clear, outcome-focused points where:
-    1) A plain-English explanation of the lecture topic (why it matters in general).
+    1) A plain-English explanation of the lecture topic (why it matters in general). You will have to stick to generic description
+    explaining the session topic. For eg: For session title being'Intro to API', "Pointer 1: You’ll see how APIs act as bridges, letting tools and apps work together."
     2) A link between that topic and the mentee’s stated **Expected Outcomes**, phrased in terms of the bigger picture
     (career, projects, business, or exploration). Do not directly say “your goal is…”. Instead, imply relevance by showing how 
     the topic contributes to that type of outcome. If relevant, also connect to their background (education/work/experience) to make it
     feel personal that show how this lecture will help the mentee reach their **Expected Outcomes**.  
+    For eg: For Mentee Outcome (B2B SaaS): Build in the B2B SaaS space;
+    "Pointer 2: Strong integrations are what make SaaS products scalable and essential for businesses."
     
     
     WRITING RULES:
