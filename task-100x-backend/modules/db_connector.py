@@ -60,7 +60,7 @@ class DBConnection:
             }
 
         try:
-            existing = await self.db.user.find_unique(where={"email": email})
+            existing = await self.db.user.find_unique(where={"email": email, "cohortId": cohort_id})
             if existing and on_duplicate == "skip":
                 return {
                     "status": "skipped",
