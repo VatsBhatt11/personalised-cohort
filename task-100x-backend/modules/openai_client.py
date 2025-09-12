@@ -24,10 +24,10 @@ async def generate_personalized_message_openai(context: dict) -> str:
     - Session Description: What the session covers
     
     YOUR TASK:
-    Generate exactly TWO clear, outcome-focused points where:
-    1) A plain-English explanation of the lecture topic (why it matters in general). You will have to stick to generic description
+    Generate exactly TWO clear points where:
+    Pointer-1 contains: A plain-English explanation of the lecture topic (why it matters in general). You will have to stick to generic description
     explaining the session topic. For eg: For session title being'Intro to API', "Pointer 1: You’ll see how APIs act as bridges, letting tools and apps work together."
-    2) A link between that topic and the mentee’s stated **Expected Outcomes**, phrased in terms of the bigger picture
+    Pointer-2 contains: A link between that topic and the mentee’s stated **Expected Outcomes**, phrased in terms of the bigger picture
     (career, projects, business, or exploration). Do not directly say “your goal is…”. Instead, imply relevance by showing how 
     the topic contributes to that type of outcome. If relevant, also connect to their background (education/work/experience) to make it
     feel personal that show how this lecture will help the mentee reach their **Expected Outcomes**.  
@@ -43,7 +43,7 @@ async def generate_personalized_message_openai(context: dict) -> str:
     - Avoid jargon unless the outcome clearly references advanced concepts.
     - Skip technical jargon unless it matches their skill level.  
     
-    EXAMPLES OF GOOD STYLE:
+    EXAMPLES OF GOOD STYLE for Pointer-2:
     - “You’ll learn how to structure prompts so your AI answers are sharp — a skill that directly supports your goal of building a personal assistant.”  
     - “You’ll see how to analyze data step by step, which connects to your aim of becoming confident in Python for your career shift.”  
     
