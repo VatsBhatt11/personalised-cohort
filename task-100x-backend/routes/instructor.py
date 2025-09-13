@@ -1497,20 +1497,20 @@ async def send_notifications(
                 status=status,
                 media=media
             )
-            await prisma.notification.update(
-                where={"id": notification.id},
-                data={
-                    "status": "sent"
-                }
-            )
+            # await prisma.notification.update(
+            #     where={"id": notification.id},
+            #     data={
+            #         "status": "sent"
+            #     }
+            # )
         except Exception as e:
             print(f"Failed to send notification {notification.id}: {e}")
-            await prisma.notification.update(
-                where={"id": notification.id},
-                data={
-                    "status": "failed"
-                }
-            )
+            # await prisma.notification.update(
+            #     where={"id": notification.id},
+            #     data={
+            #         "status": "failed"
+            #     }
+            # )
     return {"success": True, "message": f"Attempted to send {len(notifications_to_send)} notifications."}
 
 @router.get("/build-in-public/users")
