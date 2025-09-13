@@ -1469,10 +1469,23 @@ async def send_notifications(
                 elif line.startswith('Pointer 2:'):
                     pointer2 = line.replace('Pointer 2:', '').strip()
             # Calculate remaining time and status (re-introducing logic from _send_notifications_in_background)
-            ist = timezone(timedelta(hours=5, minutes=30))
-            now_ist = datetime.now(ist)
-            # Assuming session_details.date is a datetime object and session time is 6 PM IST
-            session_time_ist = notification.session.createdAt.replace(hour=18, minute=0, second=0, microsecond=0)
+            ist_offset = timedelta(hours=5, minutes=30)
+            ist_timezone = timezone(ist_offset)
+
+            now_ist = datetime.now(ist_timezone)
+
+            # Assume notification.session.createdAt is UTC. Convert it to IST first.
+            # If createdAt is naive, assume it's UTC and make it timezone-aware.
+            if notification.session.createdAt.tzinfo is None:
+                session_created_at_utc = notification.session.createdAt.replace(tzinfo=timezone.utc)
+            else:
+                session_created_at_utc = notification.session.createdAt.astimezone(timezone.utc)
+
+            session_created_at_ist = session_created_at_utc.astimezone(ist_timezone)
+
+            # Now replace the hour on the IST date to 6 PM IST
+            session_time_ist = session_created_at_ist.replace(hour=18, minute=0, second=0, microsecond=0)
+
             remaining_time_delta = session_time_ist - now_ist
             remaining_minutes = int(remaining_time_delta.total_seconds() / 60)
             status = ""
