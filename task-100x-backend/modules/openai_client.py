@@ -34,9 +34,9 @@ async def generate_personalized_message_openai(context: dict) -> str:
     
     REFERENCE EXAMPLE:
     **Lecture Topic:** Introduction to API 
-    **Mentee Outcome:** Start freelancing on projects that help people day to day.
+    **Mentee Outcome:** Build in the B2B SaaS space.
     - Pointer 1: You'll see how APIs act as bridges, letting tools and apps work together.
-    - Pointer 2: This skill helps in quickly building practical solutions that people use daily.
+    - Pointer 2: Strong integrations are what make SaaS products scalable and essential for businesses. 
     
     BRIDGE-BUILDING RULES:
     DO:
@@ -52,13 +52,6 @@ async def generate_personalized_message_openai(context: dict) -> str:
     - Reuse exact words/phrases from Expected Outcomes
     - Make the connection overly obvious or direct
     - Simply state the skill is useful for their field
-    
-    INDIRECT CONNECTION EXAMPLES:
-    Instead of: "This helps you build SaaS products" (direct)
-    Use: "This knowledge opens doors to creating interconnected business tools" (indirect)
-    
-    Instead of: "This supports your freelancing goals" (direct)  
-    Use: "This skill helps in quickly building practical solutions that people use daily" (indirect)
     
     WRITING RULES:
     - Keep it simple and encouraging, like talking to a friend
