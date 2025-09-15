@@ -92,7 +92,7 @@ async def fetch_linkedin_posts(linkedin_cookie_data: LinkedInCookie, current_use
             # Check if the post has a 'text' field and contains the required keywords
             if "text" in post and post["text"] is not None:
                 post_text_lower = post["text"].lower()
-                if re.search(r'\b(100xengineer|100xengineers|0to100x)', post_text_lower, re.IGNORECASE):
+                if re.search(r'\b(100xengineer|100xengineers|0to100xengineers|0to100xengineer)', post_text_lower, re.IGNORECASE):
                     linkedin_username = None
                     if "inputUrl" in post and post["inputUrl"]:
                         parts = post["inputUrl"].split("/in/")
@@ -207,7 +207,7 @@ async def fetch_linkedin_posts_sequentially(linkedin_cookie_data: LinkedInCookie
                 for post in apify_data:
                     if "text" in post and post["text"] is not None:
                         post_text_lower = post["text"].lower()
-                        if re.search(r'\b(100xengineer|100xengineers|0to100x)', post_text_lower, re.IGNORECASE):
+                        if re.search(r'\b(100xengineer|100xengineers|0to100xengineers|0to100xengineer)', post_text_lower, re.IGNORECASE):
                             linkedin_username = None
                             if "inputUrl" in post and post["inputUrl"]:
                                 parts = post["inputUrl"].split("/in/")
