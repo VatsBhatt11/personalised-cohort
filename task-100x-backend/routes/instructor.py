@@ -1630,6 +1630,48 @@ async def get_user_analytics(user_id: str, prisma: Prisma = Depends(get_prisma_c
         "rank": rank,
     }
 
+@router.get("/build-in-public/users/{user_id}/posts")
+async def get_user_posts(user_id: str, prisma: Prisma = Depends(get_prisma_client)):
+    user = await prisma.user.find_unique(
+        where={'id': user_id},
+        include={
+            'posts': True
+        }
+    )
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Sort posts by postedAt in descending order (most recent first)
+    sorted_posts = sorted(user.posts, key=lambda p: p.postedAt, reverse=True)
+
+    return [
+        {
+            "id": post.id,
+            "url": post.url,
+            "postedAt": post.postedAt.isoformat(),
+            "hasReacted": post.hasReacted
+        }
+        for post in sorted_posts
+    ]
+
+
+@router.put("/build-in-public/posts/{post_id}/react")
+async def update_post_reaction_status(
+    post_id: str,
+    has_reacted: bool,
+    prisma: Prisma = Depends(get_prisma_client)
+):
+    try:
+        updated_post = await prisma.post.update(
+            where={'id': post_id},
+            data={'hasReacted': has_reacted}
+        )
+        return {"success": True, "message": "Post reaction status updated successfully", "post": updated_post}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update post reaction status: {e}")
+
+
 @router.get("/build-in-public/users/{user_id}/heatmap")
 async def get_user_heatmap_data(user_id: str, prisma: Prisma = Depends(get_prisma_client)):
     user = await prisma.user.find_unique(

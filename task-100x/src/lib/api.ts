@@ -1,4 +1,12 @@
 import axios, { AxiosResponse } from "axios";
+
+export interface Post {
+  id: string;
+  url: string;
+  postedAt: string;
+  hasReacted: boolean;
+}
+
 export interface Quiz {
   id?: string;
   cohortId: string;
@@ -621,6 +629,22 @@ export const instructor = {
   getUserHeatmap: async (userId: string): Promise<Record<string, number>> => {
     const response = await api.get<Record<string, number>>(
       `/api/build-in-public/users/${userId}/heatmap`
+    );
+    return response.data;
+  },
+  getUserPosts: async (userId: string): Promise<Post[]> => {
+    const response = await api.get<Post[]>(
+      `/api/build-in-public/users/${userId}/posts`
+    );
+    return response.data;
+  },
+  updatePostReactionStatus: async (
+    postId: string,
+    hasReacted: boolean
+  ): Promise<any> => {
+    const response = await api.put(
+      `/api/build-in-public/posts/${postId}/react`,
+      { has_reacted: hasReacted }
     );
     return response.data;
   },
