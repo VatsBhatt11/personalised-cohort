@@ -8,6 +8,7 @@ AISENSY_API_URL = os.environ.get('AISENSY_API_URL')
 async def send_whatsapp_message(
     destination: str,
     user_name: str,
+    session_status : str,
     message_body_1: str,
     message_body_2: str,
     session_title: str,
@@ -31,7 +32,7 @@ async def send_whatsapp_message(
         "destination": destination,
         "userName": user_name,
         "media" : media,
-        "templateParams": [session_title, user_name, message_body_1, message_body_2, remaining_time, status] 
+        "templateParams": [session_title, user_name, session_status, message_body_1, message_body_2, remaining_time, status] 
     }
 
     print(payload)

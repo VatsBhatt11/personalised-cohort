@@ -1488,10 +1488,13 @@ async def send_notifications(
 
             remaining_time_delta = session_time_ist - now_ist
             remaining_minutes = int(remaining_time_delta.total_seconds() / 60)
+            session_status = ""
             status = ""
             if remaining_minutes > 0:
+                session_status = "starting soon"
                 status = f"Starting in {remaining_minutes} minutes"
             else:
+                session_status = "live"
                 status = "Started"
             media = None
             if notification.session.imageUrl:
@@ -1503,6 +1506,7 @@ async def send_notifications(
             await send_whatsapp_message(
                 destination=whatsapp_number,
                 user_name=notification.user.name,
+                session_status = session_status,
                 message_body_1=pointer1,
                 message_body_2=pointer2,
                 session_title=notification.session.title,
