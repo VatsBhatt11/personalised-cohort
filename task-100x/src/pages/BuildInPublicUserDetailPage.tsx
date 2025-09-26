@@ -116,40 +116,74 @@ const BuildInPublicUserDetailPage = () => {
         <UserStatsCards userStats={userStats} />
         <StreakCalendar userId={userId} userStats={userStats} />
 
-        <div className="mt-8">
-          <h2 className="text-xl font-bold mb-4">User Posts</h2>
-          <div className="flex space-x-2 mb-4">
-            <Button onClick={() => setFilter("all")} variant={filter === "all" ? "default" : "outline"}>All Posts</Button>
-            <Button onClick={() => setFilter("reacted")} variant={filter === "reacted" ? "default" : "outline"}>Reacted Posts</Button>
-            <Button onClick={() => setFilter("unreacted")} variant={filter === "unreacted" ? "default" : "outline"}>Unreacted Posts</Button>
+        <div className="mt-8 p-6 bg-white rounded-lg shadow-md">
+          <h2 className="text-2xl font-bold mb-4 text-black">User Posts</h2>
+          <div className="flex space-x-3 mb-6">
+            <Button
+              onClick={() => setFilter("all")}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${filter === "all"
+                ? "bg-orange-500 text-white hover:bg-orange-600"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
+              `}
+            >
+              All Posts
+            </Button>
+            <Button
+              onClick={() => setFilter("reacted")}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${filter === "reacted"
+                ? "bg-orange-500 text-white hover:bg-orange-600"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
+              `}
+            >
+              Reacted Posts
+            </Button>
+            <Button
+              onClick={() => setFilter("unreacted")}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${filter === "unreacted"
+                ? "bg-orange-500 text-white hover:bg-orange-600"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
+              `}
+            >
+              Unreacted Posts
+            </Button>
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Sr No.</TableHead>
-                <TableHead>Post URL</TableHead>
-                <TableHead>Post Date</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredPosts.map((post, index) => (
-                <TableRow key={post.id}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell><a href={post.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Link</a></TableCell>
-                  <TableCell>{new Date(post.postedAt).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <Toggle
-                      pressed={post.hasReacted}
-                      onPressedChange={() => handleToggleReacted(post.id, post.hasReacted)}
-                    >
-                      {post.hasReacted ? "Reacted" : "Unreacted"}
-                    </Toggle>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table className="min-w-full bg-white border border-gray-200 rounded-lg">
+              <TableHeader className="bg-gray-100">
+                <TableRow>
+                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sr No.</TableHead>
+                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Post URL</TableHead>
+                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Post Date</TableHead>
+                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredPosts.map((post, index) => (
+                  <TableRow key={post.id} className="border-b border-gray-200 hover:bg-gray-50">
+                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{index + 1}</TableCell>
+                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <a href={post.url} target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline font-medium">
+                        Link
+                      </a>
+                    </TableCell>
+                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(post.postedAt).toLocaleDateString()}</TableCell>
+                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm">
+                      <Toggle
+                        pressed={post.hasReacted}
+                        onPressedChange={() => handleToggleReacted(post.id, post.hasReacted)}
+                        className={`h-8 px-4 rounded-full text-xs font-medium transition-colors ${post.hasReacted
+                          ? "bg-orange-500 text-white hover:bg-orange-600"
+                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
+                        `}
+                      >
+                        {post.hasReacted ? "Reacted" : "Unreacted"}
+                      </Toggle>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </div>
     </AppLayout>

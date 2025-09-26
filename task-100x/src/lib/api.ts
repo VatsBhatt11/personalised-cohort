@@ -203,8 +203,8 @@ export interface UserData {
   totalComments: number;
 }
 
-// const API_BASE_URL = "http://localhost:8000";
-const API_BASE_URL = "https://one00x-be.onrender.com";
+const API_BASE_URL = "http://localhost:8000";
+// const API_BASE_URL = "https://one00x-be.onrender.com";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -643,8 +643,7 @@ export const instructor = {
     hasReacted: boolean
   ): Promise<any> => {
     const response = await api.put(
-      `/api/build-in-public/posts/${postId}/react`,
-      { has_reacted: hasReacted }
+      `/api/build-in-public/posts/${postId}/react?has_reacted=${hasReacted}`
     );
     return response.data;
   },
