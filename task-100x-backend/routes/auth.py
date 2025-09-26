@@ -74,7 +74,8 @@ async def signup(user: UserCreate, prisma: Prisma = Depends(get_db)):
     )
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-    
+    if len(user.password.encode('utf-8')) > 72:
+        raise HTTPException(status_code=400, detail="Password cannot be longer than 72 characters")
     # Hash password
     hashed_password = pwd_context.hash(user.password)
     
@@ -119,7 +120,8 @@ async def login(user: UserLogin, prisma: Prisma = Depends(get_db)):
     )
     if not db_user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
-    
+    if len(user.password.encode('utf-8')) > 72:
+        raise HTTPException(status_code=400, detail="Password cannot be longer than 72 characters")
     # Verify password
     if not pwd_context.verify(user.password, db_user.password):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
