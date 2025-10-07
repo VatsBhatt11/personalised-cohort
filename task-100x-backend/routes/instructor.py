@@ -60,33 +60,67 @@ async def fetch_linkedin_posts(linkedin_cookie_data: LinkedInCookie, current_use
             return {"message": "No LinkedIn usernames found to fetch posts for.", "data": []}
 
         all_apify_data = []
+        processed_users_count = 0
+        
+        users_to_process = []
+        for user in users:
+            if user.linkedinUsername:
+                today = datetime.now(timezone.utc).date()
+                existing_posts_today = await prisma.post.find_first(
+                    where={
+                        "userId": user.id,
+                        "postedAt": {
+                            "gte": datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc),
+                            "lt": datetime.combine(today + timedelta(days=1), datetime.min.time(), tzinfo=timezone.utc),
+                        },
+                    }
+                )
+                if not existing_posts_today:
+                    users_to_process.append(user)
+        
+        for user in users_to_process:
+            if processed_users_count >= 100:
+                print("Reached limit of 100 users for post fetching.")
+                break
 
-        # Split users into batches for parallel processing
-        batch_size = 3  # Number of parallel calls
-        user_batches = [users[i:i + batch_size] for i in range(0, len(users), batch_size)]
+            try:
+                url = f"https://www.linkedin.com/in/{user.linkedinUsername}/recent-activity/all/"
+                urls = [url] # Process one URL at a time
 
-        for batch in user_batches:
-            tasks = []
-            for user in batch:
-                if user.linkedinUsername:  # Only process users with a LinkedIn profile
-                    url = f"https://www.linkedin.com/in/{user.linkedinUsername}/recent-activity/all/"
-                    tasks.append(_make_apify_call_batch([url], linkedin_cookie_data.linkedinCookie))
-            
-            if tasks:
-                batch_results = await asyncio.gather(*tasks)
-                for apify_data in batch_results:
-                    all_apify_data.extend(apify_data)
+                apify_request_body = {
+                    "cookie": json.loads(linkedin_cookie_data.linkedinCookie),
+                    "deepScrape": True,
+                    "maxDelay": 8,
+                    "minDelay": 2,
+                    "proxy": {
+                        "useApifyProxy": True,
+                        "apifyProxyCountry": "US",
+                    },
+                    "rawData": False,
+                    "urls": urls,
+                    "limitPerSource" : 100
+                }
 
-                    # Process and store the fetched LinkedIn posts in your database
-                    for post in apify_data:
-                        if "text" in post and post["text"] is not None:
-                            post_text_lower = post["text"].lower()
-                            if re.search(r'\b(0to100xengineers|0to100xengineer|0to100xEngineers|0to100xEngineer|100xengineer|100xengineers|100xEngineers|#100xengineers|#0to100xengineers|#0to100xengineer|#0to100xEngineers|#0to100xEngineer)', post_text_lower, re.IGNORECASE):
-                                linkedin_username = None
-                                if "inputUrl" in post and post["inputUrl"]:
-                                    parts = post["inputUrl"].split("/in/")
-                                    if len(parts) > 1:
-                                        linkedin_username = parts[1].split("/")[0]
+                apify_api_token = os.environ.get("APIFY_API_TOKEN")
+                apify_api_url = f"https://api.apify.com/v2/acts/curious_coder~linkedin-post-search-scraper/run-sync-get-dataset-items?token={apify_api_token}"
+
+                async with httpx.AsyncClient(timeout=3600.0) as client:
+                    apify_response = await client.post(apify_api_url, json=apify_request_body)
+                    apify_response.raise_for_status()
+
+                apify_data = apify_response.json()
+                all_apify_data.extend(apify_data)
+
+                # Process and store the fetched LinkedIn posts in your database
+                for post in apify_data:
+                    if "text" in post and post["text"] is not None:
+                        post_text_lower = post["text"].lower()
+                        if re.search(r'\b(0to100xengineers|0to100xengineer|0to100xEngineers|0to100xEngineer|100xengineer|100xengineers|100xEngineers|#100xengineers|#0to100xengineers|#0to100xengineer|#0to100xEngineers|#0to100xEngineer)', post_text_lower, re.IGNORECASE):
+                            linkedin_username = None
+                            if "inputUrl" in post and post["inputUrl"]:
+                                parts = post["inputUrl"].split("/in/")
+                                if len(parts) > 1:
+                                    linkedin_username = parts[1].split("/")[0]
 
                                 if linkedin_username:
                                     user_id = next((u.id for u in users if u.linkedinUsername == linkedin_username), None)
@@ -112,8 +146,21 @@ async def fetch_linkedin_posts(linkedin_cookie_data: LinkedInCookie, current_use
                                                 },
                                             }
                                         )
+                    processed_users_count += 1
+            except httpx.HTTPStatusError as e:
+                print(f"Apify API HTTP error for user {user.linkedinUsername}: {e.response.status_code} - {e.response.text}")
+                # Continue to the next user
+            except httpx.RequestError as e:
+                print(f"HTTPX request error for user {user.linkedinUsername}: {e}")
+                # Continue to the next user
+            except json.JSONDecodeError:
+                print(f"JSON decoding error for user {user.linkedinUsername}: Invalid LinkedIn cookie format or Apify response.")
+                # Continue to the next user
+            except Exception as e:
+                print(f"An unexpected error occurred for user {user.linkedinUsername}: {e}")
+                traceback.print_exc()
+                # Continue to the next user
 
-        keep_alive_handle.cancel() # Cancel the task when processing is complete
         return {"message": "LinkedIn posts fetched and processed sequentially!", "data": all_apify_data}
 
     except httpx.HTTPStatusError as e:
@@ -133,6 +180,8 @@ async def fetch_linkedin_posts(linkedin_cookie_data: LinkedInCookie, current_use
         print(f"An unexpected error occurred: {e}")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+    finally:
+        keep_alive_handle.cancel() # Cancel the task when processing is complete
 
 
 @router.post("/build-in-public/fetch-linkedin-posts-sequentially")
@@ -263,7 +312,6 @@ async def fetch_linkedin_posts_sequentially(linkedin_cookie_data: LinkedInCookie
                     traceback.print_exc()
                     # Continue to the next user
 
-        keep_alive_handle.cancel() # Cancel the task when processing is complete
         return {"message": "LinkedIn posts fetched and processed sequentially!", "data": all_apify_data}
 
     except Exception as e:
