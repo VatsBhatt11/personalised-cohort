@@ -79,8 +79,8 @@ async def fetch_linkedin_posts(linkedin_cookie_data: LinkedInCookie, current_use
                     users_to_process.append(user)
         
         for user in users_to_process:
-            if processed_users_count >= 100:
-                print("Reached limit of 100 users for post fetching.")
+            if processed_users_count >= 20:
+                print("Reached limit of 20 users for post fetching.")
                 break
 
             try:
