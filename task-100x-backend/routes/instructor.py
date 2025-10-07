@@ -465,6 +465,43 @@ class CreateSessionResponse(BaseModel):
     data: SessionResponse
     message: str
 
+class NotificationUpdate(BaseModel):
+    message: str
+
+@router.put("/notifications/{notification_id}")
+async def update_notification_message(notification_id: str, notification_update: NotificationUpdate, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+    if current_user.role != "INSTRUCTOR":
+        raise HTTPException(status_code=403, detail="Only instructors can edit notification messages")
+
+    updated_notification = await prisma.notification.update(
+        where={
+            "id": notification_id
+        },
+        data={
+            "message": notification_update.message
+        }
+    )
+
+    if not updated_notification:
+        raise HTTPException(status_code=404, detail="Notification not found")
+
+    return {"message": "Notification message updated successfully", "data": updated_notification}
+
+@router.get("/sessions/{session_id}/notifications")
+async def get_session_notifications(session_id: str, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+    if current_user.role != "INSTRUCTOR":
+        raise HTTPException(status_code=403, detail="Only instructors can view session notifications")
+
+    notifications = await prisma.notification.find_many(
+        where={
+            "sessionId": session_id
+        },
+        include={
+            "user": True
+        }
+    )
+
+    return {"message": "Session notifications retrieved successfully", "data": notifications}
 
 
 class WeeklyResourcePayload(BaseModel):

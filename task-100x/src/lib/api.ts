@@ -203,8 +203,26 @@ export interface UserData {
   totalComments: number;
 }
 
-const API_BASE_URL = "http://localhost:8000";
-// const API_BASE_URL = "https://one00x-be.onrender.com";
+export interface Notification {
+  id: string;
+  studentId: string;
+  sessionId: string;
+  message: string;
+  status: "READ" | "UNREAD";
+  createdAt: string;
+  student: {
+    id: string;
+    email: string;
+    name: string | null;
+  };
+}
+
+export interface NotificationUpdate {
+  message: string;
+}
+
+const API_BASE_URL = "https://one00x-be.onrender.com";
+// const API_BASE_URL = "http://localhost:8000";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -646,5 +664,26 @@ export const instructor = {
       `/api/build-in-public/posts/${postId}/react?has_reacted=${hasReacted}`
     );
     return response.data;
+  },
+  getSessionNotifications: async (
+    sessionId: string
+  ): Promise<Notification[]> => {
+    const response = await api.get<{
+      success: boolean;
+      data: Notification[];
+      message: string;
+    }>(`/api/sessions/${sessionId}/notifications`);
+    return response.data.data;
+  },
+  updateNotification: async (
+    notificationId: string,
+    data: NotificationUpdate
+  ): Promise<Notification> => {
+    const response = await api.put<{
+      success: boolean;
+      data: Notification;
+      message: string;
+    }>(`/api/notifications/${notificationId}`, data);
+    return response.data.data;
   },
 };

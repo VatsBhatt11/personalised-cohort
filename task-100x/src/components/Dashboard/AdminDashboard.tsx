@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import logo from '../../../public/100x.svg'
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BookOpen, Award, TrendingUp, Edit, Trash2, Loader2, HelpCircle, Send } from 'lucide-react';
+import { Users, BookOpen, Award, TrendingUp, Edit, Trash2, Loader2, HelpCircle, Send, MessageSquare } from 'lucide-react';
 import QuizForm from './QuizForm';
 import QuizCard from './QuizCard';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -23,6 +23,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import BuildInPublicUserTable from '../BuildInPublic/BuildInPublicUserTable';
+import NotificationModal from './NotificationModal';
 
 interface Resource {
   id?: string;
@@ -116,6 +117,8 @@ const AdminDashboard: React.FC = ({ userEmail }: AdminDashboardProps) => {
   const [linkedinCookie, setLinkedinCookie] = useState("");
   const [isFetchingPosts, setIsFetchingPosts] = useState(false);
   const [usersData, setUsersData] = useState<UserData[]>([]);
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  const [selectedSessionForNotifications, setSelectedSessionForNotifications] = useState<Session | null>(null);
 
   const handleLogout = () => {
     logout();
@@ -752,6 +755,17 @@ const AdminDashboard: React.FC = ({ userEmail }: AdminDashboardProps) => {
                            >
                              <Send className="w-5 h-5" />
                            </Button>
+                           <Button
+                             onClick={() => {
+                               setSelectedSessionForNotifications(session);
+                               setIsNotificationModalOpen(true);
+                             }}
+                             className="p-2 text-blue-600 hover:text-blue-800 hover:bg-orange-300 rounded-md transition-colors duration-200"
+                             title="View/Edit Notifications"
+                             disabled={loading}
+                           >
+                             <MessageSquare className="w-5 h-5" />
+                           </Button>
                          </div>
                        </div>
                        <p className="text-black">{session.description}</p>
@@ -852,6 +866,16 @@ const AdminDashboard: React.FC = ({ userEmail }: AdminDashboardProps) => {
         totalWeeks={cohorts.find(c => c.id === cohortId)?.totalWeeks || 12} // Pass totalWeeks of selected cohort
         fontFamily={jetbrainsMonoFont}
       />
+
+      {
+        isNotificationModalOpen && (
+        <NotificationModal
+          onClose={() => setIsNotificationModalOpen(false)}
+          sessionId={selectedSessionForNotifications?.id || ""}
+          sessionTitle={selectedSessionForNotifications?.title || ""}
+          weekNumber={selectedSessionForNotifications?.weekNumber || 0}
+        />)
+      }
     </>
   )}
   </div>)}
