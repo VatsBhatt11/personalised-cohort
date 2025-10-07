@@ -171,6 +171,22 @@ async def fetch_linkedin_posts_sequentially(linkedin_cookie_data: LinkedInCookie
         for user in users:
             if user.linkedinUsername:
                 try:
+                    # Check if posts for this user have already been scraped today
+                    today = datetime.now(timezone.utc).date()
+                    existing_posts_today = await prisma.post.find_first(
+                        where={
+                            "userId": user.id,
+                            "postedAt": {
+                                "gte": datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc),
+                                "lt": datetime.combine(today + timedelta(days=1), datetime.min.time(), tzinfo=timezone.utc),
+                            },
+                        }
+                    )
+
+                    if existing_posts_today:
+                        print(f"Skipping user {user.linkedinUsername} as posts have already been scraped today.")
+                        continue
+
                     url = f"https://www.linkedin.com/in/{user.linkedinUsername}/recent-activity/all/"
                     urls = [url] # Process one URL at a time
 
