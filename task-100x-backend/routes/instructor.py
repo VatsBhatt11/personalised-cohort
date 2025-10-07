@@ -55,87 +55,81 @@ async def fetch_linkedin_posts(linkedin_cookie_data: LinkedInCookie, current_use
             },
         )
 
-        urls = [
-            f"https://www.linkedin.com/in/{user.linkedinUsername}/recent-activity/all/"
-            for user in users
-            if user.linkedinUsername
-        ]
-
-        if not urls:
+        if not users:
+            keep_alive_handle.cancel() # Cancel the task if no users
             return {"message": "No LinkedIn usernames found to fetch posts for.", "data": []}
 
-        apify_request_body = {
-            "cookie": json.loads(linkedin_cookie_data.linkedinCookie), # Assuming linkedinCookie is a JSON string of the cookie array
-            "deepScrape": True,
-            "maxDelay": 8,
-            "minDelay": 2,
-            "proxy": {
-                "useApifyProxy": True,
-                "apifyProxyCountry": "US",
-            },
-            "rawData": False,
-            "urls": urls,
-            # "limitPerSource": 2,
-        }
+        all_apify_data = []
 
-        apify_api_token = os.environ.get("APIFY_API_TOKEN")
-        apify_api_url = f"https://api.apify.com/v2/acts/curious_coder~linkedin-post-search-scraper/run-sync-get-dataset-items?token={apify_api_token}"
+        # Split users into batches for parallel processing
+        batch_size = 3  # Number of parallel calls
+        user_batches = [users[i:i + batch_size] for i in range(0, len(users), batch_size)]
 
-        async with httpx.AsyncClient(timeout=21600.0) as client:
-            apify_response = await client.post(apify_api_url, json=apify_request_body)
-            apify_response.raise_for_status()
+        for batch in user_batches:
+            tasks = []
+            for user in batch:
+                if user.linkedinUsername:  # Only process users with a LinkedIn profile
+                    url = f"https://www.linkedin.com/in/{user.linkedinUsername}/recent-activity/all/"
+                    tasks.append(_make_apify_call_batch([url], linkedin_cookie_data.linkedinCookie))
+            
+            if tasks:
+                batch_results = await asyncio.gather(*tasks)
+                for apify_data in batch_results:
+                    all_apify_data.extend(apify_data)
 
-        apify_data = apify_response.json()
+                    # Process and store the fetched LinkedIn posts in your database
+                    for post in apify_data:
+                        if "text" in post and post["text"] is not None:
+                            post_text_lower = post["text"].lower()
+                            if re.search(r'\b(0to100xengineers|0to100xengineer|0to100xEngineers|0to100xEngineer|100xengineer|100xengineers|100xEngineers|#100xengineers|#0to100xengineers|#0to100xengineer|#0to100xEngineers|#0to100xEngineer)', post_text_lower, re.IGNORECASE):
+                                linkedin_username = None
+                                if "inputUrl" in post and post["inputUrl"]:
+                                    parts = post["inputUrl"].split("/in/")
+                                    if len(parts) > 1:
+                                        linkedin_username = parts[1].split("/")[0]
 
-        # Process and store the fetched LinkedIn posts in your database
-        for post in apify_data:
-            # Check if the post has a 'text' field and contains the required keywords
-            if "text" in post and post["text"] is not None:
-                post_text_lower = post["text"].lower()
-                if re.search(r'\b(#100xengineers|100xengineers|#0to100xengineers|#0to100xengineer|#0to100xEngineer|#0to100xEngineers)', post_text_lower, re.IGNORECASE):
-                    linkedin_username = None
-                    if "inputUrl" in post and post["inputUrl"]:
-                        parts = post["inputUrl"].split("/in/")
-                        if len(parts) > 1:
-                            linkedin_username = parts[1].split("/")[0]
+                                if linkedin_username:
+                                    user_id = next((u.id for u in users if u.linkedinUsername == linkedin_username), None)
 
-                    if linkedin_username:
-                        user_id = next((user.id for user in users if user.linkedinUsername == linkedin_username), None)
+                                    if user_id:
+                                        await prisma.post.upsert(
+                                            where={
+                                                "url": post["url"]
+                                            },
+                                            data={
+                                                "create": {
+                                                    "userId": user_id,
+                                                    "url": post["url"],
+                                                    "platform": "LINKEDIN",
+                                                    "numLikes": post.get("numLikes", 0),
+                                                    "numComments": post.get("numComments", 0),
+                                                    "postedAt": datetime.fromisoformat(post["postedAtISO"].replace("Z", "+00:00")) if "postedAtISO" in post else datetime.now(timezone.utc),
+                                                },
+                                                "update": {
+                                                    "numLikes": post.get("numLikes", 0),
+                                                    "numComments": post.get("numComments", 0),
+                                                    "postedAt": datetime.fromisoformat(post["postedAtISO"].replace("Z", "+00:00")) if "postedAtISO" in post else datetime.now(timezone.utc),
+                                                },
+                                            }
+                                        )
 
-                        if user_id:
-                            await prisma.post.upsert(
-                                where={
-                                    "url": post["url"]
-                                },
-                                data={
-                                    "create": {
-                                        "userId": user_id,
-                                        "url": post["url"],
-                                        "platform": "LINKEDIN",
-                                        "numLikes": post.get("numLikes", 0),
-                                        "numComments": post.get("numComments", 0),
-                                        "postedAt": datetime.fromisoformat(post["postedAtISO"].replace("Z", "+00:00")) if "postedAtISO" in post else datetime.now(timezone.utc),
-                                    },
-                                    "update": {
-                                        "numLikes": post.get("numLikes", 0),
-                                        "numComments": post.get("numComments", 0),
-                                        "postedAt": datetime.fromisoformat(post["postedAtISO"].replace("Z", "+00:00")) if "postedAtISO" in post else datetime.now(timezone.utc),
-                                    },
-                                }
-                            )
-
-        return {"message": "LinkedIn posts fetched successfully!", "data": apify_data}
+        keep_alive_handle.cancel() # Cancel the task when processing is complete
+        return {"message": "LinkedIn posts fetched and processed sequentially!", "data": all_apify_data}
 
     except httpx.HTTPStatusError as e:
+        keep_alive_handle.cancel() # Cancel the task on error
         print(f"Apify API HTTP error: {e.response.status_code} - {e.response.text}")
         raise HTTPException(status_code=e.response.status_code, detail=f"Apify API error: {e.response.text}")
     except httpx.RequestError as e:
+        keep_alive_handle.cancel() # Cancel the task on error
         print(f"HTTPX request error: {e}")
         raise HTTPException(status_code=500, detail=f"Network or request error: {e}")
     except json.JSONDecodeError:
+        keep_alive_handle.cancel() # Cancel the task on error
         print("JSON decoding error: Invalid LinkedIn cookie format or Apify response.")
         raise HTTPException(status_code=400, detail="Invalid LinkedIn cookie format or Apify response. Must be a JSON string.")
     except Exception as e:
+        keep_alive_handle.cancel() # Cancel the task on error
         print(f"An unexpected error occurred: {e}")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
