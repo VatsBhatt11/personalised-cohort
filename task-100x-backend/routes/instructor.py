@@ -69,7 +69,7 @@ async def fetch_linkedin_posts(linkedin_cookie_data: LinkedInCookie, current_use
                 existing_posts_today = await prisma.post.find_first(
                     where={
                         "userId": user.id,
-                        "postedAt": {
+                        "createdAt": {
                             "gte": datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc),
                             "lt": datetime.combine(today + timedelta(days=1), datetime.min.time(), tzinfo=timezone.utc),
                         },
@@ -98,7 +98,7 @@ async def fetch_linkedin_posts(linkedin_cookie_data: LinkedInCookie, current_use
                     },
                     "rawData": False,
                     "urls": urls,
-                    "limitPerSource" : 120
+                    "limitPerSource" : 100
                 }
 
                 apify_api_token = os.environ.get("APIFY_API_TOKEN")
@@ -225,7 +225,7 @@ async def fetch_linkedin_posts_sequentially(linkedin_cookie_data: LinkedInCookie
                     existing_posts_today = await prisma.post.find_first(
                         where={
                             "userId": user.id,
-                            "postedAt": {
+                            "createdAt": {
                                 "gte": datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc),
                                 "lt": datetime.combine(today + timedelta(days=1), datetime.min.time(), tzinfo=timezone.utc),
                             },
