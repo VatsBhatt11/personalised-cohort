@@ -98,7 +98,7 @@ async def fetch_linkedin_posts(linkedin_cookie_data: LinkedInCookie, current_use
                     },
                     "rawData": False,
                     "urls": urls,
-                    "limitPerSource" : 100
+                    "limitPerSource" : 120
                 }
 
                 apify_api_token = os.environ.get("APIFY_API_TOKEN")
