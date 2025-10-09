@@ -755,17 +755,19 @@ const AdminDashboard: React.FC = ({ userEmail }: AdminDashboardProps) => {
                            >
                              <Send className="w-5 h-5" />
                            </Button>
-                           <Button
-                             onClick={() => {
-                               setSelectedSessionForNotifications(session);
-                               setIsNotificationModalOpen(true);
-                             }}
-                             className="p-2 text-blue-600 hover:text-blue-800 hover:bg-orange-300 rounded-md transition-colors duration-200"
-                             title="View/Edit Notifications"
-                             disabled={loading}
-                           >
-                             <MessageSquare className="w-5 h-5" />
-                           </Button>
+                           <Link to={`/admin/notifications?sessionId=${session.id}`}>
+                            <Button
+                             //  onClick={() => {
+                             //    setSelectedSessionForNotifications(session);
+                             //    setIsNotificationModalOpen(true);
+                             //  }}
+                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-orange-300 rounded-md transition-colors duration-200"
+                              title="View/Edit Notifications"
+                              disabled={loading}
+                            >
+                              <MessageSquare className="w-5 h-5" />
+                            </Button>
+                           </Link>
                          </div>
                        </div>
                        <p className="text-black">{session.description}</p>

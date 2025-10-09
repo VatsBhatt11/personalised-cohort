@@ -221,8 +221,8 @@ export interface NotificationUpdate {
   message: string;
 }
 
-const API_BASE_URL = "https://one00x-be.onrender.com";
-// const API_BASE_URL = "http://localhost:8000";
+// const API_BASE_URL = "https://one00x-be.onrender.com";
+const API_BASE_URL = "http://localhost:8000";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -673,6 +673,14 @@ export const instructor = {
       data: Notification[];
       message: string;
     }>(`/api/sessions/${sessionId}/notifications`);
+    return response.data.data;
+  },
+  getAllNotifications: async (): Promise<Notification[]> => {
+    const response = await api.get<{
+      success: boolean;
+      data: Notification[];
+      message: string;
+    }>(`/api/notifications`);
     return response.data.data;
   },
   updateNotification: async (

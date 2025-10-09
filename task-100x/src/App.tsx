@@ -6,12 +6,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import NotFound from "./pages/NotFound";
 import BuildInPublic from "./pages/BuildInPublic";
 import BuildInPublicUserDetailPage from "./pages/BuildInPublicUserDetailPage";
-
 import AuthPage from "./components/Auth/AuthPage";
 import useAuth from "./hooks/useAuth";
 import AdminDashboard from "./components/Dashboard/AdminDashboard";
 import Dashboard from "./components/Dashboard/Dashboard";
 import { Loader2 } from "lucide-react";
+import NotificationsPage from "./pages/NotificationsPage";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +51,7 @@ const App = () => {
               <Route path="/admin">
                 <Route path="track-100x" element={<BuildInPublic />} />
                 <Route path="track-100x/:userId" element={<BuildInPublicUserDetailPage />} />
+                <Route path="notifications" element={<NotificationsPage />} />
               </Route>
             )}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

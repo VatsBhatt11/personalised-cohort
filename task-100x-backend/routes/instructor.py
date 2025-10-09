@@ -212,6 +212,144 @@ async def fetch_linkedin_posts_sequentially(linkedin_cookie_data: LinkedInCookie
         )
 
         if not users:
+            return {"message": "No LinkedIn usernames found to fetch posts for.", "data": []}
+
+        all_apify_data = []
+        processed_users_count = 0
+
+        for user in users:
+            if processed_users_count >= 100:
+                print("Reached limit of 100 users for post fetching.")
+                break
+                
+            if user.linkedinUsername:
+                try:
+                    # Check if this user has any posts in the database
+                    existing_posts = await prisma.post.find_first(
+                        where={
+                            "userId": user.id,
+                        }
+                    )
+
+                    if existing_posts:
+                        print(f"Skipping user {user.linkedinUsername} as they already have existing posts.")
+                        continue
+
+                    url = f"https://www.linkedin.com/in/{user.linkedinUsername}/recent-activity/all/"
+                    urls = [url] # Process one URL at a time
+
+                    apify_request_body = {
+                        "cookie": json.loads(linkedin_cookie_data.linkedinCookie),
+                        "deepScrape": True,
+                        "maxDelay": 8,
+                        "minDelay": 2,
+                        "proxy": {
+                            "useApifyProxy": True,
+                            "apifyProxyCountry": "US",
+                        },
+                        "rawData": False,
+                        "urls": urls,
+                        "limitPerSource" : 100
+                    }
+
+                    apify_api_token = os.environ.get("APIFY_API_TOKEN")
+                    apify_api_url = f"https://api.apify.com/v2/acts/curious_coder~linkedin-post-search-scraper/run-sync-get-dataset-items?token={apify_api_token}"
+
+                    async with httpx.AsyncClient(timeout=3600.0) as client:
+                        apify_response = await client.post(apify_api_url, json=apify_request_body)
+                        apify_response.raise_for_status()
+
+                    apify_data = apify_response.json()
+                    all_apify_data.extend(apify_data)
+
+                    # Process and store the fetched LinkedIn posts in your database
+                    for post in apify_data:
+                        if "text" in post and post["text"] is not None:
+                            post_text_lower = post["text"].lower()
+                            if re.search(r'\b(0to100xengineers|0to100xengineer|0to100xEngineers|0to100xEngineer|100xengineer|100xengineers|100xEngineers|#100xengineers|#0to100xengineers|#0to100xengineer|#0to100xEngineers|#0to100xEngineer)', post_text_lower, re.IGNORECASE):
+                                linkedin_username = None
+                                if "inputUrl" in post and post["inputUrl"]:
+                                    parts = post["inputUrl"].split("/in/")
+                                    if len(parts) > 1:
+                                        linkedin_username = parts[1].split("/")[0]
+
+                                if linkedin_username:
+                                    user_id = next((u.id for u in users if u.linkedinUsername == linkedin_username), None)
+
+                                    if user_id:
+                                        await prisma.post.upsert(
+                                            where={
+                                                "url": post["url"]
+                                            },
+                                            data={
+                                                "create": {
+                                                    "userId": user_id,
+                                                    "url": post["url"],
+                                                    "platform": "LINKEDIN",
+                                                    "numLikes": post.get("numLikes", 0),
+                                                    "numComments": post.get("numComments", 0),
+                                                    "postedAt": datetime.fromisoformat(post["postedAtISO"].replace("Z", "+00:00")) if "postedAtISO" in post else datetime.now(timezone.utc),
+                                                },
+                                                "update": {
+                                                    "numLikes": post.get("numLikes", 0),
+                                                    "numComments": post.get("numComments", 0),
+                                                    "postedAt": datetime.fromisoformat(post["postedAtISO"].replace("Z", "+00:00")) if "postedAtISO" in post else datetime.now(timezone.utc),
+                                                },
+                                            }
+                                        )
+                    processed_users_count += 1
+                except httpx.HTTPStatusError as e:
+                    print(f"Apify API HTTP error for user {user.linkedinUsername}: {e.response.status_code} - {e.response.text}")
+                    # Continue to the next user
+                except httpx.RequestError as e:
+                    print(f"HTTPX request error for user {user.linkedinUsername}: {e}")
+                    # Continue to the next user
+                except json.JSONDecodeError:
+                    print(f"JSON decoding error for user {user.linkedinUsername}: Invalid LinkedIn cookie format or Apify response.")
+                    # Continue to the next user
+                except Exception as e:
+                    print(f"An unexpected error occurred for user {user.linkedinUsername}: {e}")
+                    traceback.print_exc()
+                    # Continue to the next user
+
+        return {"message": "LinkedIn posts fetched and processed sequentially!", "data": all_apify_data}
+
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+    finally:
+        keep_alive_handle.cancel() # Cancel the task when processing is complete
+
+
+@router.post("/build-in-public/fetch-linkedin-posts-sequentially-backup")
+async def fetch_linkedin_posts_sequentially_backup(linkedin_cookie_data: LinkedInCookie, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+    if current_user.role != "INSTRUCTOR":
+        raise HTTPException(status_code=403, detail="Only instructors can fetch LinkedIn posts sequentially")
+
+    async def keep_alive_task():
+        while True:
+            try:
+                async with httpx.AsyncClient() as client:
+                    await client.get("https://one00x-be.onrender.com/api/cohorts")
+                print("Keep-alive API called successfully.")
+            except httpx.RequestError as e:
+                print(f"Keep-alive API call failed: {e}")
+            await asyncio.sleep(120) # Call every 2 minutes
+
+    # Start the keep-alive task in the background
+    keep_alive_handle = asyncio.create_task(keep_alive_task())
+
+    try:
+        users = await prisma.user.find_many(
+            where={
+                "linkedinUsername": {
+                    "not": None,
+                },
+            },
+        )
+
+        if not users:
             keep_alive_handle.cancel() # Cancel the task if no users
             return {"message": "No LinkedIn usernames found to fetch posts for.", "data": []}
 
@@ -319,6 +457,7 @@ async def fetch_linkedin_posts_sequentially(linkedin_cookie_data: LinkedInCookie
         print(f"An unexpected error occurred: {e}")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+
 
 
 class ResourceCreate(BaseModel):
@@ -545,12 +684,17 @@ async def get_session_notifications(session_id: str, current_user = Depends(get_
             "sessionId": session_id
         },
         include={
-            "user": True
+            "user": {
+                "include": {
+                    "launchpad": True
+                }
+            },
+            "session": True
         }
     )
 
+    notifications.sort(key=lambda n: n.user.name if n.user and n.user.name else "")
     return {"message": "Session notifications retrieved successfully", "data": notifications}
-
 
 class WeeklyResourcePayload(BaseModel):
     id: Optional[str] = None
