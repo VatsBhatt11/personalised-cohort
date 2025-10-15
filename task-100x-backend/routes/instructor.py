@@ -98,7 +98,7 @@ async def fetch_linkedin_posts(linkedin_cookie_data: LinkedInCookie, current_use
                     },
                     "rawData": False,
                     "urls": urls,
-                    "limitPerSource" : 100
+                    "limitPerSource" : 5
                 }
 
                 apify_api_token = os.environ.get("APIFY_API_TOKEN")
@@ -183,9 +183,8 @@ async def fetch_linkedin_posts(linkedin_cookie_data: LinkedInCookie, current_use
     finally:
         keep_alive_handle.cancel() # Cancel the task when processing is complete
 
-
 @router.post("/build-in-public/fetch-linkedin-posts-sequentially")
-async def fetch_linkedin_posts_sequentially(linkedin_cookie_data: LinkedInCookie, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+async def fetch_linkedin_posts_sequentially_backup(linkedin_cookie_data: LinkedInCookie, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
     if current_user.role != "INSTRUCTOR":
         raise HTTPException(status_code=403, detail="Only instructors can fetch LinkedIn posts sequentially")
 
@@ -212,27 +211,28 @@ async def fetch_linkedin_posts_sequentially(linkedin_cookie_data: LinkedInCookie
         )
 
         if not users:
+            keep_alive_handle.cancel() # Cancel the task if no users
             return {"message": "No LinkedIn usernames found to fetch posts for.", "data": []}
 
         all_apify_data = []
-        processed_users_count = 0
 
         for user in users:
-            if processed_users_count >= 100:
-                print("Reached limit of 100 users for post fetching.")
-                break
-                
             if user.linkedinUsername:
                 try:
-                    # Check if this user has any posts in the database
-                    existing_posts = await prisma.post.find_first(
+                    # Check if posts for this user have already been scraped today
+                    today = datetime.now(timezone.utc).date()
+                    existing_posts_today = await prisma.post.find_first(
                         where={
                             "userId": user.id,
+                            "createdAt": {
+                                "gte": datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc),
+                                "lt": datetime.combine(today + timedelta(days=1), datetime.min.time(), tzinfo=timezone.utc),
+                            },
                         }
                     )
 
-                    if existing_posts:
-                        print(f"Skipping user {user.linkedinUsername} as they already have existing posts.")
+                    if existing_posts_today:
+                        print(f"Skipping user {user.linkedinUsername} as posts have already been scraped today.")
                         continue
 
                     url = f"https://www.linkedin.com/in/{user.linkedinUsername}/recent-activity/all/"
@@ -249,7 +249,7 @@ async def fetch_linkedin_posts_sequentially(linkedin_cookie_data: LinkedInCookie
                         },
                         "rawData": False,
                         "urls": urls,
-                        "limitPerSource" : 100
+                        "limitPerSource" : 5
                     }
 
                     apify_api_token = os.environ.get("APIFY_API_TOKEN")
@@ -297,7 +297,6 @@ async def fetch_linkedin_posts_sequentially(linkedin_cookie_data: LinkedInCookie
                                                 },
                                             }
                                         )
-                    processed_users_count += 1
                 except httpx.HTTPStatusError as e:
                     print(f"Apify API HTTP error for user {user.linkedinUsername}: {e.response.status_code} - {e.response.text}")
                     # Continue to the next user
@@ -315,11 +314,11 @@ async def fetch_linkedin_posts_sequentially(linkedin_cookie_data: LinkedInCookie
         return {"message": "LinkedIn posts fetched and processed sequentially!", "data": all_apify_data}
 
     except Exception as e:
+        keep_alive_handle.cancel() # Cancel the task on error
         print(f"An unexpected error occurred: {e}")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
-    finally:
-        keep_alive_handle.cancel() # Cancel the task when processing is complete
+
 
 
 @router.post("/build-in-public/fetch-linkedin-posts-sequentially-backup")
@@ -388,7 +387,7 @@ async def fetch_linkedin_posts_sequentially_backup(linkedin_cookie_data: LinkedI
                         },
                         "rawData": False,
                         "urls": urls,
-                        "limitPerSource" : 100
+                        "limitPerSource" : 5
                     }
 
                     apify_api_token = os.environ.get("APIFY_API_TOKEN")
