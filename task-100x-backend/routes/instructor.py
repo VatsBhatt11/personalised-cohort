@@ -233,7 +233,8 @@ async def fetch_linkedin_posts_sequentially_backup(linkedin_cookie_data: LinkedI
                         },
                         "rawData": False,
                         "urls": urls,
-                        "limitPerSource" : 5
+                        "limitPerSource" : 5,
+                        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
                     }
 
                     apify_api_token = os.environ.get("APIFY_API_TOKEN")
