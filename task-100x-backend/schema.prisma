@@ -54,7 +54,7 @@ enum Role {
 
 model Cohort {
   id         String     @id @default(uuid())
-  name       Int
+  name       String
   totalWeeks Int
   startDate  DateTime
   endDate    DateTime
