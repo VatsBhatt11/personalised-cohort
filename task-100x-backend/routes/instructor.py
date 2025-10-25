@@ -27,7 +27,7 @@ import httpx
 import json
 import os
 
-PROFILE_SYSTEM_API_BASE_URL = os.environ.get("PROFILE_SYSTEM_API_BASE_URL", "http://localhost:3000") # Default to localhost for development
+PROFILE_SYSTEM_API_BASE_URL = os.environ.get("PROFILE_SYSTEM_API_BASE_URL", "https://profile-system.vercel.app") # Default to localhost for development
 
 # Supabase Initialization
 SUPABASE_URL = os.environ.get("SUPABASE_URL")

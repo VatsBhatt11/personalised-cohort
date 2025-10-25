@@ -25,7 +25,7 @@ const RechargeRequestPage = () => {
   const [showChatModal, setShowChatModal] = useState<boolean>(false);
   const [currentChatHistory, setCurrentChatHistory] = useState<ChatMessage[]>([]);
 
-  const API_BASE_URL = import.meta.env.NEXT_PUBLIC_PROFILE_SYSTEM_API_BASE_URL || 'http://localhost:3000';
+  const API_BASE_URL = import.meta.env.NEXT_PUBLIC_PROFILE_SYSTEM_API_BASE_URL || 'https://profile-system.vercel.app';
 
   const fetchRechargeRequests = async () => {
     setIsLoading(true);
