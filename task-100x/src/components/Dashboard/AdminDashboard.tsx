@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import logo from '../../../public/100x.svg'
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BookOpen, Award, TrendingUp, Edit, Trash2, Loader2, HelpCircle, Send, MessageSquare } from 'lucide-react';
+import { Users, BookOpen, Award, TrendingUp, Edit, Trash2, Loader2, HelpCircle, Send, MessageSquare, BrainCircuit } from 'lucide-react';
 import QuizForm from './QuizForm';
 import QuizCard from './QuizCard';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -19,11 +19,12 @@ import useAuth from '@/hooks/useAuth';
 import { LogOut } from 'lucide-react';
 import { instructor, learner, WeekResource } from '@/lib/api';
 import axios, { isAxiosError, type AxiosError } from 'axios';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import BuildInPublicUserTable from '../BuildInPublic/BuildInPublicUserTable';
 import NotificationModal from './NotificationModal';
+import Cookies from 'js-cookie';
 
 interface Resource {
   id?: string;
@@ -76,6 +77,7 @@ interface UserData {
 }
 
 const AdminDashboard: React.FC = ({ userEmail }: AdminDashboardProps) => {
+  const navigate = useNavigate();
   const location = useLocation();
   const isBuildInPublicRoute = location.pathname === '/admin/track-100x';
   const gilroyFont = 'Gilroy, sans-serif';
@@ -100,8 +102,13 @@ const AdminDashboard: React.FC = ({ userEmail }: AdminDashboardProps) => {
     setCohortIdState(id);
     if (id) {
       document.cookie = `cohortId=${id}; path=/; max-age=${60 * 60 * 24 * 30}`;
+       const selectedCohort = cohorts.find((cohort) => cohort.id === id);
+      if (selectedCohort) {
+        localStorage.setItem("cohortName", selectedCohort.name);
+      }
     } else {
       document.cookie = `cohortId=; path=/; max-age=0`;
+      localStorage.removeItem("cohortName");
     }
   };
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
@@ -287,7 +294,6 @@ const AdminDashboard: React.FC = ({ userEmail }: AdminDashboardProps) => {
   const handleSaveQuiz = async (quizData: Quiz) => {
     setLoading(true);
     try {
-      console.log("Payload sent to backend:", quizData);
       if (quizData.id) {
         await instructor.updateQuiz(quizData.id, quizData);
         toast({
@@ -796,6 +802,38 @@ const AdminDashboard: React.FC = ({ userEmail }: AdminDashboardProps) => {
                    Track 100x
                  </Button>
                </Link>
+             </div>
+           </CardContent>
+         </Card>
+
+         <Card className="bg-orange-100 border border-orange-200 rounded-xl shadow-lg">
+           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+             <CardTitle className="text-base font-medium">Self-Discovery Management</CardTitle>
+             <BrainCircuit className="h-8 w-8 text-gray-500" />
+           </CardHeader>
+           <CardContent>
+             <div className="space-y-5">
+               <p className="text-black text-lg">Manage self-discovery related requests and approvals.</p>
+               <div className="flex flex-col space-y-2">
+                 <Button
+                   onClick={() => navigate("/admin/self-discovery/recharge-requests")}
+                   className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+                 >
+                   Recharge requests
+                 </Button>
+                 <Button
+                   onClick={() => navigate("/admin/self-discovery/project-approvals")}
+                   className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+                 >
+                   Project Approvals
+                 </Button>
+                 <Button
+                   onClick={() => navigate("/admin/self-discovery/manage")}
+                   className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+                 >
+                   Manage
+                 </Button>
+               </div>
              </div>
            </CardContent>
          </Card>

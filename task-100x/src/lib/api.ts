@@ -203,6 +203,33 @@ export interface UserData {
   totalComments: number;
 }
 
+export interface ProfileSystemIkigaiBalanceResponse {
+  ikigai_balance: number;
+}
+
+export interface ProfileSystemIdeationBalanceResponse {
+  ideation_balance: number;
+}
+
+export interface ProfileSystemProjectIdea {
+  id: string;
+  user_id: string;
+  module_name: string;
+  problem_statement: string;
+  solution: string;
+  chat_history: any[];
+  features: string[];
+}
+
+export interface UserWithBalanceAndIdeas {
+  id: string;
+  name: string | null;
+  email: string | null;
+  ikigai_balance: number;
+  module_ideation_balance: Array<{ module: string; balance: number }>;
+  ideas_submitted: number;
+}
+
 export interface Notification {
   id: string;
   studentId: string;
@@ -223,9 +250,17 @@ export interface NotificationUpdate {
 
 // const API_BASE_URL = "https://one00x-be.onrender.com";
 const API_BASE_URL = "http://localhost:8000";
+const PROFILE_SYSTEM_API_BASE_URL = "http://localhost:3000";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+const profileSystemApi = axios.create({
+  baseURL: PROFILE_SYSTEM_API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -241,6 +276,28 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (
+      error.response &&
+      (error.response.status === 401 || error.response.status === 403)
+    ) {
+      localStorage.clear();
+      window.location.href = "/";
+    }
+    return Promise.reject(error);
+  }
+);
+
+profileSystemApi.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+profileSystemApi.interceptors.response.use(
   (response) => response,
   (error) => {
     if (
@@ -410,8 +467,43 @@ export const learner = {
   },
 };
 
+export interface ProjectIdea {
+  id: string;
+  user_id: string;
+  module_name: string;
+  chat_history: any[];
+  problem_statement: string;
+  solution: string;
+  features: string[];
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  created_at: string;
+  updated_at: string;
+  profiles: {
+    name: string;
+    cohort_number: string;
+  };
+}
+
 // Instructor APIs
 export const instructor = {
+  getProjectApprovals: async (cohortName?: string): Promise<ProjectIdea[]> => {
+    const response = await profileSystemApi.get<ProjectIdea[]>(
+      "/api/project-approvals",
+      {
+        params: { cohortName },
+      }
+    );
+    return response.data;
+  },
+  updateProjectApprovalStatus: async (
+    id: string,
+    isAccepted: boolean
+  ): Promise<void> => {
+    await profileSystemApi.put("/api/project-approvals-update", {
+      id,
+      isAccepted,
+    });
+  },
   assignResourcesToWeek: async (
     cohortId: string,
     weekNumber: number,
@@ -525,6 +617,7 @@ export const instructor = {
       lectureNumber: number;
       imageUrl?: string;
       sessionType?: string;
+      module_name?: string;
     },
     image?: File | null
   ): Promise<Session> => {
@@ -539,6 +632,9 @@ export const instructor = {
     }
     if (sessionData.sessionType) {
       formData.append("sessionType", sessionData.sessionType);
+    }
+    if (sessionData.module_name) {
+      formData.append("module_name", sessionData.module_name);
     }
     if (image) {
       formData.append("image", image);
@@ -693,5 +789,96 @@ export const instructor = {
       message: string;
     }>(`/api/notifications/${notificationId}`, data);
     return response.data.data;
+  },
+  // New functions for profile-system APIs
+  getIkigaiBalance: async (
+    userId: string
+  ): Promise<ProfileSystemIkigaiBalanceResponse> => {
+    const response =
+      await profileSystemApi.get<ProfileSystemIkigaiBalanceResponse>(
+        `/api/ikigai-balance?userId=${userId}`
+      );
+    return response.data;
+  },
+  getIkigai: async (userId: string): Promise<any> => {
+    const response = await profileSystemApi.get<any>(
+      `/api/ikigai?userId=${userId}`
+    );
+    return response.data;
+  },
+  getIdeationBalance: async (
+    userId: string,
+    balanceType: string
+  ): Promise<ProfileSystemIdeationBalanceResponse> => {
+    const response =
+      await profileSystemApi.get<ProfileSystemIdeationBalanceResponse>(
+        `/api/ideation-balance?userId=${userId}&balanceType=${balanceType}`
+      );
+    return response.data;
+  },
+  getProjectIdeas: async (
+    userId: string
+  ): Promise<ProfileSystemProjectIdea[]> => {
+    const response = await profileSystemApi.get<ProfileSystemProjectIdea[]>(
+      `/api/project-ideas?userId=${userId}`
+    );
+    return response.data;
+  },
+  getRoadmaps: async (userId: string): Promise<any> => {
+    const response = await profileSystemApi.get<any>(
+      `/api/roadmaps?userId=${userId}`
+    );
+    return response.data;
+  },
+
+  getUsersByCohort: async (cohortName: string): Promise<UserData[]> => {
+    const response = await profileSystemApi.get<UserData[]>(
+      `/api/users-by-cohort?cohortName=${cohortName}`
+    );
+    return response.data;
+  },
+
+  getUsersWithBalanceAndIdeas: async (
+    cohortId: string
+  ): Promise<UserWithBalanceAndIdeas[]> => {
+    // First, get basic user data from the tracker system
+    const basicUsers = await instructor.getBuildInPublicUsers(cohortId);
+
+    const usersWithEnrichedData: UserWithBalanceAndIdeas[] = await Promise.all(
+      basicUsers.map(async (user) => {
+        // Fetch Ikigai Balance
+        const ikigaiBalanceData = await instructor.getIkigaiBalance(user.id);
+
+        // Fetch Ideation Balance for each module (assuming Module 1-4)
+        const moduleIdeationBalances = await Promise.all(
+          ["Module 1", "Module 2", "Module 3", "Module 4"].map(
+            async (moduleName) => {
+              const ideationBalanceData = await instructor.getIdeationBalance(
+                user.id,
+                moduleName
+              );
+              return {
+                module: moduleName,
+                balance: ideationBalanceData.ideation_balance,
+              };
+            }
+          )
+        );
+
+        // Fetch Project Ideas
+        const projectIdeasData = await instructor.getProjectIdeas(user.id);
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          ikigai_balance: ikigaiBalanceData.ikigai_balance,
+          module_ideation_balance: moduleIdeationBalances,
+          ideas_submitted: projectIdeasData.length,
+        };
+      })
+    );
+
+    return usersWithEnrichedData;
   },
 };

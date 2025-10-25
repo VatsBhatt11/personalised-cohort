@@ -42,6 +42,7 @@ const SessionManagementModal = ({
   const [imageUrl, setImageUrl] = useState<string>('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
     const [sessionType, setSessionType] = useState<string>('combined');
+    const [moduleName, setModuleName] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -53,7 +54,8 @@ const SessionManagementModal = ({
       setSessionWeekNumber(editingSession.weekNumber);
       setLectureNumber(editingSession.lectureNumber);
       setImageUrl(editingSession.imageUrl || '');
-       setSessionType(editingSession.sessionType || '');
+      setSessionType(editingSession.sessionType || 'combined');
+      setModuleName(editingSession.module_name || '');
       setSelectedImage(null);
     } else {
       setSessionTitle('');
@@ -63,6 +65,7 @@ const SessionManagementModal = ({
       setImageUrl('');
       setSelectedImage(null);
        setSessionType('');
+       setModuleName('');
     }
   }, [editingSession]);
 
@@ -75,7 +78,7 @@ const SessionManagementModal = ({
   };
 
   const handleSubmit = async () => {
-    if (!sessionTitle || !sessionDescription || !sessionWeekNumber || !lectureNumber || !sessionType) {
+    if (!sessionTitle || !sessionDescription || !sessionWeekNumber || !lectureNumber || !sessionType || !moduleName) {
       toast({
         variant: "destructive",
         title: "Missing Fields",
@@ -96,7 +99,8 @@ const SessionManagementModal = ({
         imageUrl: uploadedImageUrl || undefined,
         cohortId,
         imageFile: selectedImage, // Pass the selected image file directly
-           sessionType: sessionType,
+        sessionType: sessionType,
+        module_name: moduleName,
       };
 
       if (editingSession) {
@@ -152,6 +156,16 @@ const SessionManagementModal = ({
               value={sessionDescription}
               onChange={(e) => setSessionDescription(e.target.value)}
               placeholder="e.g., A deep dive into React hooks"
+              className="bg-orange-50 border border-orange-600/50 text-black px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out placeholder:text-gray-500"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="moduleName" className="text-orange-400">Module Name</Label>
+            <Input
+              id="moduleName"
+              value={moduleName}
+              onChange={(e) => setModuleName(e.target.value)}
+              placeholder="e.g., React Basics"
               className="bg-orange-50 border border-orange-600/50 text-black px-4 py-2 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all duration-200 ease-in-out placeholder:text-gray-500"
             />
           </div>

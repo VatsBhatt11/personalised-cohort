@@ -18,13 +18,16 @@ import csv
 import re
 from prisma import Prisma
 from modules.groq_client import generate_personalized_message, generate_quiz_from_transcription
-from modules.openai_client import generate_personalized_message_openai
+from modules.openai_client import generate_personalized_message_openai, generate_project_based_message_openai, generate_outcome_based_message_openai
 from routes.auth import get_current_user
 from modules.aisensy_client import send_whatsapp_message
 from modules.db_connector import DBConnection
 from supabase import create_client, Client
 import httpx
 import json
+import os
+
+PROFILE_SYSTEM_API_BASE_URL = os.environ.get("PROFILE_SYSTEM_API_BASE_URL", "http://localhost:3000") # Default to localhost for development
 
 # Supabase Initialization
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -182,6 +185,112 @@ async def fetch_linkedin_posts(linkedin_cookie_data: LinkedInCookie, current_use
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
     finally:
         keep_alive_handle.cancel() # Cancel the task when processing is complete
+
+class UserData(BaseModel):
+    id: str
+    name: str
+    ikigai_balance: int
+    module1_ideation_balance: int
+    module2_ideation_balance: int
+    module3_ideation_balance: int
+    module4_ideation_balance: int
+    ideas_submitted: int
+
+@router.get("/cohort-users/{cohort_id}", response_model=List[UserData])
+async def get_cohort_users(cohort_id: str, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
+    if current_user.role != "INSTRUCTOR":
+        raise HTTPException(status_code=403, detail="Only instructors can view cohort users")
+
+    try:
+        users = await prisma.user.find_many(
+            where={
+                "cohortId": cohort_id
+            },
+            include={
+                "ikigaiBalance": True,
+                "ideationBalance": True,
+                "projectIdeas": True
+            }
+        )
+
+        user_data_list = []
+        for user in users:
+            ikigai_balance = user.ikigaiBalance.balance if user.ikigaiBalance else 0
+            module1_ideation_balance = 0
+            module2_ideation_balance = 0
+            module3_ideation_balance = 0
+            module4_ideation_balance = 0
+
+            if user.ideationBalance:
+                for balance_entry in user.ideationBalance:
+                    if balance_entry.moduleName == "Module-1":
+                        module1_ideation_balance = balance_entry.balance
+                    elif balance_entry.moduleName == "Module-2":
+                        module2_ideation_balance = balance_entry.balance
+                    elif balance_entry.moduleName == "Module-3":
+                        module3_ideation_balance = balance_entry.balance
+                    elif balance_entry.moduleName == "Module-4":
+                        module4_ideation_balance = balance_entry.balance
+
+            ideas_submitted = len(user.projectIdeas)
+
+            user_data_list.append(UserData(
+                id=user.id,
+                name=user.name,
+                ikigai_balance=ikigai_balance,
+                module1_ideation_balance=module1_ideation_balance,
+                module2_ideation_balance=module2_ideation_balance,
+                module3_ideation_balance=module3_ideation_balance,
+                module4_ideation_balance=module4_ideation_balance,
+                ideas_submitted=ideas_submitted
+            ))
+        return user_data_list
+
+    except Exception as e:
+        print(f"Error fetching cohort users: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@router.get("/users/{user_id}/ikigai")
+async def get_user_ikigai(user_id: str, current_user = Depends(get_current_user)):
+    if current_user.role != "INSTRUCTOR":
+        raise HTTPException(status_code=403, detail="Only instructors can view user Ikigai data")
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{PROFILE_SYSTEM_API_BASE_URL}/api/ikigai?userId={user_id}")
+            response.raise_for_status()
+            return response.json()
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=f"Profile system API error: {e.response.text}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+
+@router.get("/users/{user_id}/project-ideas")
+async def get_user_project_ideas(user_id: str, current_user = Depends(get_current_user)):
+    if current_user.role != "INSTRUCTOR":
+        raise HTTPException(status_code=403, detail="Only instructors can view user project ideas")
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{PROFILE_SYSTEM_API_BASE_URL}/api/project-ideas?userId={user_id}")
+            response.raise_for_status()
+            return response.json()
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=f"Profile system API error: {e.response.text}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+
+@router.get("/users/{user_id}/roadmaps")
+async def get_user_roadmaps(user_id: str, current_user = Depends(get_current_user)):
+    if current_user.role != "INSTRUCTOR":
+        raise HTTPException(status_code=403, detail="Only instructors can view user roadmaps")
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{PROFILE_SYSTEM_API_BASE_URL}/api/roadmaps?userId={user_id}")
+            response.raise_for_status()
+            return response.json()
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=f"Profile system API error: {e.response.text}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
 
 @router.post("/build-in-public/fetch-linkedin-posts-sequentially")
 async def fetch_linkedin_posts_sequentially_backup(linkedin_cookie_data: LinkedInCookie, current_user = Depends(get_current_user), prisma: Prisma = Depends(get_prisma_client)):
@@ -699,6 +808,7 @@ async def create_session(
     lectureNumber: int = Form(...),
     image: UploadFile = File(None),
     sessionType: Optional[str] = Form(None),
+    module_name: Optional[str] = Form(None),
     current_user = Depends(get_current_user),
     prisma: Prisma = Depends(get_prisma_client)
 ):
@@ -782,17 +892,86 @@ async def create_session(
         }
     )
 
+    print("module_name:", module_name)
+
+    module_name_str = module_name if module_name is not None else ""
+
     for user in users_with_launchpad:
         try:
-            context = {
-                "student_background": user.launchpad.studyStream if user.launchpad and user.launchpad.studyStream else "",
-                "student_interests": user.launchpad.codingFamiliarity if user.launchpad and user.launchpad.codingFamiliarity else "",
-                "student_future_goals": user.launchpad.expectedOutcomes if user.launchpad and user.launchpad.expectedOutcomes else "",
-                "upcoming_session_title": new_session.title,
-                "upcoming_session_description": new_session.description
-            }
-            # personalized_message = await generate_personalized_message(context)
-            personalized_message = await generate_personalized_message_openai(context)
+            async with httpx.AsyncClient() as client:
+                # Fetch profile.id from profile-system using user's email
+                profile_response = await client.get(f"{PROFILE_SYSTEM_API_BASE_URL}/api/users?email={user.email}")
+                if profile_response.status_code == 200:
+                    profile_data = profile_response.json()
+                    profile_id = profile_data.get("id")
+                else:
+                    print(f"DEBUG: No profile found for user email: {user.email}. Skipping roadmap creation.")
+                    continue # Skip roadmap creation for this user if no profile is found
+
+                # Fetch Ikigai data
+                ikigai_response = await client.get(f"{PROFILE_SYSTEM_API_BASE_URL}/api/ikigai?userId={profile_id}")
+                ikigai_data = ikigai_response.json() if ikigai_response.status_code == 200 else {}
+
+                # Fetch Project Idea data
+                project_ideas_response = await client.get(f"{PROFILE_SYSTEM_API_BASE_URL}/api/project-ideas?userId={profile_id}&moduleName={module_name_str}")
+                project_ideas_data = project_ideas_response.json() if project_ideas_response.status_code == 200 else []
+
+                # Prepare context for personalized message
+                context = {
+                    "student_background": user.launchpad.studyStream if user.launchpad and user.launchpad.studyStream else "",
+                    "student_interests": user.launchpad.codingFamiliarity if user.launchpad and user.launchpad.codingFamiliarity else "",
+                    "student_future_goals": user.launchpad.expectedOutcomes if user.launchpad and user.launchpad.expectedOutcomes else "",
+                    "upcoming_session_title": new_session.title,
+                    "upcoming_session_description": new_session.description,
+                }
+                # personalized_message = await generate_personalized_message(context)
+                personalized_message = await generate_personalized_message_openai(context)
+
+                # Generate project_based_msg and outcome_based_msg
+                project_based_msg = ""
+                outcome_based_msg = ""
+
+                if project_ideas_data:
+                    project_based_context = {
+                        "project_ideas": project_ideas_data,
+                        "session_name": new_session.title,
+                        "module_name": module_name_str,
+                    }
+                    project_based_msg = await generate_project_based_message_openai(project_based_context)
+
+                if ikigai_data and user.launchpad and user.launchpad.expectedOutcomes:
+                    outcome_based_context = {
+                        "ikigai_data": ikigai_data,
+                        "expected_outcomes": user.launchpad.expectedOutcomes,
+                        "session_name": new_session.title,
+                        "module_name": module_name_str,
+                    }
+                    print(f"DEBUG: ikigai_data: {ikigai_data}")
+                    outcome_based_msg = await generate_outcome_based_message_openai(outcome_based_context)
+
+                # Fetch profile.id from profile-system using user's email
+                profile_response = await client.get(f"{PROFILE_SYSTEM_API_BASE_URL}/api/users?email={user.email}")
+                if profile_response.status_code == 200:
+                    profile_data = profile_response.json()
+                    profile_id = profile_data.get("id")
+                else:
+                    print(f"DEBUG: No profile found for user email: {user.email}. Skipping roadmap creation.")
+                    continue # Skip roadmap creation for this user if no profile is found
+
+                # Store messages in roadmaps table via profile-system API
+                roadmap_data = {
+                    "userId": profile_id,
+                    "sessionName": new_session.title,
+                    "weekNumber": new_session.weekNumber,
+                    "lectureNumber": new_session.lectureNumber,
+                    "moduleName": module_name_str,
+                    "projectBasedMessage": project_based_msg,
+                    "outcomeBasedMessage": outcome_based_msg,
+                }
+                print(f"DEBUG: Sending roadmap_data: {roadmap_data}")
+                roadmap_post_response = await client.post(f"{PROFILE_SYSTEM_API_BASE_URL}/api/roadmaps", json=roadmap_data)
+                print(f"DEBUG: Roadmap API response: {roadmap_post_response.text}")
+
             await prisma.notification.create(
                 data={
                     "studentId": user.id,
@@ -804,7 +983,7 @@ async def create_session(
             print(f"Notification generated and saved for user {user.id}")
             time.sleep(1.2) # Delay for 0.6 seconds to limit to 100 notifications per minute
         except Exception as e:
-            print(f"Failed to generate or save notification for user {user.id}: {e}")
+            print(f"Error generating notification for user {user.id}: {e}")
 
     return {
         "success": True,

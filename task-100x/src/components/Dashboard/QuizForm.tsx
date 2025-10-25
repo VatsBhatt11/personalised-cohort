@@ -149,7 +149,6 @@ const QuizForm: React.FC<QuizFormProps> = ({
         }
       }
     }
-    console.log("Quiz form state on submit:", formState);
     onSave(formState);
     toast.success("Quiz saved successfully!");
   };

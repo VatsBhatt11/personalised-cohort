@@ -12,6 +12,10 @@ import AdminDashboard from "./components/Dashboard/AdminDashboard";
 import Dashboard from "./components/Dashboard/Dashboard";
 import { Loader2 } from "lucide-react";
 import NotificationsPage from "./pages/NotificationsPage";
+import RechargeRequestPage from "./pages/RechargeRequestPage";
+import ProjectApprovalsPage from "./pages/ProjectApprovalsPage";
+import ManageSelfDiscoveryPage from "./pages/ManageSelfDiscoveryPage";
+import UserDetailPage from "./pages/user/[userId]";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +56,10 @@ const App = () => {
                 <Route path="track-100x" element={<BuildInPublic />} />
                 <Route path="track-100x/:userId" element={<BuildInPublicUserDetailPage />} />
                 <Route path="notifications" element={<NotificationsPage />} />
+                <Route path="self-discovery/recharge-requests" element={<RechargeRequestPage />} />
+                <Route path="self-discovery/project-approvals" element={<ProjectApprovalsPage />} />
+                <Route path="self-discovery/manage" element={<ManageSelfDiscoveryPage />} />
+                <Route path="user/:userId" element={<UserDetailPage />} />
               </Route>
             )}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

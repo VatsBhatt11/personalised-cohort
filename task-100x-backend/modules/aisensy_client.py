@@ -42,7 +42,7 @@ async def send_whatsapp_message(
 
     try:
         async with httpx.AsyncClient() as client:
-            print(f"DEBUG: AISENSY_API_URL: {AISENSY_API_URL}")
+            print(f"DEBUG: AISENSY_API_URL: {AISENSY_API_URL}, Type: {type(AISENSY_API_URL)}")
             response = await client.post(AISENSY_API_URL, headers=headers, json=payload)
             response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
             print(f"AiSensy WhatsApp message sent to {destination}: {response.json()}")

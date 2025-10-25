@@ -1,7 +1,7 @@
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // directUrl = env("DIRECT_URL")
 }
 
 generator client {
@@ -54,7 +54,7 @@ enum Role {
 
 model Cohort {
   id         String     @id @default(uuid())
-  name       String
+  name       Int
   totalWeeks Int
   startDate  DateTime
   endDate    DateTime
