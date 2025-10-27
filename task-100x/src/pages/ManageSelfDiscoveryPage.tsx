@@ -66,40 +66,46 @@ const ManageSelfDiscoveryPage = () => {
   };
 
   return (
-    <div className='p-6'>
-      <h1 className='text-2xl font-bold mb-6'>Manage Cohort Users</h1>
-      <div className='mb-6'>
-        <Select onValueChange={handleCohortChange} value={cohortId}>
-          <SelectTrigger className='w-64'>
-            <SelectValue placeholder='Select a cohort' />
-          </SelectTrigger>
-          <SelectContent>
-            {cohorts.map((cohort) => (
-              <SelectItem key={cohort.id} value={cohort.id}>
-                {cohort.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+    <div className="min-h-screen bg-gray-100 p-4">
+      <div className="container mx-auto bg-white rounded-lg shadow-md p-6">
+        <h1 className="text-3xl font-bold mb-6 text-gray-800">Manage Cohort Users</h1>
+        <div className="mb-6">
+          <Select onValueChange={handleCohortChange} value={cohortId}>
+            <SelectTrigger className='w-64'>
+              <SelectValue placeholder='Select a cohort' />
+            </SelectTrigger>
+            <SelectContent>
+              {cohorts.map((cohort) => (
+                <SelectItem key={cohort.id} value={cohort.id}>
+                  {cohort.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="overflow-x-auto mt-4 max-h-[60vh]">
+          <Table aria-label='Users in cohort' className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <TableHeader className="sticky top-0 bg-gray-50">
+              <TableRow>
+                <TableHead className="py-3 px-4 border-b text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Name</TableHead>
+                <TableHead className="py-3 px-4 border-b text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((user: UserData) => (
+                <TableRow key={user.id} className="hover:bg-gray-50">
+                  <TableCell className="py-3 px-4 border-b text-sm text-gray-900">{user.name}</TableCell>
+                  <TableCell className="py-3 px-4 border-b text-sm text-gray-900">
+                    <Button onClick={() => navigate(`/admin/user/${user.id}`)} className="bg-custom-orange hover:bg-orange-700 text-white px-3 py-1 rounded-md text-sm transition duration-150 ease-in-out">
+                      View Details
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
-      <Table aria-label='Users in cohort'>
-        <TableHeader>
-          <TableHead>Name</TableHead>
-          <TableHead>Actions</TableHead>
-        </TableHeader>
-        <TableBody>
-          {users.map((user: UserData) => (
-            <TableRow key={user.id}>
-              <TableCell>{user.name}</TableCell>
-              <TableCell>
-                <Button onClick={() => navigate(`/admin/user/${user.id}`)}>
-                  View Details
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
     </div>
   );
 };
