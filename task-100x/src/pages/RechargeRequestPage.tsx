@@ -175,7 +175,7 @@ const RechargeRequestPage = () => {
               <div className="flex justify-end">
                 <button
                   onClick={() => setShowChatModal(false)}
-                  className="px-4 py-2 bg-custom-orange text-white font-medium rounded-md shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-custom-orange focus:ring-offset-2"
+                  className="px-4 py-2 bg-orange-500 text-white font-medium rounded-md shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-custom-orange focus:ring-offset-2"
                 >
                   Close
                 </button>
