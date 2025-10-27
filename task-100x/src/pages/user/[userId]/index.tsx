@@ -40,10 +40,6 @@ const UserDetailPage = () => {
     const fetchData = async () => {
       if (userId) {
         try {
-          // Fetch user details (if needed, otherwise user.name can come from manage page)
-          // For now, we'll assume user details are not directly fetched here unless necessary
-
-          // Fetch Ikigai data
           const ikigaiRes = await instructor.getIkigai(userId as string);
           setIkigaiData(ikigaiRes);
 
@@ -71,7 +67,7 @@ const UserDetailPage = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="container mx-auto bg-white rounded-lg shadow-md p-6">
-        <Button onClick={() => navigate('/admin/self-discovery/manage')} className="mb-6 bg-custom-orange hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm transition duration-150 ease-in-out">
+        <Button onClick={() => navigate('/admin/self-discovery/manage')} className="mb-6 bg-orange-500 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm transition duration-150 ease-in-out">
           Back to Manage
         </Button>
         <h1 className="text-3xl font-bold mb-6 text-gray-800">{user.name} Details</h1>
