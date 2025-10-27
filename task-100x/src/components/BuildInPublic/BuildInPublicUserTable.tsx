@@ -17,9 +17,10 @@ interface UserData {
   id: string;
   name: string | null;
   email: string | null;
-  ikigai_balance: number;
-  module_ideation_balance: { module: string; balance: number }[];
-  ideas_submitted: number;
+  totalPosts: number;
+  lastPosted: string | null;
+  totalLikes: number;
+  totalComments: number;
 }
 
 interface BuildInPublicUserTableProps {
@@ -39,7 +40,7 @@ const BuildInPublicUserTable = ({ cohortId }: BuildInPublicUserTableProps) => {
       if (!cohortId) return; // Only fetch if cohortId is available
       try {
         setLoading(true);
-        const response = await instructor.getUsersWithBalanceAndIdeas(cohortId);
+        const response = await instructor.getBuildInPublicUsers(cohortId);
         setUsers(response);
       } catch (error) {
         console.error("Error fetching users:", error);
@@ -86,12 +87,10 @@ const BuildInPublicUserTable = ({ cohortId }: BuildInPublicUserTableProps) => {
       "ID",
       "Name",
       "Email",
-      "Ikigai Balance",
-      "Ideation Balance (Module 1)",
-      "Ideation Balance (Module 2)",
-      "Ideation Balance (Module 3)",
-      "Ideation Balance (Module 4)",
-      "Ideas Submitted",
+      "Total Posts",
+      "Last Posted",
+      "Total Likes",
+      "Total Comments",
     ];
     const csvRows = [];
 
@@ -102,12 +101,10 @@ const BuildInPublicUserTable = ({ cohortId }: BuildInPublicUserTableProps) => {
         user.id,
         user.name || "",
         user.email || "",
-        user.ikigai_balance,
-        user.module_ideation_balance.find(m => m.module === "Module 1")?.balance || 0,
-        user.module_ideation_balance.find(m => m.module === "Module 2")?.balance || 0,
-        user.module_ideation_balance.find(m => m.module === "Module 3")?.balance || 0,
-        user.module_ideation_balance.find(m => m.module === "Module 4")?.balance || 0,
-        user.ideas_submitted,
+        user.totalPosts,
+        user.lastPosted || "",
+        user.totalLikes,
+        user.totalComments,
       ];
       csvRows.push(row.map((field) => `"${field}"`).join(","));
     });
@@ -160,12 +157,10 @@ const BuildInPublicUserTable = ({ cohortId }: BuildInPublicUserTableProps) => {
               <TableHead>Rank</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Ikigai Balance</TableHead>
-              <TableHead>Ideation Balance (M1)</TableHead>
-              <TableHead>Ideation Balance (M2)</TableHead>
-              <TableHead>Ideation Balance (M3)</TableHead>
-              <TableHead>Ideation Balance (M4)</TableHead>
-              <TableHead>Ideas Submitted</TableHead>
+              <TableHead>Total Posts</TableHead>
+              <TableHead>Total Likes</TableHead>
+              <TableHead>Total Comments</TableHead>
+              <TableHead>Last Posted</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -174,12 +169,10 @@ const BuildInPublicUserTable = ({ cohortId }: BuildInPublicUserTableProps) => {
                 <TableCell>{index + 1}</TableCell>
                 <TableCell><Link to={`/admin/track-100x/${user.id}?userName=${encodeURIComponent(user.name || '')}`} className="text-orange-500 hover:underline">{user.name}</Link></TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.ikigai_balance}</TableCell>
-                <TableCell>{user.module_ideation_balance.find(m => m.module === "Module 1")?.balance || 0}</TableCell>
-                <TableCell>{user.module_ideation_balance.find(m => m.module === "Module 2")?.balance || 0}</TableCell>
-                <TableCell>{user.module_ideation_balance.find(m => m.module === "Module 3")?.balance || 0}</TableCell>
-                <TableCell>{user.module_ideation_balance.find(m => m.module === "Module 4")?.balance || 0}</TableCell>
-                <TableCell>{user.ideas_submitted}</TableCell>
+                <TableCell>{user.totalPosts}</TableCell>
+                <TableCell>{user.totalLikes}</TableCell>
+                <TableCell>{user.totalComments}</TableCell>
+                <TableCell>{user.lastPosted ? new Date(user.lastPosted).toLocaleDateString() : 'N/A'}</TableCell>
               </TableRow>
             ))}
           </TableBody>
