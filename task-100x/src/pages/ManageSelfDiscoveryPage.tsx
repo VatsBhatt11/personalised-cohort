@@ -96,7 +96,7 @@ const ManageSelfDiscoveryPage = () => {
                 <TableRow key={user.id} className="hover:bg-gray-50">
                   <TableCell className="py-3 px-4 border-b text-sm text-gray-900">{user.name}</TableCell>
                   <TableCell className="py-3 px-4 border-b text-sm text-gray-900">
-                    <Button onClick={() => navigate(`/admin/user/${user.id}`)} className="bg-custom-orange hover:bg-orange-700 text-white px-3 py-1 rounded-md text-sm transition duration-150 ease-in-out">
+                    <Button onClick={() => navigate(`/admin/user/${user.id}`)} className="bg-orange-500 hover:bg-orange-700 text-white px-3 py-1 rounded-md text-sm transition duration-150 ease-in-out">
                       View Details
                     </Button>
                   </TableCell>
