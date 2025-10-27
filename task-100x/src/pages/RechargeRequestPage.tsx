@@ -10,6 +10,7 @@ interface ChatMessage {
 interface RechargeRequest {
   id: string;
   mentee_id: string;
+  mentee_name: string;
   amount: number;
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
@@ -104,8 +105,8 @@ const RechargeRequestPage = () => {
             <table className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
               <thead>
                 <tr className="bg-gray-50 sticky top-0">
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Mentee ID</th>
+                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Sr No.</th>
+                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Mentee Name</th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Balance Type</th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -115,10 +116,10 @@ const RechargeRequestPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {rechargeRequests.map((request) => (
+                {rechargeRequests.map((request, index) => (
                   <tr key={request.id} className="hover:bg-gray-50">
-                    <td className="py-3 px-4 border-b text-sm text-gray-900">{request.id}</td>
-                    <td className="py-3 px-4 border-b text-sm text-gray-900">{request.mentee_id}</td>
+                    <td className="py-3 px-4 border-b text-sm text-gray-900">{index + 1}</td>
+                    <td className="py-3 px-4 border-b text-sm text-gray-900">{request.mentee_name}</td>
                     <td className="py-3 px-4 border-b text-sm text-gray-900">{request.amount}</td>
                     <td className="py-3 px-4 border-b text-sm text-gray-900">{request.type}</td>
                     <td className="py-3 px-4 border-b text-sm text-gray-900">
