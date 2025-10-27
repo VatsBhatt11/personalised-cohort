@@ -71,7 +71,7 @@ const ProjectApprovalsPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {projectIdeas.map((idea, index) => (
+                {projectIdeas.filter(idea => idea.problem_statement && idea.solution).map((idea, index) => (
                   <tr key={idea.id} className="hover:bg-gray-50">
                     <td className="py-3 px-4 border-b text-sm text-gray-900">{index + 1}</td>
                     <td className="py-3 px-4 border-b text-sm text-gray-900">{idea?.profiles?.name}</td>
