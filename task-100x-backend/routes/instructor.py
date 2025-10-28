@@ -892,8 +892,6 @@ async def create_session(
         }
     )
 
-    print("module_name:", module_name)
-
     module_name_str = module_name if module_name is not None else ""
 
     for user in users_with_launchpad:
@@ -910,11 +908,11 @@ async def create_session(
 
                 # Fetch Ikigai data
                 ikigai_response = await client.get(f"{PROFILE_SYSTEM_API_BASE_URL}/api/ikigai?userId={profile_id}")
-                ikigai_data = ikigai_response.json() if ikigai_response.status_code == 200 else {}
+                ikigai_data = ikigai_response.json()
 
                 # Fetch Project Idea data
                 project_ideas_response = await client.get(f"{PROFILE_SYSTEM_API_BASE_URL}/api/project-ideas?userId={profile_id}&moduleName={module_name_str}")
-                project_ideas_data = project_ideas_response.json() if project_ideas_response.status_code == 200 else []
+                project_ideas_data = project_ideas_response.json()
 
                 # Prepare context for personalized message
                 context = {
@@ -932,21 +930,26 @@ async def create_session(
                 outcome_based_msg = ""
 
                 if project_ideas_data:
+                    filtered_project_ideas = [
+                        idea for idea in project_ideas_data if idea.get("module_name") == module_name_str
+                    ]
+                    print(f"DEBUG: filtered_project_ideas: {filtered_project_ideas}")
                     project_based_context = {
-                        "project_ideas": project_ideas_data,
+                        "project_ideas": filtered_project_ideas,
                         "session_name": new_session.title,
                         "module_name": module_name_str,
                     }
                     project_based_msg = await generate_project_based_message_openai(project_based_context)
 
+                print(f"DEBUG: ikigai_data: {ikigai_data.ikigai_details}")
+
                 if ikigai_data and user.launchpad and user.launchpad.expectedOutcomes:
                     outcome_based_context = {
-                        "ikigai_data": ikigai_data,
+                        "ikigai_data": ikigai_data.ikigai_details,
                         "expected_outcomes": user.launchpad.expectedOutcomes,
                         "session_name": new_session.title,
                         "module_name": module_name_str,
                     }
-                    print(f"DEBUG: ikigai_data: {ikigai_data}")
                     outcome_based_msg = await generate_outcome_based_message_openai(outcome_based_context)
 
                 # Fetch profile.id from profile-system using user's email
@@ -968,9 +971,7 @@ async def create_session(
                     "projectBasedMessage": project_based_msg,
                     "outcomeBasedMessage": outcome_based_msg,
                 }
-                print(f"DEBUG: Sending roadmap_data: {roadmap_data}")
                 roadmap_post_response = await client.post(f"{PROFILE_SYSTEM_API_BASE_URL}/api/roadmaps", json=roadmap_data)
-                print(f"DEBUG: Roadmap API response: {roadmap_post_response.text}")
 
             await prisma.notification.create(
                 data={
