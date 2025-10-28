@@ -106,6 +106,7 @@ async def generate_project_based_message_openai(context: dict) -> str:
     - Upcoming Session Title
     - Upcoming Session Description
     - Project Idea: a brief description of the student's project idea for the current module
+    - Module Name: the name of the module for which the project idea is relevant
     
     RULES:
     - Generate exactly ONE bullet point.
@@ -135,7 +136,8 @@ async def generate_project_based_message_openai(context: dict) -> str:
     Student Future Goals: {context.get('student_future_goals')}
     Upcoming Session Title: {context.get('upcoming_session_title')}
     Upcoming Session Description: {context.get('upcoming_session_description')}
-    Project Idea: {context.get('project_idea')}
+    Module Name: {context.get('module_name')}
+    Project Ideas: {context.get('project_ideas')}
     """
 
     try:
@@ -179,6 +181,8 @@ async def generate_outcome_based_message_openai(context: dict) -> str:
     - Upcoming Session Title
     - Upcoming Session Description
     - Expected Outcomes: a brief description of the student's expected outcomes from the program
+    - Module Name: the name of the module for which the project idea is relevant
+    - Ikigai Data: the ikigai data of the student
     
     RULES:
     - Generate exactly ONE bullet point.
@@ -195,6 +199,7 @@ async def generate_outcome_based_message_openai(context: dict) -> str:
     Upcoming Session Title: Low-Level Design of Payment Apps
     Upcoming Session Description: Covers architecture, scalability, and design principles used in apps like Google Pay and PhonePe
     Expected Outcomes: Land a Staff Engineer role at a FAANG company and contribute to open-source projects.
+    Module Name: Low-Level Design of Payment Apps
     
     Generated Message:
     - Aiming for a Staff Engineer role? This session on low-level design will sharpen the skills you need for complex systems at FAANG.
@@ -208,7 +213,8 @@ async def generate_outcome_based_message_openai(context: dict) -> str:
     Student Future Goals: {context.get('student_future_goals')}
     Upcoming Session Title: {context.get('upcoming_session_title')}
     Upcoming Session Description: {context.get('upcoming_session_description')}
-    Expected Outcomes: {context.get('expected_outcomes')}
+    Module Name: {context.get('module_name')}
+    Ikigai Data: {context.get('ikigai_data')}
     """
 
     try:

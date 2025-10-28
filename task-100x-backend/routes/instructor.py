@@ -931,13 +931,23 @@ async def create_session(
 
                 if project_ideas_data:
                     filtered_project_ideas = [
-                        idea for idea in project_ideas_data if idea.get("module_name") == module_name_str
+                        {
+                            "module_name": idea.get("module_name"),
+                            "problem_statement": idea.get("problem_statement"),
+                            "solution": idea.get("solution"),
+                            "features": idea.get("features"),
+                        }
+                        for idea in project_ideas_data if idea.get("module_name") == module_name_str
                     ]
                     print(f"DEBUG: filtered_project_ideas: {filtered_project_ideas}")
                     project_based_context = {
                         "project_ideas": filtered_project_ideas,
-                        "session_name": new_session.title,
                         "module_name": module_name_str,
+                        "student_background": user.launchpad.studyStream if user.launchpad and user.launchpad.studyStream else "",
+                        "student_interests": user.launchpad.codingFamiliarity if user.launchpad and user.launchpad.codingFamiliarity else "",
+                        "student_future_goals": user.launchpad.expectedOutcomes if user.launchpad and user.launchpad.expectedOutcomes else "",
+                        "upcoming_session_title": new_session.title,
+                        "upcoming_session_description": new_session.description,
                     }
                     project_based_msg = await generate_project_based_message_openai(project_based_context)
 
@@ -946,9 +956,12 @@ async def create_session(
                 if ikigai_data and user.launchpad and user.launchpad.expectedOutcomes:
                     outcome_based_context = {
                         "ikigai_data": ikigai_data["ikigai_details"],
-                        "expected_outcomes": user.launchpad.expectedOutcomes,
-                        "session_name": new_session.title,
                         "module_name": module_name_str,
+                        "student_background": user.launchpad.studyStream if user.launchpad and user.launchpad.studyStream else "",
+                        "student_interests": user.launchpad.codingFamiliarity if user.launchpad and user.launchpad.codingFamiliarity else "",
+                        "student_future_goals": user.launchpad.expectedOutcomes if user.launchpad and user.launchpad.expectedOutcomes else "",
+                        "upcoming_session_title": new_session.title,
+                        "upcoming_session_description": new_session.description,
                     }
                     outcome_based_msg = await generate_outcome_based_message_openai(outcome_based_context)
 
