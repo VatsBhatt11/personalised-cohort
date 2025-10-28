@@ -167,7 +167,7 @@ const RechargeRequestPage = () => {
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Chat History</h3>
               <div className="max-h-80 overflow-y-auto border border-gray-200 rounded-md p-4 mb-4">
                 {currentChatHistory.map((message, index) => (
-                  <div key={index} className={`p-2 rounded mb-4 text-sm ${message.role === 'user' ? 'bg-blue-100 text-right' : 'bg-gray-100 text-left'}`}>
+                  <div key={index} className={`p-2 rounded mb-4 text-sm w-fit ${message.role === 'user' ? 'bg-blue-100 ml-auto' : 'bg-gray-100 mr-auto'}`}>
                     <strong>{message.role}:</strong> {message.parts && message.parts.length > 0 && message.parts.map(part => part.type === 'text' ? part.text : '').join('')}
                   </div>
                 ))}
