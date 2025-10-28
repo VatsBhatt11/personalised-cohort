@@ -16,9 +16,17 @@ interface IkigaiData {
 
 interface ProjectIdeaData {
   id: string;
-  title: string;
-  description: string;
-  chatHistory: Record<string, unknown>; // Refined type
+  user_id: string;
+  module_name: string;
+  problem_statement: string;
+  rationale: string | null;
+  is_accepted: boolean;
+  created_at: string;
+  solution: string;
+  features: string;
+  updated_at: string;
+  user_name: string;
+  chat_history?: Record<string, unknown>;
 }
 
 interface RoadmapData {
@@ -49,7 +57,7 @@ const UserDetailPage = () => {
       if (userId) {
         try {
           const ikigaiRes = await instructor.getIkigai(userId as string);
-          setIkigaiData(ikigaiRes);
+          setIkigaiData(ikigaiRes.ikigai_details || {});
 
           // Fetch project ideas
           const projectIdeasRes = await instructor.getProjectIdeas(userId as string);
@@ -122,19 +130,24 @@ const UserDetailPage = () => {
             projectIdeas
               .filter(
                 (idea) =>
-                  idea.status === 'APPROVED' &&
+                  idea.is_accepted &&
                   idea.problem_statement &&
                   idea.solution
               )
               .map((idea) => (
                 <div key={idea.id} className="bg-white p-4 rounded-lg shadow">
-                  <h3 className="text-lg font-bold">{idea.module_name}</h3>
+                  <h3 className="text-lg font-semibold mb-2">
+                    {idea.problem_statement}
+                  </h3>
+                  <p className="text-gray-600">{idea.solution}</p>
                   <p className="text-gray-700">
-                    <strong>Problem Statement:</strong> {idea.problem_statement}
+                    <strong>Module:</strong> {idea.module_name}
                   </p>
-                  <p className="text-gray-700">
-                    <strong>Solution:</strong> {idea.solution}
-                  </p>
+                  {idea.rationale && (
+                    <p className="text-gray-700">
+                      <strong>Rationale:</strong> {idea.rationale}
+                    </p>
+                  )}
                   <p className="text-gray-700">
                     <strong>Features:</strong> {idea.features}
                   </p>
