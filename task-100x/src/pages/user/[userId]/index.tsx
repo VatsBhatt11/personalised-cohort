@@ -109,7 +109,7 @@ const UserDetailPage = () => {
   }
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 bg-white">
       <h1 className="text-2xl font-bold mb-4">User Details: {user.name}</h1>
 
       <div className="mb-8">
@@ -125,7 +125,7 @@ const UserDetailPage = () => {
 
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">Project Ideas</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           {projectIdeas &&
             projectIdeas
               .filter(
@@ -137,9 +137,9 @@ const UserDetailPage = () => {
               .map((idea) => (
                 <div key={idea.id} className="bg-white p-4 rounded-lg shadow">
                   <h3 className="text-lg font-semibold mb-2">
-                    {idea.problem_statement}
+                    Problem Statement: {idea.problem_statement}
                   </h3>
-                  <p className="text-gray-600">{idea.solution}</p>
+                  <p className="text-gray-600">Solution: {idea.solution}</p>
                   <p className="text-gray-700">
                     <strong>Module:</strong> {idea.module_name}
                   </p>
