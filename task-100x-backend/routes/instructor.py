@@ -941,11 +941,11 @@ async def create_session(
                     }
                     project_based_msg = await generate_project_based_message_openai(project_based_context)
 
-                print(f"DEBUG: ikigai_data: {ikigai_data.ikigai_details}")
+                print(f"DEBUG: ikigai_data: {ikigai_data['ikigai_details']}")
 
                 if ikigai_data and user.launchpad and user.launchpad.expectedOutcomes:
                     outcome_based_context = {
-                        "ikigai_data": ikigai_data.ikigai_details,
+                        "ikigai_data": ikigai_data["ikigai_details"],
                         "expected_outcomes": user.launchpad.expectedOutcomes,
                         "session_name": new_session.title,
                         "module_name": module_name_str,
