@@ -107,6 +107,7 @@ async def generate_project_based_message_openai(context: dict) -> str:
     - Upcoming Session Description
     - Project Idea: a brief description of the student's project idea for the current module
     - Module Name: the name of the module for which the project idea is relevant
+    - Ikigai Data: the ikigai data of the student
     
     RULES:
     - Generate exactly ONE bullet point.
@@ -114,6 +115,7 @@ async def generate_project_based_message_openai(context: dict) -> str:
     - Avoid heavy or artistic words like “seamless,” “core techniques,” “architecture strategies.”
     - Use plain, direct words: “apps stay quick,” “keep payments safe,” “backend runs smooth.”
     - Keep it personal: tie session to student background, interests, or project idea naturally.
+    - Explicitly state how the upcoming session will help the student with their Project Idea.
     - Make it sound like a person wrote it, not a template.
     
     EXAMPLE:
@@ -123,9 +125,10 @@ async def generate_project_based_message_openai(context: dict) -> str:
     Upcoming Session Title: Low-Level Design of Payment Apps
     Upcoming Session Description: Covers architecture, scalability, and design principles used in apps like Google Pay and PhonePe
     Project Idea: A decentralized payment gateway using blockchain
+    Module Name: Low-Level Design of Payment Apps
     
     Generated Message:
-    - Thinking about your decentralized payment project, this session on payment app design could give you some solid architectural insights.
+    - Thinking about your decentralized payment project? This session on payment app design will give you solid architectural insights to build a robust backend.
     
     Your task: Using the above framework and context, generate ONE casual, human-sounding, personalized bullet point.
     """
@@ -137,7 +140,7 @@ async def generate_project_based_message_openai(context: dict) -> str:
     Upcoming Session Title: {context.get('upcoming_session_title')}
     Upcoming Session Description: {context.get('upcoming_session_description')}
     Module Name: {context.get('module_name')}
-    Project Ideas: {context.get('project_ideas')}
+    Project Idea: {context.get('project_ideas')}
     """
 
     try:
@@ -190,6 +193,7 @@ async def generate_outcome_based_message_openai(context: dict) -> str:
     - Avoid heavy or artistic words like “seamless,” “core techniques,” “architecture strategies.”
     - Use plain, direct words: “apps stay quick,” “keep payments safe,” “backend runs smooth.”
     - Keep it personal: tie session to student background, interests, or expected outcomes naturally.
+    - Explicitly state how the upcoming session will help the student achieve their Expected Outcomes.
     - Make it sound like a person wrote it, not a template.
     
     EXAMPLE:
@@ -202,7 +206,7 @@ async def generate_outcome_based_message_openai(context: dict) -> str:
     Module Name: Low-Level Design of Payment Apps
     
     Generated Message:
-    - Aiming for a Staff Engineer role? This session on low-level design will sharpen the skills you need for complex systems at FAANG.
+    - Aiming for a Staff Engineer role at a FAANG company? This session on low-level design will directly sharpen the skills you need for complex systems and open-source contributions.
     
     Your task: Using the above framework and context, generate ONE casual, human-sounding, personalized bullet point.
     """

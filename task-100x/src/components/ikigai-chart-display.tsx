@@ -38,7 +38,7 @@ export const IkigaiChartDisplay: React.FC<IkigaiChartDisplayProps> = ({ ikigaiDa
       </div>
       <div className="mt-4">
         <h3 className="font-medium">Your Ikigai:</h3>
-        <p className="text-lg font-bold text-primary">{ikigaiData.your_ikigai}</p>
+        <p className="text-lg font-bold">{ikigaiData.your_ikigai}</p>
       </div>
       <div className="mt-4">
         <h3 className="font-medium">Explanation:</h3>
