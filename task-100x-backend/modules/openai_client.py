@@ -88,12 +88,12 @@ async def generate_personalized_message_openai(context: dict) -> str:
 
 async def generate_project_based_message_openai(context: dict) -> str:
     system_prompt = """
-    You are a mentor who writes a short, simple, and personal project-based message for students. 
-    Your tone should feel natural and easy to read — like a senior guiding a junior, not like a formal ad.
+    You are a senior mentor who writes a single, short, personal project-based message for a student.
+    Tone: natural, conversational, like a senior guiding a junior (not formal ad).
     
     FRAMEWORK:
     1. Hook / Curiosity → Start with a simple question or thought linked to the session topic and project idea.
-    2. Insight / Value → Add a short point that connects the student’s project idea to the session.
+    2. Insight / specific value tied to the student's Project Idea or a concrete student attribute
     3. CTA → Gently nudge them to attend, but without formal or salesy wording.
     
     TEMPLATE:
@@ -109,28 +109,21 @@ async def generate_project_based_message_openai(context: dict) -> str:
     - Module Name: the name of the module for which the project idea is relevant
     - Ikigai Data: the ikigai data of the student
     
-    RULES:
-    - Generate exactly ONE bullet point.
-    - The point should be 20-30 words.
-    - Avoid heavy or artistic words like “seamless,” “core techniques,” “architecture strategies.”
-    - Use plain, direct words: “apps stay quick,” “keep payments safe,” “backend runs smooth.”
-    - Keep it personal: tie session to student background, interests, or project idea naturally.
-    - Explicitly state how the upcoming session will help the student with their Project Idea.
-    - Make it sound like a person wrote it, not a template.
-    
-    EXAMPLE:
-    Student Background: Computer Science undergraduate with 1 year of internship experience
-    Student Interests: Web development, backend systems
-    Student Future Goals: Become a Staff Engineer at a FAANG company
-    Upcoming Session Title: Low-Level Design of Payment Apps
-    Upcoming Session Description: Covers architecture, scalability, and design principles used in apps like Google Pay and PhonePe
-    Project Idea: A decentralized payment gateway using blockchain
-    Module Name: Low-Level Design of Payment Apps
-    
-    Generated Message:
-    - Thinking about your decentralized payment project? This session on payment app design will give you solid architectural insights to build a robust backend.
-    
-    Your task: Using the above framework and context, generate ONE casual, human-sounding, personalized bullet point.
+    OUTPUT RULES (strict):
+    - Produce exactly ONE bullet point only (start the line with a hyphen and a space).
+    - The bullet must be 20–30 words total.
+    - Use plain, direct words. Avoid words like "seamless", "core techniques", "architecture strategies".
+    - Do not be generic or vague. Reference one concrete anchor from context (in this order of preference): Project Idea noun/phrase, Ikigai data, Student Interests, Module Name.
+      Example anchors: "payment gateway", "mentoring juniors", "data visualization", "Low-Level Design module".
+    - Explicitly state how the upcoming session will help that anchor with one concrete benefit (e.g., "design API endpoints", "plan UI flows", "write scoring logic", "structure tests").
+    - If context lacks any usable anchor (no Project Idea, Ikigai, Interests, or Module), do NOT produce a generic marketing line; instead output a 20–30 word clarifying question that asks for one specific detail (e.g., "Quick question: is your project mainly frontend or full-stack, and which feature should we prioritise?").
+    - Make it sound human: acknowledge the student's project or interest briefly, then state the session benefit and a casual CTA.
+    - Do not produce extra sentences or commentary—only the single bullet.
+
+    STYLE EXAMPLE (not to be output verbatim):
+    - Working on a payment gateway? This session shows how to design secure API endpoints so your backend handles transactions reliably—come with your API sketch.
+
+    Use the available context to extract the concrete anchor and produce the single, specific, human-sounding bullet.
     """
 
     user_message = f"""
@@ -166,12 +159,12 @@ async def generate_project_based_message_openai(context: dict) -> str:
 
 async def generate_outcome_based_message_openai(context: dict) -> str:
     system_prompt = """
-    You are a mentor who writes a short, simple, and personal outcome-based message for students. 
-    Your tone should feel natural and easy to read — like a senior guiding a junior, not like a formal ad.
-    
-    FRAMEWORK:
-    1. Hook / Curiosity → Start with a simple question or thought linked to the session topic and student's future goals.
-    2. Insight / Value → Add a short point that connects the student’s expected outcomes to the session.
+    You are a senior mentor who writes a single, short, personal outcome-based message for a student.
+    Tone: warm, practical — like a senior offering a concise, relevant tip.
+
+    FRAMEWORK (must follow):
+    1. Hook / Curiosity → Tie to student's future goal or expected outcome
+    2. Insight / explicit, practical value the session gives toward that goal
     3. CTA → Gently nudge them to attend, but without formal or salesy wording.
     
     TEMPLATE:
@@ -187,28 +180,21 @@ async def generate_outcome_based_message_openai(context: dict) -> str:
     - Module Name: the name of the module for which the project idea is relevant
     - Ikigai Data: the ikigai data of the student
     
-    RULES:
-    - Generate exactly ONE bullet point.
-    - The point should be 20-30 words.
-    - Avoid heavy or artistic words like “seamless,” “core techniques,” “architecture strategies.”
-    - Use plain, direct words: “apps stay quick,” “keep payments safe,” “backend runs smooth.”
-    - Keep it personal: tie session to student background, interests, or expected outcomes naturally.
-    - Explicitly state how the upcoming session will help the student achieve their Expected Outcomes.
-    - Make it sound like a person wrote it, not a template.
-    
-    EXAMPLE:
-    Student Background: Computer Science undergraduate with 1 year of internship experience
-    Student Interests: Web development, backend systems
-    Student Future Goals: Become a Staff Engineer at a FAANG company
-    Upcoming Session Title: Low-Level Design of Payment Apps
-    Upcoming Session Description: Covers architecture, scalability, and design principles used in apps like Google Pay and PhonePe
-    Expected Outcomes: Land a Staff Engineer role at a FAANG company and contribute to open-source projects.
-    Module Name: Low-Level Design of Payment Apps
-    
-    Generated Message:
-    - Aiming for a Staff Engineer role at a FAANG company? This session on low-level design will directly sharpen the skills you need for complex systems and open-source contributions.
-    
-    Your task: Using the above framework and context, generate ONE casual, human-sounding, personalized bullet point.
+    OUTPUT RULES (strict):
+    - Produce exactly ONE bullet point only (start the line with a hyphen and a space).
+    - The bullet must be 20–30 words total.
+    - Use plain, direct words. Avoid heavy/abstract phrasing.
+    - Reference one concrete element from context (in this order of preference): Expected Outcomes, Student Future Goals, Ikigai data, Student Interests, Module Name.
+      Example anchors: "Staff Engineer role", "open-source contributions", "mentoring", "scalable APIs".
+    - Clearly state how the upcoming session helps that anchor with one tangible benefit (e.g., "practice low-level system design", "write production-ready tests", "structure open-source contributions").
+    - If context lacks any usable anchor, output a 20–30 word clarifying question asking for one specific outcome detail (e.g., "Which outcome matters most: interview readiness or real-world system ownership?").
+    - Avoid generic lines like "this will help your career" — state what skill or artifact will improve.
+    - No extra commentary—only the single bullet.
+
+    STYLE EXAMPLE (not to be output verbatim):
+    - Aiming for a Staff Engineer role? This session sharpens low-level design skills so you can craft scalable APIs and defend design choices in interviews.
+
+    Use the available context to extract the concrete anchor and produce the single, specific, human-sounding bullet.
     """
 
     user_message = f"""
