@@ -1,5 +1,5 @@
 import useAuth from '@/hooks/useAuth';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface ChatMessage {
   id: string;
@@ -15,18 +15,18 @@ interface RechargeRequest {
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
   chat_history: ChatMessage[];
-  type: string; // Add the new balance type field
+  type: string; 
 }
 
 const RechargeRequestPage = () => {
-  const { user, loading } = useAuth(); // Assuming useAuth provides user and loading state
+  const { user, loading } = useAuth();
   const [rechargeRequests, setRechargeRequests] = useState<RechargeRequest[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showChatModal, setShowChatModal] = useState<boolean>(false);
   const [currentChatHistory, setCurrentChatHistory] = useState<ChatMessage[]>([]);
 
-  const API_BASE_URL = import.meta.env.NEXT_PUBLIC_PROFILE_SYSTEM_API_BASE_URL || 'https://profile-system.vercel.app';
+  const API_BASE_URL = import.meta.env.NEXT_PUBLIC_PROFILE_SYSTEM_API_BASE_URL || 'http://localhost:3000';
 
   const fetchRechargeRequests = async () => {
     setIsLoading(true);
@@ -101,7 +101,7 @@ const RechargeRequestPage = () => {
         {error && <p className="text-red-600">Error: {error}</p>}
         {!isLoading && rechargeRequests.length === 0 && <p className="text-gray-600">No pending recharge requests.</p>}
         {!isLoading && rechargeRequests.length > 0 && (
-          <div className="overflow-x-auto mt-4 max-h-[60vh]">
+          <div className="overflow-x-auto mt-4 max-h-[80dvh]">
             <table className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
               <thead>
                 <tr className="bg-gray-50 sticky top-0">
