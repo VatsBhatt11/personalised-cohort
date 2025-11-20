@@ -142,8 +142,8 @@ const RechargeRequestPage = () => {
                           {latestRequest.status}
                         </span>
                       </td>
-                      <td className="py-3 px-4 border-b text-sm text-gray-900">{new Date(latestRequest.created_at).toLocaleString()}</td>
                       <td className="py-3 px-4 border-b text-sm text-gray-900">{latestRequest.approved_count_for_type}</td>
+                      <td className="py-3 px-4 border-b text-sm text-gray-900">{new Date(latestRequest.created_at).toLocaleString()}</td>
                       <td className="py-3 px-4 border-b text-sm text-gray-900">
                         <button
                           onClick={() => handleViewChat(latestRequest.chat_history)}
