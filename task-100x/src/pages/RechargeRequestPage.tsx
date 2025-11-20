@@ -16,6 +16,7 @@ interface RechargeRequest {
   created_at: string;
   chat_history: ChatMessage[];
   type: string; 
+  approved_count_for_type?: number; // Add this new property
 }
 
 const RechargeRequestPage = () => {
@@ -93,6 +94,16 @@ const RechargeRequestPage = () => {
     return <div>Please log in to view recharge requests.</div>;
   }
 
+  // Group requests by mentee_id and type
+  const groupedRequests = rechargeRequests.reduce((acc, request) => {
+    const key = `${request.mentee_id}-${request.type}`;
+    if (!acc[key]) {
+      acc[key] = { mentee_name: request.mentee_name, type: request.type, requests: [] };
+    }
+    acc[key].requests.push(request);
+    return acc;
+  }, {} as Record<string, { mentee_name: string; type: string; requests: RechargeRequest[] }>);
+
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="container mx-auto bg-white rounded-lg shadow-md p-6">
@@ -110,52 +121,58 @@ const RechargeRequestPage = () => {
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Balance Type</th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Approved Count</th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Created At</th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Chat History</th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {rechargeRequests.map((request, index) => (
-                  <tr key={request.id} className="hover:bg-gray-50">
-                    <td className="py-3 px-4 border-b text-sm text-gray-900">{index + 1}</td>
-                    <td className="py-3 px-4 border-b text-sm text-gray-900">{request.mentee_name}</td>
-                    <td className="py-3 px-4 border-b text-sm text-gray-900">{request.amount}</td>
-                    <td className="py-3 px-4 border-b text-sm text-gray-900">{request.type}</td>
-                    <td className="py-3 px-4 border-b text-sm text-gray-900">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${request.status === 'approved' ? 'bg-green-100 text-green-800' : request.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                        {request.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 border-b text-sm text-gray-900">{new Date(request.created_at).toLocaleString()}</td>
-                    <td className="py-3 px-4 border-b text-sm text-gray-900">
-                      <button
-                        onClick={() => handleViewChat(request.chat_history)}
-                        className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-                      >
-                        View Chat
-                      </button>
-                    </td>
-                    <td className="py-3 px-4 border-b text-sm text-gray-900">
-                      {request.status === 'pending' && (
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleUpdateStatus(request.id, 'approved', request.type, request.mentee_id, request.amount)}
-                            className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm transition duration-150 ease-in-out"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleUpdateStatus(request.id, 'rejected', request.type, request.mentee_id, request.amount)}
-                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm transition duration-150 ease-in-out"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {Object.values(groupedRequests).map((group, groupIndex) => {
+                  const latestRequest = group.requests[0]; // Assuming requests are already sorted by created_at descending
+
+                  return (
+                    <tr key={latestRequest.id} className="hover:bg-gray-50">
+                      <td className="py-3 px-4 border-b text-sm text-gray-900">{groupIndex + 1}</td>
+                      <td className="py-3 px-4 border-b text-sm text-gray-900">{group.mentee_name}</td>
+                      <td className="py-3 px-4 border-b text-sm text-gray-900">{latestRequest.amount}</td>
+                      <td className="py-3 px-4 border-b text-sm text-gray-900">{group.type}</td>
+                      <td className="py-3 px-4 border-b text-sm text-gray-900">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${latestRequest.status === 'approved' ? 'bg-green-100 text-green-800' : latestRequest.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                          {latestRequest.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 border-b text-sm text-gray-900">{new Date(latestRequest.created_at).toLocaleString()}</td>
+                      <td className="py-3 px-4 border-b text-sm text-gray-900">{latestRequest.approved_count_for_type}</td>
+                      <td className="py-3 px-4 border-b text-sm text-gray-900">
+                        <button
+                          onClick={() => handleViewChat(latestRequest.chat_history)}
+                          className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                        >
+                          View Chat
+                        </button>
+                      </td>
+                      <td className="py-3 px-4 border-b text-sm text-gray-900">
+                        {latestRequest.status === 'pending' && (
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleUpdateStatus(latestRequest.id, 'approved', latestRequest.type, latestRequest.mentee_id, latestRequest.amount)}
+                              className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm transition duration-150 ease-in-out"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => handleUpdateStatus(latestRequest.id, 'rejected', latestRequest.type, latestRequest.mentee_id, latestRequest.amount)}
+                              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm transition duration-150 ease-in-out"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
