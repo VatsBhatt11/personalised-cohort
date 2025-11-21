@@ -1,9 +1,3 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { instructor } from '@/lib/api'; // Import instructor and ProjectIdea
-import { IkigaiChartDisplay } from '@/components/ikigai-chart-display';
-import { RoadmapItem, GroupedRoadmap } from '@/lib/roadmap-types';
-
 interface IkigaiData {
   what_you_love: string;
   what_you_are_good_at: string;
@@ -11,8 +5,25 @@ interface IkigaiData {
   what_you_can_be_paid_for: string;
   your_ikigai: string;
   explanation: string;
+  status: string;
   next_steps: string;
+  strength_map?: {
+    core_strengths: string[];
+    supporting_skills: string[];
+    proof: string;
+  };
+  weakness_map?: {
+    skill_gaps: string[];
+    risks: string[];
+    blocks: string[];
+  };
 }
+
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { instructor } from '@/lib/api'; // Import instructor and ProjectIdea
+import { IkigaiChartDisplay } from '@/components/ikigai-chart-display';
+import { RoadmapItem, GroupedRoadmap } from '@/lib/roadmap-types';
 
 interface ProjectIdeaData {
   id: string;
@@ -39,7 +50,7 @@ interface UserDetails {
   name: string;
   email: string;
   image: string;
-  ikigaiData: IkigaiData;
+  ikigaiData: IkigaiData | {};
   projectIdeas: ProjectIdeaData[];
   roadmapData: RoadmapData | null;
 }
